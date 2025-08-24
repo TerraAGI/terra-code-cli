@@ -48,9 +48,6 @@
     "telemetry": "node scripts/telemetry.js",
     "clean": "node scripts/clean.js"
   },
-  "bin": {
-    "terra": "bundle/terra.js"
-  },
   "files": [
     "packages/cli/dist/",
     "packages/core/dist/",

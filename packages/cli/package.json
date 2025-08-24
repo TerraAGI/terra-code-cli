@@ -1,15 +1,15 @@
 {
   "name": "@terra-code/terra-code",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Terra Code",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/terra-code/terra-code.git"
   },
   "type": "module",
-  "main": "dist/lib.js",
+  "main": "lib.js",
   "bin": {
-    "terra": "dist/terra.js"
+    "terra": "terra.js"
   },
   "scripts": {
     "build": "node ../../scripts/build_package.js",
