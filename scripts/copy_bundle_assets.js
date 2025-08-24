@@ -14,7 +14,7 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// See the License for the specific license governing permissions and
 // limitations under the License.
 
 import { copyFileSync, existsSync, mkdirSync } from 'fs';
@@ -43,6 +43,13 @@ const vsixFiles = glob.sync('packages/vscode-ide-companion/*.vsix', {
 });
 for (const file of vsixFiles) {
   copyFileSync(join(root, file), join(bundleDir, basename(file)));
+}
+
+// Copy the bundled CLI to the CLI package dist directory
+const cliDistDir = join(root, 'packages/cli/dist');
+if (existsSync(join(bundleDir, 'terra.js'))) {
+  copyFileSync(join(bundleDir, 'terra.js'), join(cliDistDir, 'terra.js'));
+  console.log('Bundled CLI copied to packages/cli/dist/');
 }
 
 console.log('Assets copied to bundle/');

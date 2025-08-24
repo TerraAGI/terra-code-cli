@@ -7,9 +7,9 @@
     "url": "git+https://github.com/terra-code/terra-code.git"
   },
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/terra.js",
   "bin": {
-    "terra": "dist/index.js"
+    "terra": "dist/terra.js"
   },
   "scripts": {
     "build": "node ../../scripts/build_package.js",

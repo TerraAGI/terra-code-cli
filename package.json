@@ -49,7 +49,7 @@
     "clean": "node scripts/clean.js"
   },
   "bin": {
-    "terra": "packages/cli/dist/index.js"
+    "terra": "bundle/terra.js"
   },
   "files": [
     "packages/cli/dist/",
