@@ -45,11 +45,22 @@ for (const file of vsixFiles) {
   copyFileSync(join(root, file), join(bundleDir, basename(file)));
 }
 
-// Copy the bundled CLI to the CLI package dist directory
-const cliDistDir = join(root, 'packages/cli/dist');
-if (existsSync(join(bundleDir, 'terra.js'))) {
-  copyFileSync(join(bundleDir, 'terra.js'), join(cliDistDir, 'terra.js'));
-  console.log('Bundled CLI copied to packages/cli/dist/');
+// Copy bundled CLI to CLI package dist directory
+const cliDistDir = join(__dirname, '..', 'packages', 'cli', 'dist');
+if (!existsSync(cliDistDir)) {
+  mkdirSync(cliDistDir, { recursive: true });
 }
+
+const bundledCliPath = join(__dirname, '..', 'bundle', 'terra.js');
+const cliExecutablePath = join(cliDistDir, 'terra.js');
+
+if (existsSync(bundledCliPath)) {
+  copyFileSync(bundledCliPath, cliExecutablePath);
+  console.log(`✅ Copied bundled CLI to ${cliExecutablePath}`);
+} else {
+  console.warn(`⚠️  Bundled CLI not found at ${bundledCliPath}`);
+}
+
+// Copy other bundle assets
 
 console.log('Assets copied to bundle/');

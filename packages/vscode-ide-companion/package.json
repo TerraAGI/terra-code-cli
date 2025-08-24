@@ -2,7 +2,7 @@
   "name": "terra-code-vscode-ide-companion",
   "displayName": "Terra Code Companion",
   "description": "Enable Terra Code with direct access to your VS Code workspace.",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publisher": "terra-code",
   "icon": "assets/icon.png",
   "repository": {

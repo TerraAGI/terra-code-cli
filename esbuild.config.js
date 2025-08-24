@@ -46,6 +46,7 @@ const result = await esbuild.build({
   bundle: true,
   platform: 'node',
   target: 'node20',
+  format: 'esm',
   outfile: 'bundle/terra.js',
   external: [
     // Only externalize core Node.js modules and a few problematic ones
@@ -77,20 +78,17 @@ const result = await esbuild.build({
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
- *
- * Terra Code - AI-powered command-line workflow tool
- * Built from Gemini CLI and enhanced with Terra AGI services
- * 
- * Original Gemini CLI: https://github.com/google-gemini/gemini-cli
- * Qwen3-Coder models: https://github.com/QwenLM/Qwen3-Coder
- * 
- * Licensed under the Apache License, Version 2.0
- */`,
+ */
+`,
   },
-  minify: false,
-  sourcemap: false,
-  format: 'esm',
-  packages: 'bundle', // Bundle all npm packages
+  footer: {
+    js: `
+// Execute the CLI if this file is run directly
+if (import.meta.url === \`file://${process.argv[1]}\`) {
+  main().catch(console.error);
+}
+`,
+  },
 });
 
 if (result.errors.length > 0) {
