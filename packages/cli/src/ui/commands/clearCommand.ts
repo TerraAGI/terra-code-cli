@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { uiTelemetryService } from '@qwen-code/qwen-code-core';
+import { uiTelemetryService } from '@terra-code/terra-code-core';
 import { CommandKind, SlashCommand } from './types.js';
 
 export const clearCommand: SlashCommand = {

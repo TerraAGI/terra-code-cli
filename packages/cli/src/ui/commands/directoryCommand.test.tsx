@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { directoryCommand, expandHomeDir } from './directoryCommand.js';
-import { Config, WorkspaceContext } from '@qwen-code/qwen-code-core';
+import { Config, WorkspaceContext } from '@terra-code/terra-code-core';
 import { CommandContext } from './types.js';
 import { MessageType } from '../types.js';
 import * as os from 'os';

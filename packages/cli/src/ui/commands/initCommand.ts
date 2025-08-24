@@ -12,7 +12,7 @@ import {
   SlashCommandActionReturn,
   CommandKind,
 } from './types.js';
-import { getCurrentGeminiMdFilename } from '@qwen-code/qwen-code-core';
+import { getCurrentGeminiMdFilename } from '@terra-code/terra-code-core';
 
 export const initCommand: SlashCommand = {
   name: 'init',

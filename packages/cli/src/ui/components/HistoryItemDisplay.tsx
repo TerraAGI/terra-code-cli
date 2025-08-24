@@ -20,7 +20,7 @@ import { StatsDisplay } from './StatsDisplay.js';
 import { ModelStatsDisplay } from './ModelStatsDisplay.js';
 import { ToolStatsDisplay } from './ToolStatsDisplay.js';
 import { SessionSummaryDisplay } from './SessionSummaryDisplay.js';
-import { Config } from '@qwen-code/qwen-code-core';
+import { Config } from '@terra-code/terra-code-core';
 import { Help } from './Help.js';
 import { SlashCommand } from '../commands/types.js';
 

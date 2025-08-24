@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useReducer, useRef } from 'react';
-import { Config, FileSearch, escapePath } from '@qwen-code/qwen-code-core';
+import { Config, FileSearch, escapePath } from '@terra-code/terra-code-core';
 import {
   Suggestion,
   MAX_SUGGESTIONS_TO_SHOW,

@@ -13,7 +13,7 @@ import {
   getErrorMessage,
   isNodeError,
   unescapePath,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import {
   HistoryItem,
   IndividualToolCallDisplay,

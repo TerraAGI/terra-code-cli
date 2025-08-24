@@ -8,7 +8,7 @@ import { SlashCommand, CommandContext, CommandKind } from './types.js';
 import { MessageType } from '../types.js';
 import * as os from 'os';
 import * as path from 'path';
-import { loadServerHierarchicalMemory } from '@qwen-code/qwen-code-core';
+import { loadServerHierarchicalMemory } from '@terra-code/terra-code-core';
 
 export function expandHomeDir(p: string): string {
   if (!p) {

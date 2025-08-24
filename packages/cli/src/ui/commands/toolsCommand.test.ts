@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { toolsCommand } from './toolsCommand.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import { MessageType } from '../types.js';
-import { Tool } from '@qwen-code/qwen-code-core';
+import { Tool } from '@terra-code/terra-code-core';
 
 // Mock tools for testing
 const mockTools = [

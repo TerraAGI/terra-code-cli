@@ -13,7 +13,7 @@ import {
   Config,
   getProjectCommandsDir,
   getUserCommandsDir,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { ICommandLoader } from './types.js';
 import {
   CommandContext,

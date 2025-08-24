@@ -1,13 +1,13 @@
 {
-  "name": "qwen-code-vscode-ide-companion",
-  "displayName": "Qwen Code Companion",
-  "description": "Enable Qwen Code with direct access to your VS Code workspace.",
+  "name": "terra-code-vscode-ide-companion",
+  "displayName": "Terra Code Companion",
+  "description": "Enable Terra Code with direct access to your VS Code workspace.",
   "version": "0.0.8",
-  "publisher": "qwenlm",
+  "publisher": "terra-code",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/QwenLM/qwen-code.git",
+    "url": "https://github.com/terra-code/terra-code.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -19,10 +19,10 @@
     "AI"
   ],
   "keywords": [
-    "qwen-code",
-    "qwen code",
-    "qwen",
-    "qwen code",
+    "terra-code",
+    "terra code",
+    "terra",
+    "terra code",
     "cli",
     "ide integration",
     "ide companion"
@@ -33,63 +33,63 @@
   "contributes": {
     "languages": [
       {
-        "id": "qwen-diff-editable"
+        "id": "terra-diff-editable"
       }
     ],
     "commands": [
       {
-        "command": "qwen.diff.accept",
-        "title": "Qwen Code: Accept Current Diff",
+        "command": "terra.diff.accept",
+        "title": "Terra Code: Accept Current Diff",
         "icon": "$(check)"
       },
       {
-        "command": "qwen.diff.cancel",
-        "title": "Qwen Code: Close Diff Editor",
+        "command": "terra.diff.cancel",
+        "title": "Terra Code: Close Diff Editor",
         "icon": "$(close)"
       },
       {
-        "command": "qwen-code.runQwenCode",
-        "title": "Qwen Code: Run"
+        "command": "terra-code.runTerraCode",
+        "title": "Terra Code: Run"
       },
       {
-        "command": "qwen-code.showNotices",
-        "title": "Qwen Code: View Third-Party Notices"
+        "command": "terra-code.showNotices",
+        "title": "Terra Code: View Third-Party Notices"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "qwen.diff.accept",
-          "when": "qwen.diff.isVisible"
+          "command": "terra.diff.accept",
+          "when": "terra.diff.isVisible"
         },
         {
-          "command": "qwen.diff.cancel",
-          "when": "qwen.diff.isVisible"
+          "command": "terra.diff.cancel",
+          "when": "terra.diff.isVisible"
         }
       ],
       "editor/title": [
         {
-          "command": "qwen.diff.accept",
-          "when": "qwen.diff.isVisible",
+          "command": "terra.diff.accept",
+          "when": "terra.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "qwen.diff.cancel",
-          "when": "qwen.diff.isVisible",
+          "command": "terra.diff.cancel",
+          "when": "terra.diff.isVisible",
           "group": "navigation"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "qwen.diff.accept",
+        "command": "terra.diff.accept",
         "key": "ctrl+s",
-        "when": "qwen.diff.isVisible"
+        "when": "terra.diff.isVisible"
       },
       {
-        "command": "qwen.diff.accept",
+        "command": "terra.diff.accept",
         "key": "cmd+s",
-        "when": "qwen.diff.isVisible"
+        "when": "terra.diff.isVisible"
       }
     ]
   },

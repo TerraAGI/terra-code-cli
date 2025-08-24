@@ -1,15 +1,15 @@
 {
-  "name": "@qwen-code/qwen-code",
+  "name": "@terra-code/terra-code",
   "version": "0.0.8",
-  "description": "Qwen Code",
+  "description": "Terra Code",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QwenLM/qwen-code.git"
+    "url": "git+https://github.com/terra-code/terra-code.git"
   },
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "qwen": "dist/index.js"
+    "terra": "dist/index.js"
   },
   "scripts": {
     "build": "node ../../scripts/build_package.js",
@@ -25,12 +25,12 @@
     "dist"
   ],
   "config": {
-    "sandboxImageUri": "ghcr.io/qwenlm/qwen-code:0.0.8"
+    "sandboxImageUri": "ghcr.io/terra-code/terra-code:0.0.8"
   },
   "dependencies": {
     "@google/genai": "1.9.0",
     "@iarna/toml": "^2.2.5",
-    "@qwen-code/qwen-code-core": "file:../core",
+    "@terra-code/terra-code-core": "file:../core",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "@types/update-notifier": "^6.0.8",
     "command-exists": "^1.2.9",
@@ -77,7 +77,7 @@
     "react-dom": "^19.1.0",
     "typescript": "^5.3.3",
     "vitest": "^3.1.1",
-    "@qwen-code/qwen-code-test-utils": "file:../test-utils"
+    "@terra-code/terra-code-test-utils": "file:../test-utils"
   },
   "engines": {
     "node": ">=20"

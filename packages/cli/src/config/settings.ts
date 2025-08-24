@@ -6,12 +6,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { homedir, platform } from 'os';
+import { homedir } from 'os';
 import * as dotenv from 'dotenv';
 import {
   GEMINI_CONFIG_DIR as GEMINI_DIR,
   getErrorMessage,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import stripJsonComments from 'strip-json-comments';
 import { DefaultLight } from '../ui/themes/default-light.js';
 import { DefaultDark } from '../ui/themes/default.js';
@@ -19,21 +19,18 @@ import { Settings, MemoryImportFormat } from './settingsSchema.js';
 
 export type { Settings, MemoryImportFormat };
 
-export const SETTINGS_DIRECTORY_NAME = '.qwen';
+export const SETTINGS_DIRECTORY_NAME = '.terra';
 export const USER_SETTINGS_DIR = path.join(homedir(), SETTINGS_DIRECTORY_NAME);
 export const USER_SETTINGS_PATH = path.join(USER_SETTINGS_DIR, 'settings.json');
 export const DEFAULT_EXCLUDED_ENV_VARS = ['DEBUG', 'DEBUG_MODE'];
 
 export function getSystemSettingsPath(): string {
-  if (process.env.GEMINI_CLI_SYSTEM_SETTINGS_PATH) {
-    return process.env.GEMINI_CLI_SYSTEM_SETTINGS_PATH;
-  }
-  if (platform() === 'darwin') {
-    return '/Library/Application Support/QwenCode/settings.json';
-  } else if (platform() === 'win32') {
-    return 'C:\\ProgramData\\qwen-code\\settings.json';
+  if (process.platform === 'darwin') {
+    return '/Library/Application Support/TerraCLI/settings.json';
+  } else if (process.platform === 'win32') {
+    return 'C:\\ProgramData\\terra-cli\\settings.json';
   } else {
-    return '/etc/qwen-code/settings.json';
+    return '/etc/terra-cli/settings.json';
   }
 }
 

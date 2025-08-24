@@ -16,7 +16,7 @@ import {
   logSlashCommand,
   SlashCommandEvent,
   ToolConfirmationOutcome,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import { runExitCleanup } from '../../utils/cleanup.js';
 import {

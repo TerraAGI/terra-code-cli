@@ -17,7 +17,7 @@ import {
   uiTelemetryService,
   SessionMetrics,
   ModelMetrics,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 
 // --- Interface Definitions ---
 

@@ -6,7 +6,7 @@
 
 import { Text } from 'ink';
 import { Colors } from '../colors.js';
-import { tokenLimit } from '@qwen-code/qwen-code-core';
+import { tokenLimit } from '@terra-code/terra-code-core';
 
 export const ContextUsageDisplay = ({
   promptTokenCount,

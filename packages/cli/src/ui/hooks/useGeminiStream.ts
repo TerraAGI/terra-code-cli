@@ -26,7 +26,7 @@ import {
   UnauthorizedError,
   UserPromptEvent,
   DEFAULT_GEMINI_FLASH_MODEL,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
 import {
   StreamingState,

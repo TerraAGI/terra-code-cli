@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from '@qwen-code/qwen-code-core';
+import { AuthType } from '@terra-code/terra-code-core';
 import { loadEnvironment } from './settings.js';
 
 export const validateAuthMethod = (authMethod: string): string | null => {
@@ -51,17 +51,7 @@ export const validateAuthMethod = (authMethod: string): string | null => {
     return null;
   }
 
-  if (authMethod === AuthType.TERRA_VECTOR) {
-    // Terra Vector requires API key and username
-    // Check both environment variables and settings
-    const apiKey = process.env.TERRA_API_KEY;
-    const username = process.env.TERRA_USERNAME;
-    
-    if (!apiKey || !username) {
-      return 'TERRA_API_KEY and TERRA_USERNAME not found. Use /auth terra register to set up Terra credentials.';
-    }
-    return null;
-  }
+
 
   return 'Invalid auth method selected.';
 };
@@ -111,18 +101,39 @@ export async function autoRegisterTerraCredentials(settings?: { setValue?: (scop
       };
     }
     
-    // Perform Terra registration
+    // Perform Terra registration with the correct API format
+    console.log('Attempting Terra registration...');
+    const requestBody = {
+      request_id: `terra_cli_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+    
     const response = await fetch('http://13.61.2.7:8000/v1/register', {
       method: 'POST',
       headers: {
+        'accept': 'application/json',
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify(requestBody)
     });
     
+    console.log(`Terra registration response: ${response.status} ${response.statusText}`);
+    
     if (!response.ok) {
+      let errorDetails = `${response.status} ${response.statusText}`;
+      
+      // Try to get more detailed error information
+      try {
+        const errorData = await response.json();
+        if (errorData.error || errorData.message) {
+          errorDetails += `: ${errorData.error || errorData.message}`;
+        }
+      } catch {
+        // If we can't parse the error response, just use the status
+      }
+      
       return { 
         success: false, 
-        message: `Terra registration failed: ${response.status} ${response.statusText}` 
+        message: `Terra registration failed: ${errorDetails}` 
       };
     }
     
@@ -140,7 +151,7 @@ export async function autoRegisterTerraCredentials(settings?: { setValue?: (scop
     process.env.TERRA_USERNAME = data.data.username;
     
     // Store credentials in settings if available
-    if (settings && settings.setValue) {
+    if (settings && typeof settings.setValue === 'function') {
       settings.setValue('User', 'terraApiKey', data.data.api_key);
       settings.setValue('User', 'terraUsername', data.data.username);
     }

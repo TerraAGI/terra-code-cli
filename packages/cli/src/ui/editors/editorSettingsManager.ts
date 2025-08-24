@@ -8,7 +8,7 @@ import {
   allowEditorTypeInSandbox,
   checkHasEditorType,
   type EditorType,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 
 export interface EditorDisplay {
   name: string;

@@ -8,12 +8,12 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ConfirmationRequiredError, ShellProcessor } from './shellProcessor.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import { CommandContext } from '../../ui/commands/types.js';
-import { Config } from '@qwen-code/qwen-code-core';
+import { Config } from '@terra-code/terra-code-core';
 
 const mockCheckCommandPermissions = vi.hoisted(() => vi.fn());
 const mockShellExecute = vi.hoisted(() => vi.fn());
 
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
+vi.mock('@terra-code/terra-code-core', async (importOriginal) => {
   const original = await importOriginal<object>();
   return {
     ...original,

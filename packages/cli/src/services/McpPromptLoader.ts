@@ -8,7 +8,7 @@ import {
   Config,
   getErrorMessage,
   getMCPServerPrompts,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import {
   CommandContext,
   CommandKind,

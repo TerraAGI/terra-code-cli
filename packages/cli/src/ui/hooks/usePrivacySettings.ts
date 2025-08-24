@@ -9,7 +9,7 @@ import {
   Config,
   CodeAssistServer,
   UserTierId,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 
 export interface PrivacyState {
   isLoading: boolean;

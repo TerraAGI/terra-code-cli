@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 
 // Import the vector DB client functions
-import { uploadDocument, searchDocuments } from '@qwen-code/qwen-code-core';
+import { uploadDocument, searchDocuments } from '@terra-code/terra-code-core';
 
 // Define the result structure to match API response
 interface SearchResult {
@@ -532,7 +532,7 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Terra credentials not found. Use /auth terra register to set up your credentials first.',
+              text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
             },
             Date.now(),
           );

@@ -183,3 +183,6 @@ Only write high-value comments if at all. Avoid talking to the user through comm
 ## General style requirements
 
 Use hyphens instead of underscores in flag names (e.g. `my-flag` instead of `my_flag`).
+
+## Qwen Added Memories
+- The user is working on Qwen Code, an AI-powered command-line workflow tool adapted from Gemini CLI, optimized for Qwen3-Coder models. The project uses Node.js >=20, has a monorepo structure with packages for cli, core, test-utils, and vscode-ide-companion. Key features include code understanding, workflow automation, and Terra AGI services. The main branch is 'main'.

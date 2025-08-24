@@ -1,6 +1,11 @@
 {
-  "name": "@qwen-code/qwen-code-test-utils",
+  "name": "@terra-code/terra-code-test-utils",
   "version": "0.0.8",
+  "description": "Terra Code Test Utils",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/terra-code/terra-code.git"
+  },
   "private": true,
   "main": "src/index.ts",
   "license": "Apache-2.0",

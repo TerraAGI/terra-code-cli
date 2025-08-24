@@ -11,7 +11,7 @@ import {
   UserTierId,
   DEFAULT_GEMINI_FLASH_MODEL,
   isProQuotaExceededError,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 
 describe('parseAndFormatApiError', () => {
   const _enterpriseMessage =

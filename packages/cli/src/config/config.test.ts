@@ -8,11 +8,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ShellTool, EditTool, WriteFileTool } from '@qwen-code/qwen-code-core';
+import { ShellTool, EditTool, WriteFileTool } from '@terra-code/terra-code-core';
 import { loadCliConfig, parseArguments } from './config.js';
 import { Settings } from './settings.js';
 import { Extension } from './extension.js';
-import * as ServerConfig from '@qwen-code/qwen-code-core';
+import * as ServerConfig from '@terra-code/terra-code-core';
 
 vi.mock('os', async (importOriginal) => {
   const actualOs = await importOriginal<typeof os>();
@@ -32,9 +32,9 @@ vi.mock('read-package-up', () => ({
   ),
 }));
 
-vi.mock('@qwen-code/qwen-code-core', async () => {
+vi.mock('@terra-code/terra-code-core', async () => {
   const actualServer = await vi.importActual<typeof ServerConfig>(
-    '@qwen-code/qwen-code-core',
+    '@terra-code/terra-code-core',
   );
   return {
     ...actualServer,

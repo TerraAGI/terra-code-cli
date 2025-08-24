@@ -13,7 +13,7 @@ import {
   isTelemetrySdkInitialized,
   GeminiEventType,
   ToolErrorType,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { Content, Part, FunctionCall } from '@google/genai';
 
 import { parseAndFormatApiError } from './ui/utils/errorParsing.js';

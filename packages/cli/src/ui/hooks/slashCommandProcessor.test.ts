@@ -9,9 +9,9 @@ const { logSlashCommand, SlashCommandEvent } = vi.hoisted(() => ({
   SlashCommandEvent: vi.fn((command, subCommand) => ({ command, subCommand })),
 }));
 
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
+vi.mock('@terra-code/terra-code-core', async (importOriginal) => {
   const original =
-    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
+    await importOriginal<typeof import('@terra-code/terra-code-core')>();
   return {
     ...original,
     logSlashCommand,
@@ -77,7 +77,7 @@ import {
   ConfirmShellCommandsActionReturn,
   SlashCommand,
 } from '../commands/types.js';
-import { Config, ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
+import { Config, ToolConfirmationOutcome } from '@terra-code/terra-code-core';
 import { LoadedSettings } from '../../config/settings.js';
 import { MessageType } from '../types.js';
 import { BuiltinCommandLoader } from '../../services/BuiltinCommandLoader.js';

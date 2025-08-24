@@ -56,7 +56,7 @@ describe('handleAutoUpdate', () => {
         latest: '2.0.0',
         current: '1.0.0',
         type: 'major',
-        name: '@qwen-code/qwen-code',
+        name: '@terra-code/terra-code',
       },
       message: 'An update is available!',
     };

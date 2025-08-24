@@ -7,7 +7,7 @@
 import {
   checkCommandPermissions,
   ShellExecutionService,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 
 import { CommandContext } from '../../ui/commands/types.js';
 import { IPromptProcessor } from './types.js';

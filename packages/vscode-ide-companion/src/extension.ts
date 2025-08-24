@@ -54,13 +54,13 @@ export async function activate(context: vscode.ExtensionContext) {
       DIFF_SCHEME,
       diffContentProvider,
     ),
-    vscode.commands.registerCommand('qwen.diff.accept', (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('terra.diff.accept', (uri?: vscode.Uri) => {
       const docUri = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (docUri && docUri.scheme === DIFF_SCHEME) {
         diffManager.acceptDiff(docUri);
       }
     }),
-    vscode.commands.registerCommand('qwen.diff.cancel', (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('terra.diff.cancel', (uri?: vscode.Uri) => {
       const docUri = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (docUri && docUri.scheme === DIFF_SCHEME) {
         diffManager.cancelDiff(docUri);
@@ -79,13 +79,13 @@ export async function activate(context: vscode.ExtensionContext) {
   if (!context.globalState.get(INFO_MESSAGE_SHOWN_KEY)) {
     void vscode.window
       .showInformationMessage(
-        'Qwen Code Companion extension successfully installed. Please restart your terminal to enable full IDE integration.',
-        'Run Qwen Code',
+        'Terra Code Companion extension successfully installed. Please restart your terminal to enable full IDE integration.',
+        'Run Terra Code',
       )
       .then(
         (selection) => {
-          if (selection === 'Run Qwen Code') {
-            void vscode.commands.executeCommand('qwen-code.runQwenCode');
+          if (selection === 'Run Terra Code') {
+            void vscode.commands.executeCommand('terra-code.runTerraCode');
           }
         },
         (err) => {
@@ -99,13 +99,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       updateWorkspacePath(context);
     }),
-    vscode.commands.registerCommand('qwen-code.runQwenCode', () => {
-      const qwenCmd = 'qwen';
-      const terminal = vscode.window.createTerminal(`Qwen Code`);
+    vscode.commands.registerCommand('terra-code.runTerraCode', () => {
+              const terraCmd = 'terra';
+        const terminal = vscode.window.createTerminal(`Terra Code`);
       terminal.show();
-      terminal.sendText(qwenCmd);
+              terminal.sendText(terraCmd);
     }),
-    vscode.commands.registerCommand('qwen-code.showNotices', async () => {
+    vscode.commands.registerCommand('terra-code.showNotices', async () => {
       const noticePath = vscode.Uri.joinPath(
         context.extensionUri,
         'NOTICES.txt',

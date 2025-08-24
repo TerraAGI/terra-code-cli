@@ -11,7 +11,7 @@ import {
   Config,
   clearCachedCredentialFile,
   getErrorMessage,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { autoRegisterTerraCredentials } from '../../config/auth.js';
 import { runExitCleanup } from '../../utils/cleanup.js';
 

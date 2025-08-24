@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { describe, beforeEach, afterEach, it, expect, vi } from 'vitest';
+import { resolve, sep } from 'node:path';
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import { type Stats } from 'node:fs';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import * as cache from './crawlCache.js';
 import { FileSearch, AbortError, filter } from './fileSearch.js';
 import { createTmpDir, cleanupTmpDir } from '@terra-code/terra-code-test-utils';
@@ -427,7 +429,7 @@ describe('FileSearch', () => {
       expect(results1).toEqual(['.gitignore', 'b.txt']);
 
       // Modify the ignore file
-      await fs.writeFile(path.join(tmpDir, '.gitignore'), 'b.txt');
+      await writeFile(resolve(tmpDir, '.gitignore'), 'b.txt');
 
       // Second search should miss the cache and trigger a recrawl
       const fs2 = new FileSearch(options);

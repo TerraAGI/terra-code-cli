@@ -8,7 +8,7 @@ import { render } from 'ink-testing-library';
 import { waitFor } from '@testing-library/react';
 import { InputPrompt, InputPromptProps } from './InputPrompt.js';
 import type { TextBuffer } from './shared/text-buffer.js';
-import { Config } from '@qwen-code/qwen-code-core';
+import { Config } from '@terra-code/terra-code-core';
 import * as path from 'path';
 import {
   CommandContext,

@@ -614,7 +614,7 @@ export class TestRig {
         // Look for tool call logs
         if (
           logData.attributes &&
-          logData.attributes['event.name'] === 'qwen-code.tool_call'
+          logData.attributes['event.name'] === 'terra-code.tool_call'
         ) {
           const toolName = logData.attributes.function_name;
           logs.push({

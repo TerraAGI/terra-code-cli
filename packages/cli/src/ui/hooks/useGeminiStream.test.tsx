@@ -22,7 +22,7 @@ import {
   AuthType,
   GeminiEventType as ServerGeminiEventType,
   AnyToolInvocation,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { Part, PartListUnion } from '@google/genai';
 import { UseHistoryManagerReturn } from './useHistoryManager.js';
 import {
@@ -52,7 +52,7 @@ const MockedUserPromptEvent = vi.hoisted(() =>
   vi.fn().mockImplementation(() => {}),
 );
 
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
+vi.mock('@terra-code/terra-code-core', async (importOriginal) => {
   const actualCoreModule = (await importOriginal()) as any;
   return {
     ...actualCoreModule,

@@ -1,5 +1,5 @@
 {
-  "name": "@terra-cli/terra-cli",
+  "name": "@terra-code/terra-code",
   "version": "0.0.8",
   "engines": {
     "node": ">=20.0.0"
@@ -10,10 +10,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/terra-cli/terra-cli.git"
+    "url": "git+https://github.com/terra-code/terra-code.git"
   },
   "config": {
-    "sandboxImageUri": "ghcr.io/terra-cli/terra-cli:0.0.8"
+    "sandboxImageUri": "ghcr.io/terra-code/terra-code:0.0.8"
   },
   "scripts": {
     "start": "node scripts/start.js",
@@ -49,13 +49,17 @@
     "clean": "node scripts/clean.js"
   },
   "bin": {
-    "terra": "bundle/terra.js"
+    "terra": "packages/cli/dist/index.js"
   },
   "files": [
-    "bundle/",
+    "packages/cli/dist/",
+    "packages/core/dist/",
     "README.md",
     "LICENSE"
   ],
+  "dependencies": {
+    "@terra-code/terra-code-core": "file:packages/core"
+  },
   "devDependencies": {
     "@types/marked": "^5.0.2",
     "@types/micromatch": "^4.0.9",

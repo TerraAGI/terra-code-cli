@@ -6,7 +6,7 @@
 
 /* ACP defines a schema for a simple (experimental) JSON-RPC protocol that allows GUI applications to interact with agents. */
 
-import { Icon } from '@qwen-code/qwen-code-core';
+import { Icon } from '@terra-code/terra-code-core';
 import { WritableStream, ReadableStream } from 'node:stream/web';
 
 export class ClientConnection implements Client {

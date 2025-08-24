@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
+import { ToolConfirmationOutcome } from '@terra-code/terra-code-core';
 import { Box, Text, useInput } from 'ink';
 import React from 'react';
 import { Colors } from '../colors.js';

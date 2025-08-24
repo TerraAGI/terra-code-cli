@@ -9,7 +9,7 @@ import { Box, Text, useInput } from 'ink';
 import { Colors } from '../colors.js';
 import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
 import { LoadedSettings, SettingScope } from '../../config/settings.js';
-import { AuthType } from '@qwen-code/qwen-code-core';
+import { AuthType } from '@terra-code/terra-code-core';
 import {
   validateAuthMethod,
   setOpenAIApiKey,
@@ -48,7 +48,6 @@ export function AuthDialog({
   const items = [
     { label: 'Qwen OAuth', value: AuthType.QWEN_OAUTH },
     { label: 'OpenAI', value: AuthType.USE_OPENAI },
-    { label: 'Terra Vector', value: AuthType.TERRA_VECTOR },
   ];
 
   const initialAuthIndex = Math.max(

@@ -10,7 +10,7 @@ import { Colors } from '../colors.js';
 import {
   type IdeContext,
   type MCPServerConfig,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 

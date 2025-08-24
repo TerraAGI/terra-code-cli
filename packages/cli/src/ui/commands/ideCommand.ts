@@ -14,7 +14,7 @@ import {
   IdeClient,
   type File,
   ideContext,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import path from 'node:path';
 import {
   CommandContext,

@@ -10,7 +10,7 @@ import {
   AuthType,
   qwenOAuth2Events,
   QwenOAuth2Event,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 
 export interface DeviceAuthorizationInfo {
   verification_uri: string;
@@ -86,6 +86,8 @@ export const useQwenAuth = (
         ...prev,
         authStatus: status,
         authMessage: message || null,
+        // Reset authentication state when auth succeeds or fails
+        isQwenAuthenticating: ['success', 'error', 'timeout', 'rate_limit'].includes(status) ? false : prev.isQwenAuthenticating,
       }));
     };
 
@@ -99,6 +101,18 @@ export const useQwenAuth = (
       qwenOAuth2Events.off(QwenOAuth2Event.AuthProgress, handleAuthProgress);
     };
   }, [isQwenAuth, isAuthenticating]);
+
+  // Reset Qwen auth state when main authentication state changes
+  useEffect(() => {
+    if (!isAuthenticating) {
+      setQwenAuthState({
+        isQwenAuthenticating: false,
+        deviceAuth: null,
+        authStatus: 'idle',
+        authMessage: null,
+      });
+    }
+  }, [isAuthenticating]);
 
   const cancelQwenAuth = useCallback(() => {
     // Emit cancel event to stop polling

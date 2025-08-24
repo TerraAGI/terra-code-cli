@@ -82,23 +82,23 @@ if (!argv.s) {
   execSync('npm run build --workspaces', { stdio: 'inherit' });
 }
 
-console.log('packing @qwen-code/qwen-code ...');
+console.log('packing @terra-code/terra-code ...');
 const cliPackageDir = join('packages', 'cli');
-rmSync(join(cliPackageDir, 'dist', 'qwen-code-*.tgz'), { force: true });
+rmSync(join(cliPackageDir, 'dist', 'terra-code-*.tgz'), { force: true });
 execSync(
-  `npm pack -w @qwen-code/qwen-code --pack-destination ./packages/cli/dist`,
+  `npm pack -w @terra-code/terra-code --pack-destination ./packages/cli/dist`,
   {
     stdio: 'ignore',
   },
 );
 
-console.log('packing @qwen-code/qwen-code-core ...');
+console.log('packing @terra-code/terra-code-core ...');
 const corePackageDir = join('packages', 'core');
-rmSync(join(corePackageDir, 'dist', 'qwen-code-core-*.tgz'), {
+rmSync(join(corePackageDir, 'dist', 'terra-code-core-*.tgz'), {
   force: true,
 });
 execSync(
-  `npm pack -w @qwen-code/qwen-code-core --pack-destination ./packages/core/dist`,
+      `npm pack -w @terra-code/terra-code-core --pack-destination ./packages/core/dist`,
   { stdio: 'ignore' },
 );
 

@@ -1,6 +1,6 @@
 # Qwen Code Companion
 
-The Qwen Code Companion extension seamlessly integrates [Qwen Code](https://github.com/QwenLM/qwen-code) into your IDE.
+The Terra Code Companion extension seamlessly integrates [Terra Code](https://github.com/terra-code/terra-code) into your IDE.
 
 # Features
 
@@ -21,4 +21,4 @@ To use this extension, you'll need:
 
 # Terms of Service and Privacy Notice
 
-By installing this extension, you agree to the [Terms of Service](https://github.com/QwenLM/qwen-code/blob/main/docs/tos-privacy.md).
+By installing this extension, you agree to the [Terms of Service](https://github.com/terra-code/terra-code/blob/main/docs/tos-privacy.md).

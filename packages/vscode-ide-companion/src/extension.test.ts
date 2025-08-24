@@ -100,7 +100,7 @@ describe('activate', () => {
     expect(showInformationMessageMock).toHaveBeenCalled();
     await new Promise(process.nextTick); // Wait for the promise to resolve
     expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-      'qwen-code.runQwenCode',
+      'terra-code.runTerraCode',
     );
   });
 });

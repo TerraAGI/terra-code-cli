@@ -123,7 +123,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
       'User-Agent': userAgent,
       ...(isOpenRouterProvider
         ? {
-            'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
+            'HTTP-Referer': 'https://github.com/terra-code/terra-code.git',
             'X-Title': 'Qwen Code',
           }
         : isDashScopeProvider

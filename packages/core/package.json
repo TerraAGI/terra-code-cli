@@ -1,10 +1,10 @@
 {
-  "name": "@qwen-code/qwen-code-core",
+  "name": "@terra-code/terra-code-core",
   "version": "0.0.8",
-  "description": "Qwen Code Core",
+  "description": "Terra Code Core",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QwenLM/qwen-code.git"
+    "url": "git+https://github.com/terra-code/terra-code.git"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -57,7 +57,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@qwen-code/qwen-code-test-utils": "file:../test-utils",
+    "@terra-code/terra-code-test-utils": "file:../test-utils",
     "@types/axios": "^0.9.36",
     "@types/diff": "^7.0.2",
     "@types/dotenv": "^6.1.1",

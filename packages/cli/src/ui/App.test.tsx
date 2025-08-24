@@ -17,7 +17,7 @@ import {
   GeminiClient,
   ideContext,
   type AuthType,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { LoadedSettings, SettingsFile, Settings } from '../config/settings.js';
 import process from 'node:process';
 import { useGeminiStream } from './hooks/useGeminiStream.js';
@@ -89,10 +89,10 @@ interface MockServerConfig {
   getIdeClient: Mock<() => { getCurrentIde: Mock<() => string | undefined> }>;
 }
 
-// Mock @qwen-code/qwen-code-core and its Config class
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
+// Mock @terra-code/terra-code-core and its Config class
+vi.mock('@terra-code/terra-code-core', async (importOriginal) => {
   const actualCore =
-    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
+    await importOriginal<typeof import('@terra-code/terra-code-core')>();
   const ConfigClassMock = vi
     .fn()
     .mockImplementation((optionsPassedToConstructor) => {
@@ -257,7 +257,7 @@ vi.mock('../hooks/useTerminalSize.js', () => ({
 
 const mockedCheckForUpdates = vi.mocked(checkForUpdates);
 const { isGitRepository: mockedIsGitRepository } = vi.mocked(
-  await import('@qwen-code/qwen-code-core'),
+  await import('@terra-code/terra-code-core'),
 );
 
 vi.mock('node:child_process');
@@ -361,11 +361,11 @@ describe('App UI', () => {
       mockedIsGitRepository.mockResolvedValue(true);
       const info: UpdateObject = {
         update: {
-          name: '@qwen-code/qwen-code',
+          name: '@terra-code/terra-code',
           latest: '1.1.0',
           current: '1.0.0',
         },
-        message: 'Qwen Code update available!',
+        message: 'Terra Code update available!',
       };
       mockedCheckForUpdates.mockResolvedValue(info);
       const { spawn } = await import('node:child_process');

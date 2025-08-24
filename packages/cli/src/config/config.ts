@@ -28,7 +28,7 @@ import {
   WriteFileTool,
   MCPServerConfig,
   ConfigParameters,
-} from '@qwen-code/qwen-code-core';
+} from '@terra-code/terra-code-core';
 import { Settings } from './settings.js';
 
 import { Extension, annotateActiveExtensions } from './extension.js';
@@ -79,11 +79,11 @@ export interface CliArgs {
 
 export async function parseArguments(): Promise<CliArgs> {
   const yargsInstance = yargs(hideBin(process.argv))
-    .scriptName('qwen')
+    .scriptName('terra')
     .usage(
-      'Usage: qwen [options] [command]\n\nQwen Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
+      'Usage: terra [options] [command]\n\nTerra CLI - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
-    .command('$0', 'Launch Qwen Code', (yargsInstance) =>
+    .command('$0', 'Launch Terra CLI', (yargsInstance) =>
       yargsInstance
         .option('model', {
           alias: 'm',

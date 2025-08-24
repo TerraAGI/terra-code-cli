@@ -160,7 +160,7 @@ describe('OpenAIContentGenerator', () => {
         maxRetries: 3,
         defaultHeaders: {
           'User-Agent': expect.stringMatching(/^QwenCode/),
-          'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
+          'HTTP-Referer': 'https://github.com/terra-code/terra-code.git',
           'X-Title': 'Qwen Code',
         },
       });

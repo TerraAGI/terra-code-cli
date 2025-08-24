@@ -22,13 +22,13 @@ WORKDIR /home/node/app
 # Install dependencies and build packages
 RUN npm ci \
   && npm run build --workspaces \
-  && npm pack -w @qwen-code/qwen-code --pack-destination ./packages/cli/dist \
-  && npm pack -w @qwen-code/qwen-code-core --pack-destination ./packages/core/dist
+  && npm pack -w @terra-code/terra-code --pack-destination ./packages/cli/dist \
+&& npm pack -w @terra-code/terra-code-core --pack-destination ./packages/core/dist
 
 # Runtime stage
 FROM docker.io/library/node:20-slim
 
-ARG SANDBOX_NAME="qwen-code-sandbox"
+ARG SANDBOX_NAME="terra-code-sandbox"
 ARG CLI_VERSION_ARG
 ENV SANDBOX="$SANDBOX_NAME"
 ENV CLI_VERSION=$CLI_VERSION_ARG
