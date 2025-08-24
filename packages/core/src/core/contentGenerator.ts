@@ -48,6 +48,7 @@ export enum AuthType {
   CLOUD_SHELL = 'cloud-shell',
   USE_OPENAI = 'openai',
   QWEN_OAUTH = 'qwen-oauth',
+  TERRA_VECTOR = 'terra-vector',
 }
 
 export type ContentGeneratorConfig = {

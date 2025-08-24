@@ -75,6 +75,49 @@ enum StreamProcessingStatus {
 }
 
 /**
+ * Automatically injects a KB check instruction for every user query
+ * This makes the CLI behave like a human developer who instinctively recalls related information
+ */
+async function injectAutomaticKBCheck(userQuery: string, _config: Config): Promise<string> {
+  // Check if Terra credentials are available
+  const terraApiKey = process.env.TERRA_API_KEY;
+  const terraUsername = process.env.TERRA_USERNAME;
+  
+  if (!terraApiKey || !terraUsername) {
+    // No Terra credentials, return original query
+    return userQuery;
+  }
+  
+  // Skip KB check for certain types of queries
+  const skipKBCheck = [
+    '/help', '/auth', '/vector', '/ide', '/memory', '/shell', '/git',
+    'help', 'auth', 'vector', 'ide', 'memory', 'shell', 'git'
+  ];
+  
+  const lowerQuery = userQuery.toLowerCase();
+  if (skipKBCheck.some(cmd => lowerQuery.startsWith(cmd))) {
+    return userQuery; // Don't enhance command queries
+  }
+  
+  // Create an enhanced query that automatically checks KB first
+  const enhancedQuery = `🚀 KNOWLEDGE RECALL FIRST: Before answering this question, ALWAYS check the KT knowledge base for relevant information, existing patterns, and related context. Think like a senior developer who instinctively recalls related work.
+
+USER QUERY: ${userQuery}
+
+MANDATORY INSTRUCTIONS:
+1. 🔍 FIRST: Use the vector_knowledge tool to search the KB for relevant information
+2. 📚 RESEARCH: Look for existing patterns, implementations, and related concepts
+3. 💡 CONTEXT: Provide context-aware answers based on what's already documented
+4. 🎯 ANSWER: Then provide a comprehensive answer incorporating KB insights
+
+IMPORTANT: You MUST use the vector_knowledge tool first before providing any answer. This is not optional - it's how you ensure you have full context, just like a human developer would naturally do.
+
+Search the KB for: "${userQuery}" and related concepts, then provide your answer.`;
+  
+  return enhancedQuery;
+}
+
+/**
  * Manages the Gemini stream, including user input, command processing,
  * API interaction, and tool call lifecycle.
  */
@@ -310,12 +353,27 @@ export const useGeminiStream = (
           }
           localQueryToSendToGemini = atCommandResult.processedQuery;
         } else {
-          // Normal query for Gemini
+          // Normal query for Gemini - automatically check KB first
           addItem(
             { type: MessageType.USER, text: trimmedQuery },
             userMessageTimestamp,
           );
-          localQueryToSendToGemini = trimmedQuery;
+          
+          // Automatically inject KB check for every user query
+          const enhancedQuery = await injectAutomaticKBCheck(trimmedQuery, config);
+          
+          // Show user that KB check is happening automatically
+          if (enhancedQuery !== trimmedQuery) {
+            addItem(
+              {
+                type: MessageType.INFO,
+                text: '🧠 Automatically checking knowledge base for relevant context...',
+              },
+              userMessageTimestamp,
+            );
+          }
+          
+          localQueryToSendToGemini = enhancedQuery;
         }
       } else {
         // It's a function response (PartListUnion that isn't a string)

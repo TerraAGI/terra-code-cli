@@ -257,6 +257,16 @@ export function loadEnvironment(settings?: Settings): void {
     setUpCloudShellEnvironment(envFilePath);
   }
 
+  // Load Terra credentials from settings if not in environment
+  if (settings && !process.env.TERRA_API_KEY && !process.env.TERRA_USERNAME) {
+    if (settings.terraApiKey) {
+      process.env.TERRA_API_KEY = settings.terraApiKey;
+    }
+    if (settings.terraUsername) {
+      process.env.TERRA_USERNAME = settings.terraUsername;
+    }
+  }
+
   // If no settings provided, try to load workspace settings for exclusions
   let resolvedSettings = settings;
   if (!resolvedSettings) {

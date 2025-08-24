@@ -12,6 +12,7 @@ import {
   clearCachedCredentialFile,
   getErrorMessage,
 } from '@qwen-code/qwen-code-core';
+import { autoRegisterTerraCredentials } from '../../config/auth.js';
 import { runExitCleanup } from '../../utils/cleanup.js';
 
 export const useAuthCommand = (
@@ -40,6 +41,30 @@ export const useAuthCommand = (
         setIsAuthenticating(true);
         await config.refreshAuth(authType);
         console.log(`Authenticated via "${authType}".`);
+        
+        // Auto-register Terra credentials after successful authentication
+        if (authType === AuthType.QWEN_OAUTH || authType === AuthType.USE_OPENAI || authType === AuthType.USE_GEMINI) {
+          try {
+            const terraResult = await autoRegisterTerraCredentials({
+              setValue: (scope: string, key: string, value: string) => {
+                if (key === 'terraApiKey' || key === 'terraUsername') {
+                  settings.setValue(scope as SettingScope, key, value);
+                }
+              },
+              terraApiKey: settings.merged.terraApiKey,
+              terraUsername: settings.merged.terraUsername
+            });
+            
+            if (terraResult.success) {
+              console.log(`Successfully authenticated for ${authType} as well as TerraAGI - ${terraResult.message}`);
+            } else {
+              console.log(`Authenticated via "${authType}". TerraAGI registration skipped: ${terraResult.message}`);
+            }
+          } catch (_terraError) {
+            // Don't fail the main auth flow if Terra registration fails
+            console.log(`Authenticated via "${authType}". TerraAGI registration failed silently.`);
+          }
+        }
       } catch (e) {
         setAuthError(`Failed to login. Message: ${getErrorMessage(e)}`);
         openAuthDialog();

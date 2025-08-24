@@ -48,6 +48,7 @@ export function AuthDialog({
   const items = [
     { label: 'Qwen OAuth', value: AuthType.QWEN_OAUTH },
     { label: 'OpenAI', value: AuthType.USE_OPENAI },
+    { label: 'Terra Vector', value: AuthType.TERRA_VECTOR },
   ];
 
   const initialAuthIndex = Math.max(

@@ -1,8 +1,10 @@
 // packages/core/src/services/vectorDbClient.ts
 import axios, { AxiosError } from 'axios';
 
+// AWS RAG Service base URL
 const BASE_URL = 'http://13.61.2.7:8000';
-// Note: Auth header X-API-Key: NOTNEEDED is not required based on the provided information.
+
+// V1 API endpoints with authentication required
 
 // Interfaces for TypeScript
 interface UploadResponse {
@@ -38,7 +40,8 @@ interface SearchResponse {
 export async function uploadDocument(
   fileBuffer: Buffer,
   fileName: string,
-  collectionName: string
+  collectionName: string,
+  apiKey?: string
 ): Promise<UploadResponse> {
   const formData = new FormData();
   // Create a Blob from the Buffer. In Node.js, we need to specify type and size implicitly via the Blob constructor.
@@ -46,12 +49,14 @@ export async function uploadDocument(
   formData.append('file', blob, fileName);
   formData.append('collection_name', collectionName);
 
+  const headers: Record<string, string> = {};
+  if (apiKey) {
+    headers['X-Terra-API-Key'] = apiKey;
+  }
+
   try {
-    const response = await axios.post(`${BASE_URL}/upload`, formData, {
-      headers: {
-        // Let axios set Content-Type: multipart/form-data with boundary
-        // Do not manually set Content-Type header for FormData
-      },
+    const response = await axios.post(`${BASE_URL}/v1/upload`, formData, {
+      headers,
     });
     return response.data;
   } catch (error: unknown) {
@@ -93,7 +98,8 @@ export async function uploadDocument(
 export async function searchDocuments(
   query: string,
   collectionName: string,
-  limit: number = 5
+  limit: number = 5,
+  apiKey?: string
 ): Promise<SearchResponse> {
   const payload = {
     query,
@@ -101,11 +107,16 @@ export async function searchDocuments(
     limit,
   };
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (apiKey) {
+    headers['X-Terra-API-Key'] = apiKey;
+  }
+
   try {
-    const response = await axios.post(`${BASE_URL}/search`, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const response = await axios.post(`${BASE_URL}/v1/search`, payload, {
+      headers,
     });
     return response.data;
   } catch (error: unknown) {
