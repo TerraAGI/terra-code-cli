@@ -141,8 +141,17 @@ Slash commands provide meta-level control over the CLI itself.
     - **Persistent setting:** Vim mode preference is saved to `~/.qwen/settings.json` and restored between sessions
   - **Status indicator:** When enabled, shows `[NORMAL]` or `[INSERT]` in the footer
 
-- **`/init`**
-  - **Description:** Analyzes the current directory and creates a `QWEN.md` context file by default (or the filename specified by `contextFileName`). If a non-empty file already exists, no changes are made. The command seeds an empty file and prompts the model to populate it with project-specific instructions.
+- **`/vector`**
+  - **Description:** Commands for interacting with the vector database.
+  - **Sub-commands:**
+    - **`upload`**:
+      - **Description:** Upload a file to the vector database.
+      - **Usage:** `/vector upload <file_path> <collection_name>`
+      - **Details:** This command uploads a file to a specified collection in the vector database. The file path can be absolute or relative to the current working directory. The collection name is used to group related documents.
+    - **`search`**:
+      - **Description:** Search for documents in the vector database.
+      - **Usage:** `/vector search <collection_name> <query>`
+      - **Details:** This command performs a semantic search within a specified collection in the vector database. The query is used to find the most relevant documents based on their content.
 
 ### Custom Commands
 

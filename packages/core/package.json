@@ -30,6 +30,7 @@
     "@opentelemetry/sdk-node": "^0.52.0",
     "@types/html-to-text": "^9.0.4",
     "ajv": "^8.17.1",
+    "axios": "^1.7.9",
     "chardet": "^2.1.0",
     "diff": "^7.0.0",
     "dotenv": "^17.1.0",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@qwen-code/qwen-code-test-utils": "file:../test-utils",
+    "@types/axios": "^0.9.36",
     "@types/diff": "^7.0.2",
     "@types/dotenv": "^6.1.1",
     "@types/micromatch": "^4.0.8",

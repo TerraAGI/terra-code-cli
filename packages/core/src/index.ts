@@ -46,6 +46,7 @@ export * from './utils/filesearch/fileSearch.js';
 // Export services
 export * from './services/fileDiscoveryService.js';
 export * from './services/gitService.js';
+export * from './services/vectorDbClient.js';
 
 // Export IDE specific logic
 export * from './ide/ide-client.js';
@@ -79,6 +80,7 @@ export * from './tools/web-search.js';
 export * from './tools/read-many-files.js';
 export * from './tools/mcp-client.js';
 export * from './tools/mcp-tool.js';
+export * from './tools/vectorKnowledgeTool.js';
 
 // MCP OAuth
 export { MCPOAuthProvider } from './mcp/oauth-provider.js';
