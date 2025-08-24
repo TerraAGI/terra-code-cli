@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * @license
  * Copyright 2025 Google LLC
