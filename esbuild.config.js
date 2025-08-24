@@ -48,18 +48,32 @@ const result = await esbuild.build({
   target: 'node20',
   outfile: 'bundle/terra.js',
   external: [
-    '@terra-code/terra-code-core',
-    '@google/genai',
-    'fsevents',
-    'lightningcss', 
-    'esbuild'
+    // Only externalize core Node.js modules and a few problematic ones
+    'fs',
+    'path',
+    'os',
+    'crypto',
+    'util',
+    'stream',
+    'events',
+    'child_process',
+    'http',
+    'https',
+    'url',
+    'querystring',
+    'zlib',
+    'buffer',
+    'process',
+    'fsevents', // macOS-specific
+    'esbuild'   // Build tool, not runtime
   ],
   define: {
     'process.env.CLI_VERSION': JSON.stringify(cliVersion),
     'process.env.CORE_VERSION': JSON.stringify(coreVersion),
   },
   banner: {
-    js: `/**
+    js: `#!/usr/bin/env node
+/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
@@ -76,7 +90,7 @@ const result = await esbuild.build({
   minify: false,
   sourcemap: false,
   format: 'esm',
-  packages: 'external',
+  packages: 'bundle', // Bundle all npm packages
 });
 
 if (result.errors.length > 0) {
