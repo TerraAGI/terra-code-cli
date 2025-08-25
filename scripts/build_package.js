@@ -35,6 +35,15 @@ execSync('node ../../scripts/copy_files.js', { stdio: 'inherit' });
 // copy package.json to dist
 copyFileSync('package.json', join('dist', 'package.json'));
 
+// If this is the CLI package, copy the bundled file
+if (process.cwd().includes('cli')) {
+  try {
+    copyFileSync('../../bundle/terra.js', join('dist', 'terra.js'));
+  } catch (_error) {
+    console.warn('Warning: Could not copy bundled file, bundle may not exist yet');
+  }
+}
+
 // touch dist/.last_build
 writeFileSync(join(process.cwd(), 'dist', '.last_build'), '');
 process.exit(0);
