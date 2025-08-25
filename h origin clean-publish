@@ -1,0 +1,5 @@
+[33md4c5c43d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mclean-publish[m[33m, [m[1;33mtag: [m[1;33mv0.0.16[m[33m)[m 0.0.16
+[33mded59375[m fix: correct bin path to point to dist/terra.js
+[33m4aa9b9f1[m[33m ([m[1;33mtag: [m[1;33mv0.0.15[m[33m)[m 0.0.15
+[33m4d71c68b[m fix: duplicate shebang removed from CLI entry point
+[33m69b5e803[m[33m ([m[1;33mtag: [m[1;33mv0.0.14[m[33m)[m 0.0.14
