@@ -166,6 +166,102 @@ After publishing, verify:
 - [ ] No module loading errors occur
 - [ ] Global installation works from any directory
 
+## Local Testing Steps
+
+For developers and contributors who want to test the CLI package locally before publishing, follow these steps to ensure the `terra` command works correctly:
+
+### CLI Package Local Installation
+
+When testing the CLI package from source, you need to install the specific CLI package rather than the root package to ensure the `terra` command is properly created.
+
+1. **Build the packages first:**
+   ```bash
+   npm run build
+   ```
+
+2. **Install the CLI package globally (not the root package):**
+   ```bash
+   # Navigate to the CLI package directory
+   cd packages/cli
+   
+   # Install the CLI package globally
+   npm install -g .
+   ```
+
+3. **Verify the installation:**
+   ```bash
+   # Check if terra command files were created
+   ls "C:\Users\[YourUsername]\AppData\Roaming\npm\terra*"
+   
+   # Test the terra command
+   terra --help
+   ```
+
+### Why This Approach is Necessary
+
+The root package (`@terra-code/terra-code`) doesn't contain the `bin` configuration needed to create the `terra` command. Only the CLI package (`packages/cli`) has the proper configuration:
+
+```json
+"bin": {
+  "terra": "dist/terra-launcher.js"
+}
+```
+
+### Troubleshooting Local Installation
+
+If the `terra` command is not recognized after installation:
+
+1. **Check if you installed the wrong package:**
+   ```bash
+   npm list -g --depth=0
+   ```
+   Look for `@terra-code/terra-code` (root package) vs `@terra-code/terra-code` (CLI package)
+
+2. **Uninstall and reinstall correctly:**
+   ```bash
+   npm uninstall -g @terra-code/terra-code
+   cd packages/cli
+   npm install -g .
+   ```
+
+3. **Verify the command files exist:**
+   - `terra` (Unix script)
+   - `terra.cmd` (Windows command)
+   - `terra.ps1` (PowerShell script)
+
+### Alternative: Using npm link
+
+For development purposes, you can also use `npm link` to create a symlink:
+
+```bash
+cd packages/cli
+npm link
+```
+
+This creates a global symlink to your local CLI package, allowing you to test changes without reinstalling.
+
+### Testing Before Publishing
+
+Always test your local build before publishing:
+
+```bash
+# 1. Build and install locally
+npm run build
+cd packages/cli
+npm install -g .
+
+# 2. Test the command
+terra --version
+terra --help
+
+# 3. Test basic functionality
+terra -p "Hello, test this command"
+
+# 4. If everything works, proceed with publishing
+cd ../..
+npm run publish-packages
+```
+
 ## Example Complete Workflow
 
 ```bash
