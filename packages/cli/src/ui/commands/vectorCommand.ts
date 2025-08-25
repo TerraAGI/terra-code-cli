@@ -3,6 +3,7 @@ import { CommandKind, SlashCommand } from './types.js';
 import { MessageType } from '../types.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as os from 'os';
 
 // Import the vector DB client functions
 import { uploadDocument, searchDocuments } from '@terra-code/terra-code-core';
@@ -858,6 +859,217 @@ export const vectorCommand: SlashCommand = {
             Date.now(),
           );
         }
+      },
+    },
+    {
+      name: 'kt',
+      description: 'Interactive KT (Knowledge Transfer) collection from developers and team leads.',
+      kind: CommandKind.BUILT_IN,
+      action: async (context, _args) => {
+        // Check if we have Terra credentials
+        let terraApiKey = process.env.TERRA_API_KEY;
+        let terraUsername = process.env.TERRA_USERNAME;
+        
+        if (!terraApiKey || !terraUsername) {
+          if (context.services.settings) {
+            terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
+            terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+          }
+        }
+        
+        if (!terraApiKey || !terraUsername) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        // Start interactive KT collection session
+        context.ui.addItem(
+          {
+            type: MessageType.INFO,
+            text: '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
+                  'This session will help you collect knowledge from developers and team leads.\n' +
+                  'The entire conversation will be recorded and uploaded to your KT knowledge base.\n\n' +
+                  'Available commands during this session:\n' +
+                  '• Type "/finish" when you\'re done sharing knowledge to complete and upload the session\n' +
+                  '• Type "/cancel" to abort the collection without saving\n\n' +
+                  'What knowledge would you like to share with the team?',
+          },
+          Date.now(),
+        );
+
+        // Return a special action that will handle the interactive collection
+        return {
+          type: 'submit_prompt',
+          content: `I'm starting an interactive KT (Knowledge Transfer) collection session. 
+
+The user (a developer or team lead) wants to share their knowledge through a conversation with me. This entire conversation will be recorded and uploaded to their KT knowledge base.
+
+IMPORTANT: This is a special KT collection session. I need to:
+
+1. Help them share their knowledge in a conversational way
+2. Ask follow-up questions to get more details
+3. Help them structure their knowledge clearly
+4. Watch for special commands during the session
+
+Available commands during this session:
+• When they type "/finish" - I should help them complete the session and summarize what we've collected
+• When they type "/cancel" - I should acknowledge that they want to abort the session
+
+The goal is to capture valuable knowledge that can help other team members. I should be collaborative and ask good follow-up questions to get comprehensive information.
+
+Start by asking them what specific knowledge, processes, or information they want to share with the team.`
+        };
+      },
+    },
+    {
+      name: 'finish',
+      description: 'Complete the current KT session and upload the conversation to the vector database.',
+      kind: CommandKind.BUILT_IN,
+      action: async (context, _args) => {
+        // Check if we have Terra credentials
+        let terraApiKey = process.env.TERRA_API_KEY;
+        let terraUsername = process.env.TERRA_USERNAME;
+        
+        if (!terraApiKey || !terraUsername) {
+          if (context.services.settings) {
+            terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
+            terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+          }
+        }
+        
+        if (!terraApiKey || !terraUsername) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        // Get the current conversation history
+        const chat = await context.services.config?.getGeminiClient()?.getChat();
+        if (!chat) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'No chat client available to save conversation.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        const history = chat.getHistory();
+        if (history.length === 0) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'No conversation found to save.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        // Create a formatted text file from the conversation
+        let conversationText = `# Knowledge Transfer Session\n\n`;
+        conversationText += `Date: ${new Date().toISOString()}\n`;
+        conversationText += `Participant: ${terraUsername}\n`;
+        conversationText += `Type: Interactive KT Collection\n\n`;
+        conversationText += `## Conversation Transcript\n\n`;
+
+        for (const message of history) {
+          const role = message.role === 'user' ? 'Developer/Team Lead' : 'AI Assistant';
+          const content = message.parts?.map(part => part.text).join('') || '';
+          
+          if (content.trim()) {
+            conversationText += `### ${role}\n\n${content}\n\n`;
+          }
+        }
+
+        // Create a temporary file
+        const tempDir = os.tmpdir();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `kt_session_${terraUsername}_${timestamp}.txt`;
+        const tempFilePath = path.join(tempDir, fileName);
+
+        try {
+          // Write the conversation to the temporary file
+          await fs.writeFile(tempFilePath, conversationText, 'utf8');
+
+          // Use user's collection name
+          const userCollectionName = `${terraUsername}_kt`;
+          
+          context.ui.addItem(
+            {
+              type: MessageType.INFO,
+              text: `📝 KT session completed! Saving conversation to "${fileName}"...`,
+            },
+            Date.now(),
+          );
+
+          // Read the file and upload
+          const fileBuffer = await fs.readFile(tempFilePath);
+          const result = await uploadDocument(fileBuffer, fileName, userCollectionName, terraApiKey);
+
+          if (result.success) {
+            context.ui.addItem(
+              {
+                type: MessageType.INFO,
+                text: `✅ Successfully uploaded KT session "${fileName}" to collection "${userCollectionName}".\n\n` +
+                      `The knowledge you shared has been saved to your team's knowledge base and can now be searched by other team members.`,
+              },
+              Date.now(),
+            );
+
+            // Clean up the temporary file
+            try {
+              await fs.unlink(tempFilePath);
+            } catch (_cleanupError) {
+              // Ignore cleanup errors
+            }
+          } else {
+            context.ui.addItem(
+              {
+                type: MessageType.ERROR,
+                text: `Failed to upload KT session: ${result.error || 'Unknown error'}`,
+              },
+              Date.now(),
+            );
+          }
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: `Error saving KT session: ${errorMessage}`,
+            },
+            Date.now(),
+          );
+        }
+      },
+    },
+    {
+      name: 'cancel',
+      description: 'Cancel the current KT session without saving.',
+      kind: CommandKind.BUILT_IN,
+      action: async (context, _args) => {
+        context.ui.addItem(
+          {
+            type: MessageType.INFO,
+            text: '❌ KT session cancelled. No knowledge was saved to the database.\n\n' +
+                  'You can start a new KT session anytime with `/vector kt`.',
+          },
+          Date.now(),
+        );
       },
     },
   ],
