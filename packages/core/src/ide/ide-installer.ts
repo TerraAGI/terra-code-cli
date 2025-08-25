@@ -101,7 +101,7 @@ class VsCodeInstaller implements IdeInstaller {
       };
     }
 
-    const command = `"${commandPath}" --install-extension terra-code.terra-code-vscode-ide-companion --force`;
+    const command = `"${commandPath}" --install-extension terra-code-vscode-ide-companion --force`;
     try {
       child_process.execSync(command, { stdio: 'pipe' });
       return {

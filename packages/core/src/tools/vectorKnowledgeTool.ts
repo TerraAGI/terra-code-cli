@@ -8,7 +8,6 @@ import {
   BaseTool,
   ToolResult,
   ToolCallConfirmationDetails,
-  ToolInfoConfirmationDetails,
   Icon,
 } from './tools.js';
 import { Config } from '../config/config.js';
@@ -102,11 +101,11 @@ Think of this as your INSTINCTIVE knowledge recall - like a senior developer who
             type: 'string',
           },
           limit: {
-            description: 'Maximum number of results to return. Use higher limits (8-10) for comprehensive research, lower (3-5) for focused answers. Default: 8 for thorough research.',
+            description: 'Maximum number of results (default: 3, use 5-8 for comprehensive research)',
             type: 'number',
           },
           deep_search: {
-            description: 'Whether to perform intelligent deep-dive exploration of related concepts, patterns, and connections. Always true for comprehensive knowledge recall.',
+            description: 'Whether to perform intelligent deep-dive exploration of related concepts, patterns, and connections. Always true (default: false) for comprehensive knowledge recall.',
             type: 'boolean',
           },
         },
@@ -120,7 +119,7 @@ Think of this as your INSTINCTIVE knowledge recall - like a senior developer who
     params: VectorKnowledgeToolParams,
     _signal: AbortSignal,
   ): Promise<ToolResult> {
-    const { query, limit = 8, deep_search = true } = params;
+    const { query, limit = 3, deep_search = false } = params;
     
     // Get Terra credentials from environment
     const terraApiKey = process.env.TERRA_API_KEY;
@@ -407,15 +406,7 @@ Think of this as your INSTINCTIVE knowledge recall - like a senior developer who
     _params: VectorKnowledgeToolParams,
     _abortSignal: AbortSignal,
   ): Promise<false | ToolCallConfirmationDetails> {
-    const confirmationDetails: ToolInfoConfirmationDetails = {
-      type: 'info',
-      title: 'Search KT Knowledge Base',
-      prompt: 'Qwen wants to search the KT knowledge base for relevant information. This will help provide more accurate and comprehensive answers.',
-      onConfirm: async () => {
-        // This will be handled by the tool execution system
-      },
-    };
-    
-    return confirmationDetails;
+    // Return false to skip confirmation and make the tool automatic
+    return false;
   }
 } 

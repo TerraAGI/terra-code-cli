@@ -34,7 +34,7 @@ import {
 } from '../utils/editCorrector.js';
 import { createMockWorkspaceContext } from '../test-utils/mockWorkspaceContext.js';
 
-const rootDir = path.resolve(os.tmpdir(), 'qwen-code-test-root');
+const rootDir = path.resolve(os.tmpdir(), 'terra-code-test-root');
 
 // --- MOCKS ---
 vi.mock('../core/client.js');

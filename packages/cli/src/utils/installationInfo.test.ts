@@ -189,7 +189,7 @@ describe('getInstallationInfo', () => {
   });
 
   it('should detect global yarn installation', () => {
-    const yarnPath = `/Users/test/.yarn/global/node_modules/@qwen-code/qwen-code/dist/index.js`;
+    const yarnPath = `/Users/test/.yarn/global/node_modules/@terra-code/terra-code/dist/index.js`;
     process.argv[1] = yarnPath;
     mockedRealPathSync.mockReturnValue(yarnPath);
     mockedExecSync.mockImplementation(() => {
@@ -200,7 +200,7 @@ describe('getInstallationInfo', () => {
     expect(info.packageManager).toBe(PackageManager.YARN);
     expect(info.isGlobal).toBe(true);
     expect(info.updateCommand).toBe(
-      'yarn global add @qwen-code/qwen-code@latest',
+      'yarn global add @terra-code/terra-code@latest',
     );
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
@@ -219,7 +219,7 @@ describe('getInstallationInfo', () => {
     const info = getInstallationInfo(projectRoot, false);
     expect(info.packageManager).toBe(PackageManager.BUN);
     expect(info.isGlobal).toBe(true);
-    expect(info.updateCommand).toBe('bun add -g @qwen-code/qwen-code@latest');
+    expect(info.updateCommand).toBe('bun add -g @terra-code/terra-code@latest');
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
     const infoDisabled = getInstallationInfo(projectRoot, true);
@@ -305,7 +305,7 @@ describe('getInstallationInfo', () => {
     expect(info.packageManager).toBe(PackageManager.NPM);
     expect(info.isGlobal).toBe(true);
     expect(info.updateCommand).toBe(
-      'npm install -g @qwen-code/qwen-code@latest',
+      'npm install -g @terra-code/terra-code@latest',
     );
     expect(info.updateMessage).toContain('Attempting to automatically update');
 

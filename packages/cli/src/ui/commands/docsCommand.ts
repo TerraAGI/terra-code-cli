@@ -15,8 +15,9 @@ import { MessageType } from '../types.js';
 
 export const docsCommand: SlashCommand = {
   name: 'docs',
-  description: 'open full Qwen Code documentation in your browser',
+  altNames: ['d'],
   kind: CommandKind.BUILT_IN,
+  description: 'open full Terra Code documentation in your browser',
   action: async (context: CommandContext): Promise<void> => {
     const docsUrl = 'https://github.com/terra-code/terra-code';
 

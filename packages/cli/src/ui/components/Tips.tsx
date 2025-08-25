@@ -28,9 +28,9 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
         <Text color={Colors.Foreground}>
           3. Create{' '}
           <Text bold color={Colors.AccentPurple}>
-            QWEN.md
+            TERRA.md
           </Text>{' '}
-          files to customize your interactions with Qwen Code.
+          files to customize your interactions with Terra Code.
         </Text>
       )}
       <Text color={Colors.Foreground}>
@@ -39,6 +39,13 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
           /help
         </Text>{' '}
         for more information.
+      </Text>
+      <Text color={Colors.Foreground}>
+        {geminiMdFileCount === 0 ? '5.' : '4.'}{' '}
+        <Text bold color={Colors.AccentPurple}>
+          /vector
+        </Text>{' '}
+        commands for Terra knowledge base: upload docs, search, and enhance responses!
       </Text>
     </Box>
   );

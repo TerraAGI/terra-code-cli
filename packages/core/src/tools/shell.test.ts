@@ -59,8 +59,8 @@ describe('ShellTool', () => {
       getGeminiClient: vi.fn(),
       getGitCoAuthor: vi.fn().mockReturnValue({
         enabled: true,
-        name: 'Qwen-Coder',
-        email: 'qwen-coder@alibabacloud.com',
+        name: 'Terra-Code',
+        email: 'info@terra-agi.com',
       }),
     } as unknown as Config;
 
@@ -441,7 +441,7 @@ describe('ShellTool', () => {
       expect(result).toBe(
         `git commit -m "Initial commit
 
-Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
+Co-authored-by: Terra-Code <terra-code@terra-agi.com>"`,
       );
     });
 
@@ -455,7 +455,7 @@ Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
       expect(result).toBe(
         `git commit -m 'Fix bug
 
-Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>'`,
+Co-authored-by: Terra-Code <terra-code@terra-agi.com>'`,
       );
     });
 
@@ -469,7 +469,7 @@ Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>'`,
       expect(result).toBe(
         `git commit -a -m "Add feature
 
-Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
+Co-authored-by: Terra-Code <terra-code@terra-agi.com>"`,
       );
     });
 
@@ -503,7 +503,7 @@ Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
       expect(result).toBe(
         `git commit -m "Fix \\"quoted\\" text
 
-Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
+Co-authored-by: Terra-Code <terra-code@terra-agi.com>"`,
       );
     });
 
@@ -511,8 +511,8 @@ Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
       // Mock config with disabled co-author
       (mockConfig.getGitCoAuthor as Mock).mockReturnValue({
         enabled: false,
-        name: 'Qwen-Coder',
-        email: 'qwen-coder@alibabacloud.com',
+        name: 'Terra-Code',
+        email: 'terra-code@terra-agi.com',
       });
 
       const command = 'git commit -m "Initial commit"';
@@ -528,8 +528,8 @@ Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
       // Mock config with custom co-author details
       (mockConfig.getGitCoAuthor as Mock).mockReturnValue({
         enabled: true,
-        name: 'Custom Bot',
-        email: 'custom@example.com',
+        name: 'Terra-Code',
+        email: 'terra-code@terra-agi.com',
       });
 
       const command = 'git commit -m "Test commit"';
@@ -541,7 +541,7 @@ Co-authored-by: Qwen-Coder <qwen-coder@alibabacloud.com>"`,
       expect(result).toBe(
         `git commit -m "Test commit
 
-Co-authored-by: Custom Bot <custom@example.com>"`,
+Co-authored-by: Terra-Code <terra-code@terra-agi.com>"`,
       );
     });
   });

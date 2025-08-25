@@ -74,7 +74,7 @@ export async function checkForUpdates(): Promise<UpdateObject | null> {
       );
 
       if (bestUpdate && semver.gt(bestUpdate.latest, currentVersion)) {
-        const message = `A new version of Qwen Code is available! ${currentVersion} → ${bestUpdate.latest}`;
+        const message = `A new version of Terra Code is available! ${currentVersion} → ${bestUpdate.latest}`;
         return {
           message,
           update: { ...bestUpdate, current: currentVersion },
@@ -84,7 +84,7 @@ export async function checkForUpdates(): Promise<UpdateObject | null> {
       const updateInfo = await createNotifier('latest').fetchInfo();
 
       if (updateInfo && semver.gt(updateInfo.latest, currentVersion)) {
-        const message = `Qwen Code update available! ${currentVersion} → ${updateInfo.latest}`;
+        const message = `Terra Code update available! ${currentVersion} → ${updateInfo.latest}`;
         return {
           message,
           update: { ...updateInfo, current: currentVersion },

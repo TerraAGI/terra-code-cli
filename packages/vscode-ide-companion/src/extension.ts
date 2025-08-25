@@ -35,7 +35,7 @@ function updateWorkspacePath(context: vscode.ExtensionContext) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  logger = vscode.window.createOutputChannel('Qwen Code Companion');
+  logger = vscode.window.createOutputChannel('Terra Code Companion');
   log = createLogger(context, logger);
   log('Extension activated');
 

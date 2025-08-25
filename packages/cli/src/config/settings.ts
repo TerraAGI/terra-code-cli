@@ -26,11 +26,11 @@ export const DEFAULT_EXCLUDED_ENV_VARS = ['DEBUG', 'DEBUG_MODE'];
 
 export function getSystemSettingsPath(): string {
   if (process.platform === 'darwin') {
-    return '/Library/Application Support/TerraCLI/settings.json';
+    return '/Library/Application Support/TerraCode/settings.json';
   } else if (process.platform === 'win32') {
-    return 'C:\\ProgramData\\terra-cli\\settings.json';
+    return 'C:\\ProgramData\\terra-code\\settings.json';
   } else {
-    return '/etc/terra-cli/settings.json';
+    return '/etc/terra-code/settings.json';
   }
 }
 

@@ -198,7 +198,7 @@ When requested to perform tasks like fixing bugs, adding features, refactoring, 
   - Researching context for API changes, feature additions, or architectural decisions
   - Validating assumptions or checking current project state
   - Looking for similar implementations or established best practices
-- **Search Strategy:** Start with direct queries, then explore related concepts. Use multiple searches with different terms to ensure comprehensive coverage.
+- **Search Strategy:** Start with ONE focused search using simple terms. Only perform additional searches if the first search yields insufficient results. Avoid deep_search unless specifically needed for comprehensive research.
 - **Integration:** Seamlessly incorporate KB insights into your responses without explicitly mentioning the search unless relevant to the answer.
 
 ## Interaction Details

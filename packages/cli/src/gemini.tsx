@@ -324,7 +324,7 @@ export async function main() {
 
 function setWindowTitle(title: string, settings: LoadedSettings) {
   if (!settings.merged.hideWindowTitle) {
-    const windowTitle = (process.env.CLI_TITLE || `Qwen - ${title}`).replace(
+    const windowTitle = (process.env.CLI_TITLE || `Terra - ${title}`).replace(
       // eslint-disable-next-line no-control-regex
       /[\x00-\x1F\x7F]/g,
       '',

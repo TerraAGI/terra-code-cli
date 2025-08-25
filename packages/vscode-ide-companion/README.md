@@ -1,24 +1,15 @@
-# Qwen Code Companion
+# Terra Code Companion
 
-The Terra Code Companion extension seamlessly integrates [Terra Code](https://github.com/terra-code/terra-code) into your IDE.
+This extension provides seamless integration between VS Code and Terra Code, enabling:
 
-# Features
+- Open Editor File Context: Terra Code gains awareness of the files you have open in your editor, providing it with a richer understanding of your project's structure and content.
 
-- Open Editor File Context: Qwen Code gains awareness of the files you have open in your editor, providing it with a richer understanding of your project's structure and content.
+- Selection Context: Terra Code can easily access your cursor's position and selected text within the editor, giving it valuable context directly from your current work.
 
-- Selection Context: Qwen Code can easily access your cursor's position and selected text within the editor, giving it valuable context directly from your current work.
+- Native Diffing: Seamlessly view, modify, and accept code changes suggested by Terra Code directly within the editor.
 
-- Native Diffing: Seamlessly view, modify, and accept code changes suggested by Qwen Code directly within the editor.
+- Launch Terra Code: Quickly start a new Terra Code session from the Command Palette (Cmd+Shift+P or Ctrl+Shift+P) by running the "Terra Code: Run" command.
 
-- Launch Qwen Code: Quickly start a new Qwen Code session from the Command Palette (Cmd+Shift+P or Ctrl+Shift+P) by running the "Qwen Code: Run" command.
+## Requirements
 
-# Requirements
-
-To use this extension, you'll need:
-
-- VS Code version 1.101.0 or newer
-- Qwen Code (installed separately) running within the VS Code integrated terminal
-
-# Terms of Service and Privacy Notice
-
-By installing this extension, you agree to the [Terms of Service](https://github.com/terra-code/terra-code/blob/main/docs/tos-privacy.md).
+- Terra Code (installed separately) running within the VS Code integrated terminal

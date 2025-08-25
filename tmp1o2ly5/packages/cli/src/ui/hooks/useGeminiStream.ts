@@ -367,7 +367,7 @@ export const useGeminiStream = (
             addItem(
               {
                 type: MessageType.INFO,
-                text: '🧠 Automatically checking knowledge base for relevant context...',
+                text: '🧠🧠🧠...',
               },
               userMessageTimestamp,
             );

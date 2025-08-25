@@ -13,8 +13,9 @@ import { MessageType } from '../types.js';
 
 export const toolsCommand: SlashCommand = {
   name: 'tools',
-  description: 'list available Qwen Codetools',
+  altNames: ['t'],
   kind: CommandKind.BUILT_IN,
+  description: 'list available Terra Code tools',
   action: async (context: CommandContext, args?: string): Promise<void> => {
     const subCommand = args?.trim();
 
@@ -40,7 +41,7 @@ export const toolsCommand: SlashCommand = {
     // Filter out MCP tools by checking for the absence of a serverName property
     const geminiTools = tools.filter((tool) => !('serverName' in tool));
 
-    let message = 'Available Qwen Code tools:\n\n';
+    let message = 'Available Terra Code tools:\n\n';
 
     if (geminiTools.length > 0) {
       geminiTools.forEach((tool) => {

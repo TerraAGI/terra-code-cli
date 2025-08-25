@@ -30,6 +30,7 @@ interface QwenAuthState {
     | 'timeout'
     | 'rate_limit';
   authMessage: string | null;
+  hasAttempted: boolean; // Track if we've already attempted auth
 }
 
 export const useQwenAuth = (
@@ -41,20 +42,15 @@ export const useQwenAuth = (
     deviceAuth: null,
     authStatus: 'idle',
     authMessage: null,
+    hasAttempted: false,
   });
 
   const isQwenAuth = settings.merged.selectedAuthType === AuthType.QWEN_OAUTH;
 
   // Set up event listeners when authentication starts
   useEffect(() => {
-    if (!isQwenAuth || !isAuthenticating) {
-      // Reset state when not authenticating or not Qwen auth
-      setQwenAuthState({
-        isQwenAuthenticating: false,
-        deviceAuth: null,
-        authStatus: 'idle',
-        authMessage: null,
-      });
+    // If we've already attempted auth or it's not Qwen auth, don't start again
+    if (!isQwenAuth || !isAuthenticating || qwenAuthState.hasAttempted) {
       return;
     }
 
@@ -62,6 +58,7 @@ export const useQwenAuth = (
       ...prev,
       isQwenAuthenticating: true,
       authStatus: 'idle',
+      hasAttempted: true, // Mark that we've attempted auth
     }));
 
     // Set up event listeners
@@ -86,8 +83,8 @@ export const useQwenAuth = (
         ...prev,
         authStatus: status,
         authMessage: message || null,
-        // Reset authentication state when auth succeeds or fails
-        isQwenAuthenticating: ['success', 'error', 'timeout', 'rate_limit'].includes(status) ? false : prev.isQwenAuthenticating,
+        // Only stop authenticating on final states
+        isQwenAuthenticating: !['success', 'error', 'timeout', 'rate_limit'].includes(status),
       }));
     };
 
@@ -99,20 +96,24 @@ export const useQwenAuth = (
     return () => {
       qwenOAuth2Events.off(QwenOAuth2Event.AuthUri, handleDeviceAuth);
       qwenOAuth2Events.off(QwenOAuth2Event.AuthProgress, handleAuthProgress);
+      
+      // Cancel any ongoing auth when unmounting
+      qwenOAuth2Events.emit(QwenOAuth2Event.AuthCancel);
     };
-  }, [isQwenAuth, isAuthenticating]);
+  }, [isQwenAuth, isAuthenticating, qwenAuthState.hasAttempted]);
 
-  // Reset Qwen auth state when main authentication state changes
+  // Reset Qwen auth state when auth type changes
   useEffect(() => {
-    if (!isAuthenticating) {
+    if (!isQwenAuth) {
       setQwenAuthState({
         isQwenAuthenticating: false,
         deviceAuth: null,
         authStatus: 'idle',
         authMessage: null,
+        hasAttempted: false, // Reset attempt tracking when auth type changes
       });
     }
-  }, [isAuthenticating]);
+  }, [isQwenAuth]);
 
   const cancelQwenAuth = useCallback(() => {
     // Emit cancel event to stop polling
@@ -123,6 +124,7 @@ export const useQwenAuth = (
       deviceAuth: null,
       authStatus: 'idle',
       authMessage: null,
+      hasAttempted: true, // Keep track that we attempted auth
     });
   }, []);
 

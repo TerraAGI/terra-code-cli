@@ -35,7 +35,7 @@ const memoryToolSchemaData: FunctionDeclaration = {
       scope: {
         type: 'string',
         description:
-          'Where to save the memory: "global" saves to user-level ~/.qwen/QWEN.md (shared across all projects), "project" saves to current project\'s QWEN.md (project-specific). If not specified, will prompt user to choose.',
+          'Where to save the memory: "global" saves to user-level ~/.terra-code/TERRA.md (shared across all projects), "project" saves to current project\'s TERRA.md (project-specific). If not specified, will prompt user to choose.',
         enum: ['global', 'project'],
       },
     },
@@ -61,16 +61,16 @@ Do NOT use this tool:
 
 - \`fact\` (string, required): The specific fact or piece of information to remember. This should be a clear, self-contained statement. For example, if the user says "My favorite color is blue", the fact would be "My favorite color is blue".
 - \`scope\` (string, optional): Where to save the memory:
-  - "global": Saves to user-level ~/.qwen/QWEN.md (shared across all projects)
-  - "project": Saves to current project's QWEN.md (project-specific)
+  - "global": Saves to user-level ~/.terra-code/TERRA.md (shared across all projects)
+  - "project": Saves to current project's TERRA.md (project-specific)
   - If not specified, the tool will ask the user where they want to save the memory.
 `;
 
-export const GEMINI_CONFIG_DIR = '.qwen';
-export const DEFAULT_CONTEXT_FILENAME = 'QWEN.md';
-export const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
+export const GEMINI_CONFIG_DIR = '.terra-code';
+export const DEFAULT_CONTEXT_FILENAME = 'TERRA.md';
+export const MEMORY_SECTION_HEADER = '## Terra Added Memories';
 
-// This variable will hold the currently configured filename for QWEN.md context files.
+// This variable will hold the currently configured filename for TERRA.md context files.
 // It defaults to DEFAULT_CONTEXT_FILENAME but can be overridden by setGeminiMdFilename.
 let currentGeminiMdFilename: string | string[] = DEFAULT_CONTEXT_FILENAME;
 
@@ -365,7 +365,7 @@ export class MemoryTool
     // If scope is not specified, prompt the user to choose
     if (!params.scope) {
       const errorMessage =
-        'Please specify where to save this memory. Use scope parameter: "global" for user-level (~/.qwen/QWEN.md) or "project" for current project (./QWEN.md).';
+        'Please specify where to save this memory. Use scope parameter: "global" for user-level (~/.terra-code/TERRA.md) or "project" for current project (./TERRA.md).';
       return {
         llmContent: JSON.stringify({ success: false, error: errorMessage }),
         returnDisplay: `${errorMessage}\n\nGlobal: ${tildeifyPath(getMemoryFilePath('global'))}\nProject: ${tildeifyPath(getMemoryFilePath('project'))}`,

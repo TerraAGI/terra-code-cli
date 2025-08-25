@@ -13,6 +13,7 @@ import open from 'open';
 import { EventEmitter } from 'events';
 import { Config } from '../config/config.js';
 import { randomUUID } from 'node:crypto';
+import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
 
 // OAuth Endpoints
 const QWEN_OAUTH_BASE_URL = 'https://chat.qwen.ai';
@@ -27,7 +28,7 @@ const QWEN_OAUTH_SCOPE = 'openid profile email model.completion';
 const QWEN_OAUTH_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:device_code';
 
 // File System Configuration
-const QWEN_DIR = '.qwen';
+const QWEN_DIR = '.terra-code';
 const QWEN_CREDENTIAL_FILENAME = 'oauth_creds.json';
 
 // Token Configuration
@@ -531,13 +532,19 @@ export async function getQwenOAuthClient(
 
 async function authWithQwenDeviceFlow(
   client: QwenOAuth2Client,
-  config: Config,
+  _config: Config,
 ): Promise<AuthResult> {
   let isCancelled = false;
+  let isTimedOut = false;
 
   // Set up cancellation listener
   const cancelHandler = () => {
     isCancelled = true;
+    qwenOAuth2Events.emit(
+      QwenOAuth2Event.AuthProgress,
+      'error',
+      'Authentication cancelled by user.',
+    );
   };
   qwenOAuth2Events.once(QwenOAuth2Event.AuthCancel, cancelHandler);
 
@@ -573,61 +580,45 @@ async function authWithQwenDeviceFlow(
     };
 
     // If browser launch is not suppressed, try to open the URL
-    if (!config.isBrowserLaunchSuppressed()) {
+    if (shouldAttemptBrowserLaunch()) {
       try {
-        const childProcess = await open(deviceAuth.verification_uri_complete);
-
-        // IMPORTANT: Attach an error handler to the returned child process.
-        // Without this, if `open` fails to spawn a process (e.g., `xdg-open` is not found
-        // in a minimal Docker container), it will emit an unhandled 'error' event,
-        // causing the entire Node.js process to crash.
-        if (childProcess) {
-          childProcess.on('error', () => {
-            console.log('Failed to open browser. Visit this URL to authorize:');
-            showFallbackMessage();
-          });
-        }
-      } catch (_err) {
+        await open(deviceAuth.verification_uri_complete);
+      } catch (error) {
+        console.error('Failed to open browser:', error);
         showFallbackMessage();
       }
     } else {
-      // Browser launch is suppressed, show fallback message
       showFallbackMessage();
     }
 
-    // Emit auth progress event
-    qwenOAuth2Events.emit(
-      QwenOAuth2Event.AuthProgress,
-      'polling',
-      'Waiting for authorization...',
-    );
+    // Set up timeout
+    const timeoutMs = Math.min(deviceAuth.expires_in * 1000, 5 * 60 * 1000); // Use device expiry or 5 min max
+    const timeoutPromise = new Promise<DeviceTokenResponse>((_, reject) => {
+      setTimeout(() => {
+        isTimedOut = true;
+        reject(new Error('Authentication timed out'));
+      }, timeoutMs);
+    });
 
-    console.log('Waiting for authorization...\n');
+    // Calculate polling parameters
+    const pollInterval = 5000; // 5 seconds between polls
+    const maxAttempts = Math.floor(timeoutMs / pollInterval);
 
-    // Poll for the token
-    let pollInterval = 2000; // 2 seconds, can be increased if slow_down is received
-    const maxAttempts = Math.ceil(
-      deviceAuth.expires_in / (pollInterval / 1000),
-    );
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Start polling loop
+    for (let attempt = 0; attempt < maxAttempts && !isTimedOut; attempt++) {
       // Check if authentication was cancelled
       if (isCancelled) {
-        console.log('\nAuthentication cancelled by user.');
-        qwenOAuth2Events.emit(
-          QwenOAuth2Event.AuthProgress,
-          'error',
-          'Authentication cancelled by user.',
-        );
         return { success: false, reason: 'cancelled' };
       }
 
       try {
-        console.log('polling for token...');
-        const tokenResponse = await client.pollDeviceToken({
-          device_code: deviceAuth.device_code,
-          code_verifier,
-        });
+        const tokenResponse = await Promise.race([
+          client.pollDeviceToken({
+            device_code: deviceAuth.device_code,
+            code_verifier,
+          }),
+          timeoutPromise,
+        ]);
 
         // Check if the response is successful and contains token data
         if (isDeviceTokenSuccess(tokenResponse)) {
@@ -635,7 +626,7 @@ async function authWithQwenDeviceFlow(
 
           // Convert to QwenCredentials format
           const credentials: QwenCredentials = {
-            access_token: tokenData.access_token!, // Safe to assert as non-null due to isDeviceTokenSuccess check
+            access_token: tokenData.access_token!,
             refresh_token: tokenData.refresh_token || undefined,
             token_type: tokenData.token_type,
             resource_url: tokenData.resource_url,
@@ -656,146 +647,83 @@ async function authWithQwenDeviceFlow(
             'Authentication successful! Access token obtained.',
           );
 
-          console.log('Authentication successful! Access token obtained.');
           return { success: true };
         }
 
-        // Check if the response is pending
-        if (isDeviceTokenPending(tokenResponse)) {
-          const pendingData = tokenResponse as DeviceTokenPendingData;
-
-          // Handle slow_down error by increasing poll interval
-          if (pendingData.slowDown) {
-            pollInterval = Math.min(pollInterval * 1.5, 10000); // Increase by 50%, max 10 seconds
-            console.log(
-              `\nServer requested to slow down, increasing poll interval to ${pollInterval}ms`,
-            );
-          } else {
-            pollInterval = 2000; // Reset to default interval
-          }
-
-          // Emit polling progress event
+        // Handle "authorization_pending" by continuing to poll
+        const errorData = tokenResponse as ErrorData;
+        if (errorData.error === 'authorization_pending') {
           qwenOAuth2Events.emit(
             QwenOAuth2Event.AuthProgress,
             'polling',
-            `Polling... (attempt ${attempt + 1}/${maxAttempts})`,
+            'Waiting for authorization...',
           );
-
-          process.stdout.write('.');
-
-          // Wait with cancellation check every 100ms
-          await new Promise<void>((resolve) => {
-            const checkInterval = 100; // Check every 100ms
-            let elapsedTime = 0;
-
-            const intervalId = setInterval(() => {
-              elapsedTime += checkInterval;
-
-              // Check for cancellation during wait
-              if (isCancelled) {
-                clearInterval(intervalId);
-                resolve();
-                return;
-              }
-
-              // Complete wait when interval is reached
-              if (elapsedTime >= pollInterval) {
-                clearInterval(intervalId);
-                resolve();
-                return;
-              }
-            }, checkInterval);
-          });
-
-          // Check for cancellation after waiting
-          if (isCancelled) {
-            console.log('\nAuthentication cancelled by user.');
-            qwenOAuth2Events.emit(
-              QwenOAuth2Event.AuthProgress,
-              'error',
-              'Authentication cancelled by user.',
-            );
-            return { success: false, reason: 'cancelled' };
-          }
-
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
           continue;
         }
 
-        // Handle error response
-        if (isErrorResponse(tokenResponse)) {
-          const errorData = tokenResponse as ErrorData;
-          throw new Error(
-            `Token polling failed: ${errorData?.error || 'Unknown error'} - ${errorData?.error_description || 'No details provided'}`,
-          );
-        }
-      } catch (error: unknown) {
-        // Handle specific error cases
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        const statusCode =
-          error instanceof Error
-            ? (error as Error & { status?: number }).status
-            : null;
-
-        if (errorMessage.includes('401') || statusCode === 401) {
-          const message =
-            'Device code expired or invalid, please restart the authorization process.';
-
-          // Emit error event
-          qwenOAuth2Events.emit(QwenOAuth2Event.AuthProgress, 'error', message);
-
-          return { success: false, reason: 'error' };
-        }
-
-        // Handle 429 Too Many Requests error
-        if (errorMessage.includes('429') || statusCode === 429) {
-          const message =
-            'Too many requests. The server is rate limiting our requests. Please select a different authentication method or try again later.';
-
-          // Emit rate limit event to notify user
+        // Handle rate limiting
+        if (errorData.error === 'slow_down') {
           qwenOAuth2Events.emit(
             QwenOAuth2Event.AuthProgress,
             'rate_limit',
-            message,
+            'Too many requests. Please try again later.',
           );
-
-          console.log('\n' + message);
-
-          // Return false to stop polling and go back to auth selection
           return { success: false, reason: 'rate_limit' };
         }
 
-        const message = `Error polling for token: ${errorMessage}`;
-
-        // Emit error event
-        qwenOAuth2Events.emit(QwenOAuth2Event.AuthProgress, 'error', message);
-
-        // Check for cancellation before waiting
-        if (isCancelled) {
-          return { success: false, reason: 'cancelled' };
+        // Handle other errors
+        throw new Error(
+          `Token request failed: ${errorData.error} - ${errorData.error_description}`,
+        );
+      } catch (error) {
+        if (isTimedOut) {
+          qwenOAuth2Events.emit(
+            QwenOAuth2Event.AuthProgress,
+            'timeout',
+            'Authentication timed out. Please try again.',
+          );
+          return { success: false, reason: 'timeout' };
         }
 
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        // For other errors, emit error and continue polling
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        qwenOAuth2Events.emit(
+          QwenOAuth2Event.AuthProgress,
+          'error',
+          `Error during authentication: ${errorMessage}`,
+        );
+        
+        // If it's a network error, wait before retrying
+        if (errorMessage.includes('network') || errorMessage.includes('ECONNREFUSED')) {
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
+          continue;
+        }
+
+        // For other errors, stop polling
+        return { success: false, reason: 'error' };
       }
     }
 
-    const timeoutMessage = 'Authorization timeout, please restart the process.';
-
-    // Emit timeout error event
+    // If we exit the loop without success, we timed out
     qwenOAuth2Events.emit(
       QwenOAuth2Event.AuthProgress,
       'timeout',
-      timeoutMessage,
+      'Authentication timed out. Please try again.',
     );
-
-    console.error('\n' + timeoutMessage);
     return { success: false, reason: 'timeout' };
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Device authorization flow failed:', errorMessage);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+    qwenOAuth2Events.emit(
+      QwenOAuth2Event.AuthProgress,
+      'error',
+      `Authentication failed: ${errorMessage}`,
+    );
     return { success: false, reason: 'error' };
   } finally {
-    // Clean up event listener
+    // Clean up the cancel listener
     qwenOAuth2Events.off(QwenOAuth2Event.AuthCancel, cancelHandler);
   }
 }

@@ -75,10 +75,87 @@ enum StreamProcessingStatus {
 }
 
 /**
- * Automatically injects a KB check instruction for every user query
- * This makes the CLI behave like a human developer who instinctively recalls related information
+ * Uses LLM to determine if a user query needs knowledge base search
+ * This is more accurate than pattern matching for intent detection
+ * Works with any authenticated model provider (Gemini, OpenAI, Qwen, etc.)
  */
-async function injectAutomaticKBCheck(userQuery: string, _config: Config): Promise<string> {
+async function shouldUseKnowledgeBase(userQuery: string, config: Config): Promise<boolean> {
+  try {
+    const intentPrompt = `You are an intent classifier. Analyze this user query and determine if it would benefit from searching a knowledge base for technical context, documentation, or existing implementations.
+
+User query: "${userQuery}"
+
+Return ONLY "true" if the query:
+- Asks for technical information, explanations, or guidance
+- Requests help with implementation, debugging, or problem-solving
+- Seeks information about tools, frameworks, APIs, or technologies
+- Needs context about existing code patterns or best practices
+- Is a substantial question that could benefit from documented knowledge
+
+Return ONLY "false" if the query:
+- Is casual conversation (greetings, thanks, small talk)
+- Is a simple yes/no response or acknowledgment
+- Is purely social interaction without technical intent
+- Already contains all needed context
+
+Respond with only "true" or "false".`;
+
+    const geminiClient = config.getGeminiClient();
+    if (!geminiClient?.isInitialized?.()) {
+      // Fallback to basic heuristics if LLM not available
+      const lowerQuery = userQuery.toLowerCase().trim();
+      return lowerQuery.length > 15 && !(/^(hi|hello|hey|thanks?|yes|no|ok|cool|bye)!?$/i.test(lowerQuery));
+    }
+
+    // Check if we have an authenticated provider
+    const authType = config.getContentGeneratorConfig()?.authType;
+    if (!authType) {
+      // No auth configured, use fallback
+      return userQuery.trim().length > 15;
+    }
+
+    // Create abort controller for the intent classification request
+    const abortController = new AbortController();
+    setTimeout(() => abortController.abort(), 5000); // 5 second timeout
+
+    const response = await geminiClient.generateContent(
+      [{ role: 'user', parts: [{ text: intentPrompt }] }],
+      { 
+        temperature: 0.1, // Low temperature for consistent classification
+        maxOutputTokens: 10 // Only need "true" or "false"
+      },
+      abortController.signal
+    );
+    
+    // Extract text from response (works for all providers)
+    const result = response.candidates?.[0]?.content?.parts
+      ?.filter(part => part.text)
+      ?.map(part => part.text)
+      ?.join('')
+      ?.trim()
+      ?.toLowerCase();
+      
+    return result === 'true';
+  } catch (error) {
+    // Fallback to conservative approach on error
+    const authType = config.getContentGeneratorConfig()?.authType;
+    console.debug(`Intent classification failed for provider ${authType}, using fallback:`, error);
+    
+    // Use more conservative fallback - only search for longer, likely technical queries
+    const lowerQuery = userQuery.toLowerCase().trim();
+    return lowerQuery.length > 20 && 
+           (lowerQuery.includes('how') || 
+            lowerQuery.includes('what') || 
+            lowerQuery.includes('error') ||
+            lowerQuery.includes('implement') ||
+            lowerQuery.includes('help') ||
+            lowerQuery.includes('?'));
+  }
+}
+
+async function injectAutomaticKBCheck(userQuery: string, config: Config): Promise<string> {
+
+  return userQuery; // TODO: Remove this later if needed
   // Check if Terra credentials are available
   const terraApiKey = process.env.TERRA_API_KEY;
   const terraUsername = process.env.TERRA_USERNAME;
@@ -94,25 +171,30 @@ async function injectAutomaticKBCheck(userQuery: string, _config: Config): Promi
     'help', 'auth', 'vector', 'ide', 'memory', 'shell', 'git'
   ];
   
-  const lowerQuery = userQuery.toLowerCase();
+  const lowerQuery = userQuery.toLowerCase().trim();
   if (skipKBCheck.some(cmd => lowerQuery.startsWith(cmd))) {
     return userQuery; // Don't enhance command queries
   }
   
+  // Use LLM-based intent classification instead of pattern matching
+  const shouldUseKB = await shouldUseKnowledgeBase(userQuery, config);
+  
+  if (!shouldUseKB) {
+    return userQuery; // Don't enhance non-technical queries
+  }
+  
   // Create an enhanced query that automatically checks KB first
-  const enhancedQuery = `🚀 KNOWLEDGE RECALL FIRST: Before answering this question, ALWAYS check the KT knowledge base for relevant information, existing patterns, and related context. Think like a senior developer who instinctively recalls related work.
+  const enhancedQuery = `🧠 Researching knowledge base for relevant context...
 
 USER QUERY: ${userQuery}
 
-MANDATORY INSTRUCTIONS:
-1. 🔍 FIRST: Use the vector_knowledge tool to search the KB for relevant information
-2. 📚 RESEARCH: Look for existing patterns, implementations, and related concepts
-3. 💡 CONTEXT: Provide context-aware answers based on what's already documented
-4. 🎯 ANSWER: Then provide a comprehensive answer incorporating KB insights
+INSTRUCTIONS:
+1. 🔍 Use the vector_knowledge tool to search for relevant information
+2. 📚 Start with a simple, focused search (use default parameters)
+3. 💡 Only use deep_search=true if the initial search is insufficient
+4. 🎯 Provide a helpful answer incorporating any relevant KB insights
 
-IMPORTANT: You MUST use the vector_knowledge tool first before providing any answer. This is not optional - it's how you ensure you have full context, just like a human developer would naturally do.
-
-Search the KB for: "${userQuery}" and related concepts, then provide your answer.`;
+Use a simple search first: vector_knowledge with just the query and default parameters.`;
   
   return enhancedQuery;
 }
@@ -367,7 +449,7 @@ export const useGeminiStream = (
             addItem(
               {
                 type: MessageType.INFO,
-                text: '🧠 Automatically checking knowledge base for relevant context...',
+                text: 'ℹ 🧠 Checking knowledge base...',
               },
               userMessageTimestamp,
             );
