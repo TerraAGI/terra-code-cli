@@ -1,5 +1,5 @@
 // packages/cli/src/ui/commands/vectorCommand.ts
-import { CommandKind, SlashCommand } from './types.js';
+import { CommandKind, SlashCommand, SlashCommandActionReturn } from './types.js';
 import { MessageType } from '../types.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -312,15 +312,6 @@ export const vectorCommand: SlashCommand = {
         // Parse arguments - only file path is needed, collection is auto-generated
         const trimmedArgs = args.trim();
         
-        // Debug: Show raw arguments for troubleshooting
-        context.ui.addItem(
-          {
-            type: MessageType.INFO,
-            text: `Raw arguments: "${args}"`,
-          },
-          Date.now(),
-        );
-        
         if (!trimmedArgs) {
           context.ui.addItem(
             {
@@ -376,15 +367,6 @@ export const vectorCommand: SlashCommand = {
           return;
         }
         
-        // Debug: Show the parsed file path
-        context.ui.addItem(
-          {
-            type: MessageType.INFO,
-            text: `Parsed file path: "${filePath}"`,
-          },
-          Date.now(),
-        );
-        
         // Handle both absolute and relative paths
         let absolutePath = '';
         
@@ -402,15 +384,6 @@ export const vectorCommand: SlashCommand = {
           // Normalize the path to handle different path separators
           absolutePath = path.normalize(absolutePath);
           
-          // Debug: Show the resolved absolute path
-          context.ui.addItem(
-            {
-              type: MessageType.INFO,
-              text: `Resolved absolute path: "${absolutePath}"`,
-            },
-            Date.now(),
-          );
-
           // Check if file exists (basic validation)
           try {
             await fs.access(absolutePath);
@@ -454,7 +427,7 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.INFO,
-              text: `Uploading file "${absolutePath}" to collection "${userCollectionName}"...`,
+              text: `Uploading file "${path.basename(absolutePath)}"...`,
             },
             Date.now(),
           );
@@ -468,7 +441,7 @@ export const vectorCommand: SlashCommand = {
             context.ui.addItem(
               {
                 type: MessageType.INFO,
-                text: `Successfully uploaded "${fileName}" to collection "${userCollectionName}".`,
+                text: `Successfully uploaded "${fileName}".`,
               },
               Date.now(),
             );
@@ -486,11 +459,44 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: `Error uploading file "${absolutePath}": ${errorMessage}`,
+              text: `Error uploading file "${path.basename(absolutePath)}": ${errorMessage}`,
             },
             Date.now(),
           );
         }
+      },
+    },
+    {
+      name: 'remember',
+      description: 'Remember a fact or preference in your brain.',
+      kind: CommandKind.BUILT_IN,
+      action: (context, args): SlashCommandActionReturn | void => {
+        if (!args || args.trim() === '') {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'Usage: /brain remember <fact to remember>',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        const fact = args.trim();
+        
+        context.ui.addItem(
+          {
+            type: MessageType.INFO,
+            text: `🧠 Remembering: "${fact}"`,
+          },
+          Date.now(),
+        );
+
+        return {
+          type: 'tool',
+          toolName: 'save_memory',
+          toolArgs: { fact },
+        };
       },
     },
     /*

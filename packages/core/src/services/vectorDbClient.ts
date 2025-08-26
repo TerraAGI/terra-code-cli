@@ -2,7 +2,7 @@
 import axios, { AxiosError } from 'axios';
 
 // AWS RAG Service base URL
-const BASE_URL = 'http://13.61.2.7:8000';
+const BASE_URL = 'http://api.terra-agi.com:8000';
 
 // V1 API endpoints with authentication required
 

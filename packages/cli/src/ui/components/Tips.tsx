@@ -17,35 +17,40 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
   return (
     <Box flexDirection="column">
-      <Text color={Colors.Foreground}>Tips for getting started:</Text>
+      <Text bold color={Colors.AccentPurple}>🧠 Terra&apos;s Superpowers:</Text>
       <Text color={Colors.Foreground}>
-        1. Ask questions, edit files, or run commands.
+        1. <Text bold color={Colors.AccentPurple}>/brain upload</Text> - Build your development brain with docs, code, and knowledge
       </Text>
       <Text color={Colors.Foreground}>
-        2. Be specific for the best results.
+        2. <Text bold color={Colors.AccentPurple}>/brain kt</Text> - Interactive Knowledge Transfer sessions to capture team expertise
+      </Text>
+      <Text color={Colors.Foreground}>
+        3. <Text bold color={Colors.AccentPurple}>/brain remember</Text> - Store personal facts and preferences that persist across sessions
+      </Text>
+      <Text color={Colors.Foreground}>
+        4. <Text bold color={Colors.AccentPurple}>Auto-enhanced responses</Text> - AI automatically uses your brain&apos;s knowledge
+      </Text>
+      
+      <Box height={1} />
+      
+      <Text bold color={Colors.Foreground}>Getting Started:</Text>
+      <Text color={Colors.Foreground}>
+        • Ask questions, edit files, or run commands naturally
+      </Text>
+      <Text color={Colors.Foreground}>
+        • Use <Text bold color={Colors.AccentPurple}>@filename</Text> to reference specific files
       </Text>
       {geminiMdFileCount === 0 && (
         <Text color={Colors.Foreground}>
-          3. Create{' '}
+          • Create{' '}
           <Text bold color={Colors.AccentPurple}>
             TERRA.md
           </Text>{' '}
-          files to customize your interactions with Terra Code.
+          files to customize your AI interactions
         </Text>
       )}
       <Text color={Colors.Foreground}>
-        {geminiMdFileCount === 0 ? '4.' : '3.'}{' '}
-        <Text bold color={Colors.AccentPurple}>
-          /help
-        </Text>{' '}
-        for more information.
-      </Text>
-      <Text color={Colors.Foreground}>
-        {geminiMdFileCount === 0 ? '5.' : '4.'}{' '}
-        <Text bold color={Colors.AccentPurple}>
-          /vector
-        </Text>{' '}
-        commands for Terra knowledge base: upload docs, search, and enhance responses!
+        • Type <Text bold color={Colors.AccentPurple}>/help</Text> for complete command reference
       </Text>
     </Box>
   );

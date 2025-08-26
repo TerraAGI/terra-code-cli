@@ -83,17 +83,6 @@ Slash commands provide meta-level control over the CLI itself.
       - **Description:** Show the full JSON schema for the tool's configured parameters.
   - **Keyboard Shortcut:** Press **Ctrl+T** at any time to toggle between showing and hiding tool descriptions.
 
-- **`/memory`**
-  - **Description:** Manage the AI's instructional context (hierarchical memory loaded from `QWEN.md` files by default; configurable via `contextFileName`).
-  - **Sub-commands:**
-    - **`add`**:
-      - **Description:** Adds the following text to the AI's memory. Usage: `/memory add <text to remember>`
-    - **`show`**:
-      - **Description:** Display the full, concatenated content of the current hierarchical memory that has been loaded from all context files (e.g., `QWEN.md`). This lets you inspect the instructional context being provided to the model.
-    - **`refresh`**:
-      - **Description:** Reload the hierarchical instructional memory from all context files (default: `QWEN.md`) found in the configured locations (global, project/ancestors, and sub-directories). This updates the model with the latest context content.
-    - **Note:** For more details on how context files contribute to hierarchical memory, see the [CLI Configuration documentation](./configuration.md#context-files-hierarchical-instructional-context).
-
 - **`/restore`**
   - **Description:** Restores the project files to the state they were in just before a tool was executed. This is particularly useful for undoing file edits made by a tool. If run without a tool call ID, it will list available checkpoints to restore from.
   - **Usage:** `/restore [tool_call_id]`
@@ -148,6 +137,10 @@ Slash commands provide meta-level control over the CLI itself.
       - **Description:** Upload a file to your brain.
       - **Usage:** `/brain upload <file_path>`
       - **Details:** This command uploads a file to your brain. The file path can be absolute or relative to the current working directory. Collection name is automatically generated from your Terra credentials.
+    - **`remember`**:
+      - **Description:** Remember a fact or preference in your brain.
+      - **Usage:** `/brain remember <fact to remember>`
+      - **Details:** Stores personal facts, preferences, or important information that the AI should remember across sessions. This information becomes part of your persistent context.
     - **`kt`**:
       - **Description:** Start an interactive Knowledge Transfer session for your brain.
       - **Usage:** `/brain kt`

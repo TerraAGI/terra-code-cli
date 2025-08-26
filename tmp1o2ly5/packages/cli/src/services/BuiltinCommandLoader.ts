@@ -53,6 +53,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
     const allDefinitions: Array<SlashCommand | null> = [
       aboutCommand,
       authCommand,
+      vectorCommand, // Add the new vector command to the list
       bugCommand,
       chatCommand,
       clearCommand,
@@ -77,7 +78,6 @@ export class BuiltinCommandLoader implements ICommandLoader {
       settingsCommand,
       vimCommand,
       setupGithubCommand,
-      vectorCommand, // Add the new vector command to the list
     ];
 
     return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);

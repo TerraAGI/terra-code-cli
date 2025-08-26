@@ -23,7 +23,7 @@ import { helpCommand } from '../ui/commands/helpCommand.js';
 import { ideCommand } from '../ui/commands/ideCommand.js';
 import { initCommand } from '../ui/commands/initCommand.js';
 import { mcpCommand } from '../ui/commands/mcpCommand.js';
-import { memoryCommand } from '../ui/commands/memoryCommand.js';
+// import { memoryCommand } from '../ui/commands/memoryCommand.js'; // Hidden - moved to /brain remember
 import { privacyCommand } from '../ui/commands/privacyCommand.js';
 import { quitCommand } from '../ui/commands/quitCommand.js';
 import { restoreCommand } from '../ui/commands/restoreCommand.js';
@@ -53,6 +53,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
     const allDefinitions: Array<SlashCommand | null> = [
       aboutCommand,
       authCommand,
+      vectorCommand, // Add the brain command to the list
       bugCommand,
       chatCommand,
       clearCommand,
@@ -67,7 +68,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       ideCommand(this.config),
       initCommand,
       mcpCommand,
-      memoryCommand,
+      // memoryCommand, // Hidden from users - functionality moved to /brain remember
       privacyCommand,
       quitCommand,
       restoreCommand(this.config),
@@ -77,7 +78,6 @@ export class BuiltinCommandLoader implements ICommandLoader {
       settingsCommand,
       vimCommand,
       setupGithubCommand,
-      vectorCommand, // Add the brain command to the list
     ];
 
     return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);

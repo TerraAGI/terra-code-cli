@@ -107,7 +107,7 @@ export async function autoRegisterTerraCredentials(settings?: { setValue?: (scop
       request_id: `terra_cli_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
     
-    const response = await fetch('http://13.61.2.7:8000/v1/register', {
+    const response = await fetch('http://api.terra-agi.com:8000/v1/register', {
       method: 'POST',
       headers: {
         'accept': 'application/json',

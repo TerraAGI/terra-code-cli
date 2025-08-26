@@ -21,6 +21,45 @@ export const Help: React.FC<Help> = ({ commands }) => (
     borderStyle="round"
     padding={1}
   >
+    {/* Terra USPs */}
+    <Text bold color={Colors.AccentPurple}>
+      🧠 Terra&apos;s Unique Capabilities:
+    </Text>
+    <Text color={Colors.Foreground}>
+      <Text bold color={Colors.AccentPurple}>
+        Upload Documents
+      </Text>
+      : Build your development brain with{' '}
+      <Text bold color={Colors.AccentPurple}>
+        /brain upload
+      </Text>{' '}
+      - docs, code, and knowledge
+    </Text>
+    <Text color={Colors.Foreground}>
+      <Text bold color={Colors.AccentPurple}>
+        Knowledge Transfer
+      </Text>
+      : Capture team expertise with{' '}
+      <Text bold color={Colors.AccentPurple}>
+        /brain kt
+      </Text>{' '}
+      interactive sessions
+    </Text>
+    <Text color={Colors.Foreground}>
+      <Text bold color={Colors.AccentPurple}>
+        Persistent Memory
+      </Text>
+      : AI remembers your preferences and facts across sessions
+    </Text>
+    <Text color={Colors.Foreground}>
+      <Text bold color={Colors.AccentPurple}>
+        Auto-Enhanced AI
+      </Text>
+      : Responses automatically powered by your brain&apos;s knowledge
+    </Text>
+
+    <Box height={1} />
+
     {/* Basics */}
     <Text bold color={Colors.Foreground}>
       Basics:
