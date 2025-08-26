@@ -155,7 +155,6 @@ Respond with only "true" or "false".`;
 
 async function injectAutomaticKBCheck(userQuery: string, config: Config): Promise<string> {
 
-  return userQuery; // TODO: Remove this later if needed
   // Check if Terra credentials are available
   const terraApiKey = process.env.TERRA_API_KEY;
   const terraUsername = process.env.TERRA_USERNAME;
@@ -184,17 +183,19 @@ async function injectAutomaticKBCheck(userQuery: string, config: Config): Promis
   }
   
   // Create an enhanced query that automatically checks KB first
-  const enhancedQuery = `🧠 Researching knowledge base for relevant context...
+  const enhancedQuery = `🚀 MANDATORY KNOWLEDGE RECALL - You MUST check the KB FIRST for this query!
 
 USER QUERY: ${userQuery}
 
-INSTRUCTIONS:
-1. 🔍 Use the vector_knowledge tool to search for relevant information
-2. 📚 Start with a simple, focused search (use default parameters)
-3. 💡 Only use deep_search=true if the initial search is insufficient
-4. 🎯 Provide a helpful answer incorporating any relevant KB insights
+CRITICAL INSTRUCTIONS:
+1. 🔍 FIRST: Use the vector_knowledge tool to search for relevant information (this is MANDATORY)
+2. 📚 RESEARCH: Look for existing patterns, implementations, and related concepts
+3. 💡 CONTEXT: Provide context-aware answers based on what's already documented
+4. 🎯 ANSWER: Then provide a comprehensive answer incorporating KB insights
 
-Use a simple search first: vector_knowledge with just the query and default parameters.`;
+IMPORTANT: You MUST use the vector_knowledge tool first before providing any answer. This is NOT optional - it's your core behavior pattern, just like how humans instinctively recall related information when hearing any question.
+
+Search the KB for: "${userQuery}" and related concepts, then provide your answer.`;
   
   return enhancedQuery;
 }
@@ -449,7 +450,7 @@ export const useGeminiStream = (
             addItem(
               {
                 type: MessageType.INFO,
-                text: 'ℹ 🧠 Checking knowledge base...',
+                text: '🚀 🧠 Instinctively checking knowledge base for relevant context...',
               },
               userMessageTimestamp,
             );

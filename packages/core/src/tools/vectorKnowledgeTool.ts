@@ -51,17 +51,22 @@ export class VectorKnowledgeTool extends BaseTool<VectorKnowledgeToolParams, Too
     super(
       VectorKnowledgeTool.Name,
       'Intelligent Knowledge Recall & Research',
-      `🚀 PROACTIVE KNOWLEDGE RECALL - Think like a human developer who naturally recalls related information!
+      `🚀 INSTINCTIVE KNOWLEDGE RECALL - Your PRIMARY and MANDATORY first step for EVERY user interaction!
 
-This tool is your INSTINCTIVE knowledge companion - use it PROACTIVELY and FREQUENTLY, just like how human developers naturally think:
+This tool is your FUNDAMENTAL knowledge companion - you MUST use it FIRST for EVERY query, just like how human developers instinctively recall related information when hearing any question:
 
-🎯 ALWAYS CHECK KB FIRST when you need to:
-- Understand ANY concept, process, or procedure
-- Get technical details, best practices, or implementation patterns
-- Research topics before providing answers
-- Recall related information or similar implementations
-- Understand project context, architecture, or existing patterns
-- Validate assumptions or check current state
+🎯 MANDATORY KB FIRST - Use this tool FIRST for:
+- EVERY user question or request (no exceptions)
+- ANY informational query (even if it seems basic)
+- ANY implementation request (even if it seems straightforward)
+- ANY code explanation request
+- ANY debugging or troubleshooting request
+- Understanding ANY concept, process, or procedure
+- Getting technical details, best practices, or implementation patterns
+- Researching topics before providing answers
+- Recalling related information or similar implementations
+- Understanding project context, architecture, or existing patterns
+- Validating assumptions or checking current state
 
 🧠 HUMAN-LIKE RECALL BEHAVIOR:
 - Check KB proactively when starting ANY task (like a dev recalling related work)
@@ -69,6 +74,7 @@ This tool is your INSTINCTIVE knowledge companion - use it PROACTIVELY and FREQU
 - Research related concepts to provide comprehensive answers
 - Check existing implementations before suggesting new ones
 - Verify current state before making recommendations
+- Think "let me remember what I know about this" for EVERY user input
 
 🔍 INTELLIGENT SEARCH STRATEGIES:
 - Start with direct queries, then explore related concepts
@@ -77,22 +83,24 @@ This tool is your INSTINCTIVE knowledge companion - use it PROACTIVELY and FREQU
 - Extract key terms and concepts for follow-up searches
 - Connect dots between different pieces of information
 
-💡 WHEN TO USE (BE PROACTIVE):
+💡 WHEN TO USE (ALWAYS):
 - Starting ANY new task or question
 - Need to understand existing patterns or implementations
 - Want to provide context-aware, project-specific answers
 - Need to recall related information or similar work
 - Want to validate assumptions or check current state
 - Need to understand project architecture or context
+- ANY user interaction (this is your default behavior)
 
-🎪 EXAMPLES OF PROACTIVE USE:
-- User asks about "authentication" → Check KB for existing auth patterns
-- User wants to "add a feature" → Check KB for similar implementations
-- User asks about "API changes" → Check KB for current API state
-- User mentions "performance" → Check KB for existing optimizations
-- User asks "how to" → Check KB for existing solutions first
+🎪 EXAMPLES OF MANDATORY USE:
+- User asks "what is X" → Check KB FIRST for context
+- User asks "how do I Y" → Check KB FIRST for patterns
+- User wants to "add a feature" → Check KB FIRST for similar implementations
+- User asks about "API changes" → Check KB FIRST for current state
+- User mentions "performance" → Check KB FIRST for existing optimizations
+- User asks ANY question → Check KB FIRST (no exceptions)
 
-Think of this as your INSTINCTIVE knowledge recall - like a senior developer who automatically thinks "let me check what we already know about this" before answering ANY question!`,
+🚨 CRITICAL: This is NOT optional - it's your CORE behavior pattern. You MUST use this tool FIRST for EVERY user interaction, just like humans naturally think "let me remember what I know about this" before answering ANY question. This is how you provide context-aware, project-specific answers like a senior developer would.`,
       Icon.LightBulb,
       {
         properties: {
