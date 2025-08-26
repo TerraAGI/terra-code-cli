@@ -168,7 +168,7 @@ export function AuthDialog({
         <Text color={Colors.AccentPurple}>(Use Enter to Set Auth)</Text>
       </Box>
       <Box marginTop={1}>
-        <Text>Terms of Services and Privacy Notice for Qwen Code</Text>
+        <Text>Terms of Services and Privacy Notice for Terra Code</Text>
       </Box>
       <Box marginTop={1}>
         <Text color={Colors.AccentBlue}>

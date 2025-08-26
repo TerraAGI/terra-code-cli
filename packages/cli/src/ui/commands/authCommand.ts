@@ -181,90 +181,91 @@ export const authCommand: SlashCommand = {
         }
       },
     },
-    {
-      name: 'gemini',
-      description: 'Switch to Gemini API key',
-      kind: CommandKind.BUILT_IN,
-      action: async (context, _args) => {
-        try {
-          context.ui.addItem(
-            {
-              type: 'info',
-              text: '🔄 Switching to Gemini API key authentication...',
-            },
-            Date.now(),
-          );
+    // Hidden from users - Gemini auth option removed for Terra branding
+    // {
+    //   name: 'gemini',
+    //   description: 'Switch to Gemini API key',
+    //   kind: CommandKind.BUILT_IN,
+    //   action: async (context, _args) => {
+    //     try {
+    //       context.ui.addItem(
+    //         {
+    //           type: 'info',
+    //           text: '🔄 Switching to Gemini API key authentication...',
+    //         },
+    //         Date.now(),
+    //       );
 
-          // Set Gemini as the selected auth type
-          if (context.services.settings) {
-            context.services.settings.setValue(SettingScope.User, 'selectedAuthType', AuthType.USE_GEMINI);
-          }
+    //       // Set Gemini as the selected auth type
+    //       if (context.services.settings) {
+    //         context.services.settings.setValue(SettingScope.User, 'selectedAuthType', AuthType.USE_GEMINI);
+    //       }
 
-          // Actually authenticate with Gemini
-          if (context.services.config) {
-            await context.services.config.refreshAuth(AuthType.USE_GEMINI);
+    //       // Actually authenticate with Gemini
+    //       if (context.services.config) {
+    //         await context.services.config.refreshAuth(AuthType.USE_GEMINI);
             
-            // Auto-register Terra credentials after successful authentication
-            try {
-              const { autoRegisterTerraCredentials } = await import('../../config/auth.js');
-              const terraResult = await autoRegisterTerraCredentials({
-                setValue: (scope: string, key: string, value: string) => {
-                  if (context.services.settings && (key === 'terraApiKey' || key === 'terraUsername')) {
-                    context.services.settings.setValue(scope as SettingScope, key, value);
-                  }
-                },
-                terraApiKey: context.services.settings?.merged.terraApiKey,
-                terraUsername: context.services.settings?.merged.terraUsername
-              });
+    //         // Auto-register Terra credentials after successful authentication
+    //         try {
+    //           const { autoRegisterTerraCredentials } = await import('../../config/auth.js');
+    //           const terraResult = await autoRegisterTerraCredentials({
+    //             setValue: (scope: string, key: string, value: string) => {
+    //               if (context.services.settings && (key === 'terraApiKey' || key === 'terraUsername')) {
+    //                 context.services.settings.setValue(scope as SettingScope, key, value);
+    //               }
+    //             },
+    //             terraApiKey: context.services.settings?.merged.terraApiKey,
+    //             terraUsername: context.services.settings?.merged.terraUsername
+    //           });
               
-              if (terraResult.success) {
-                context.ui.addItem(
-                  {
-                    type: 'info',
-                    text: `🧠 TerraAGI Vector Search: ${terraResult.message}`,
-                  },
-                  Date.now(),
-                );
-              } else {
-                context.ui.addItem(
-                  {
-                    type: 'info',
-                    text: `⚠️ TerraAGI registration skipped: ${terraResult.message}`,
-                  },
-                  Date.now(),
-                );
-              }
-            } catch (_terraError) {
-              // Don't fail the main auth flow if Terra registration fails
-              context.ui.addItem(
-                {
-                  type: 'info',
-                  text: '⚠️ TerraAGI registration failed silently.',
-                },
-                Date.now(),
-              );
-            }
-          }
+    //           if (terraResult.success) {
+    //             context.ui.addItem(
+    //               {
+    //                 type: 'info',
+    //                 text: `🧠 TerraAGI Vector Search: ${terraResult.message}`,
+    //               },
+    //               Date.now(),
+    //             );
+    //           } else {
+    //             context.ui.addItem(
+    //               {
+    //                 type: 'info',
+    //                 text: `⚠️ TerraAGI registration skipped: ${terraResult.message}`,
+    //               },
+    //               Date.now(),
+    //             );
+    //           }
+    //         } catch (_terraError) {
+    //           // Don't fail the main auth flow if Terra registration fails
+    //           context.ui.addItem(
+    //             {
+    //               type: 'info',
+    //               text: '⚠️ TerraAGI registration failed silently.',
+    //             },
+    //             Date.now(),
+    //           );
+    //         }
+    //       }
 
-          context.ui.addItem(
-            {
-              type: 'info',
-              text: '✅ Successfully switched to Gemini API key!\n\n�� Setup required:\n• Set GEMINI_API_KEY environment variable\n• Use .env file for persistent configuration\n\n🧠 TerraAGI Vector Search: Automatically activated when you authenticate!',
-            },
-            Date.now(),
-          );
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          context.ui.addItem(
-            {
-              type: 'error',
-              text: `Failed to switch to Gemini: ${errorMessage}`,
-            },
-            Date.now(),
-          );
-        }
-      },
-    },
+    //       context.ui.addItem(
+    //         {
+    //           type: 'info',
+    //           text: '✅ Successfully switched to Gemini API key!\n\n�� Setup required:\n• Set GEMINI_API_KEY environment variable\n• Use .env file for persistent configuration\n\n🧠 TerraAGI Vector Search: Automatically activated when you authenticate!',
+    //         },
+    //         Date.now(),
+    //       );
+    //     } catch (error) {
+    //       const errorMessage = error instanceof Error ? error.message : String(error);
+    //       context.ui.addItem(
+    //         {
+    //           type: 'error',
+    //           text: `Failed to switch to Gemini: ${errorMessage}`,
+    //         },
+    //         Date.now(),
+    //       );
+    //     }
+    //   },
+    // },
     {
       name: 'status',
       description: 'Check current authentication status',
@@ -334,12 +335,11 @@ export const authCommand: SlashCommand = {
               statusText += `\n❓ No authentication method selected\n`;
               statusText += `• Use /auth qwen for free Qwen OAuth\n`;
               statusText += `• Use /auth openai for OpenAI-compatible API\n`;
-              statusText += `• Use /auth gemini for Gemini API\n`;
           }
 
           if (!terraApiKey || !terraUsername) {
             statusText += `\n💡 To enable Terra Vector features:\n`;
-            statusText += `• TerraAGI credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini\n`;
+            statusText += `• TerraAGI credentials are automatically registered when you authenticate with Qwen/OpenAI\n`;
             statusText += `• If you need to manually manage Terra credentials, use the /vector commands\n`;
           }
 

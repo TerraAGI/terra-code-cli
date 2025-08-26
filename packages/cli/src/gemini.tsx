@@ -131,6 +131,16 @@ ${reason.stack}`
 }
 
 export async function main() {
+  // Suppress punycode deprecation warning
+  process.removeAllListeners('warning');
+  process.on('warning', (warning) => {
+    if (warning.name === 'DeprecationWarning' && warning.message.includes('punycode')) {
+      return; // Suppress punycode deprecation warnings
+    }
+    // Allow other warnings to pass through
+    console.warn(warning.name, warning.message);
+  });
+  
   setupUnhandledRejectionHandler();
   const workspaceRoot = process.cwd();
   const settings = loadSettings(workspaceRoot);
