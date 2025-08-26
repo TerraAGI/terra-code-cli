@@ -33,7 +33,7 @@ import { toolsCommand } from '../ui/commands/toolsCommand.js';
 import { settingsCommand } from '../ui/commands/settingsCommand.js';
 import { vimCommand } from '../ui/commands/vimCommand.js';
 import { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';
-import { vectorCommand } from '../ui/commands/vectorCommand.js'; // Import the new vector command
+import { vectorCommand } from '../ui/commands/vectorCommand.js'; // Import the brain command
 
 /**
  * Loads the core, hard-coded slash commands that are an integral part
@@ -77,7 +77,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       settingsCommand,
       vimCommand,
       setupGithubCommand,
-      vectorCommand, // Add the new vector command to the list
+      vectorCommand, // Add the brain command to the list
     ];
 
     return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);

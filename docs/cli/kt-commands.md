@@ -1,20 +1,20 @@
 # KT (Knowledge Transfer) Commands
 
-The Terra CLI provides interactive commands for collecting knowledge from developers and team leads through conversational sessions. This allows teams to capture valuable expertise and make it searchable in the knowledge base.
+The Terra CLI provides interactive commands for collecting knowledge from developers and team leads through conversational sessions. This allows teams to capture valuable expertise and make it searchable in your brain.
 
 ## Overview
 
-The KT system enables developers and team leads to share their knowledge in a natural, conversational way. The entire conversation is recorded and automatically uploaded to the vector database, making it searchable for other team members.
+The KT system enables developers and team leads to share their knowledge in a natural, conversational way. The entire conversation is recorded and automatically uploaded to your brain, making it searchable for other team members.
 
 ## Commands
 
-### `/vector kt`
+### `/brain kt`
 
 Starts an interactive KT (Knowledge Transfer) collection session.
 
 **Usage:**
 ```bash
-/vector kt
+/brain kt
 ```
 
 **What it does:**
@@ -25,11 +25,11 @@ Starts an interactive KT (Knowledge Transfer) collection session.
 
 **Example session:**
 ```
-User: /vector kt
+User: /brain kt
 CLI: 🚀 Starting Interactive KT (Knowledge Transfer) Session...
 
 This session will help you collect knowledge from developers and team leads.
-The entire conversation will be recorded and uploaded to your KT knowledge base.
+The entire conversation will be recorded and uploaded to your brain.
 
 Available commands during this session:
 • Type "/finish" when you're done sharing knowledge to complete and upload the session
@@ -44,7 +44,7 @@ User: We use Docker containers with Kubernetes...
 
 ### `/finish`
 
-Completes the current KT session and uploads the conversation to the vector database.
+Completes the current KT session and uploads the conversation to your brain.
 
 **Usage:**
 ```bash
@@ -54,7 +54,7 @@ Completes the current KT session and uploads the conversation to the vector data
 **What it does:**
 - Summarizes the collected knowledge
 - Saves the entire conversation to a formatted text file
-- Uploads the file to your personal KT collection in the vector database
+- Uploads the file to your personal KT collection in your brain
 - Makes the knowledge searchable for other team members
 
 **Example output:**

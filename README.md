@@ -315,17 +315,16 @@ terra
 
 Terra Code includes powerful AGI services that enhance your development workflow:
 
-### 🔍 Vector Knowledge Base
+### 🧠 Development Brain
 
 ```bash
-# Upload documents to your knowledge base
-terra> /vector upload README.md
-✅ Document uploaded successfully to your Terra knowledge base
+# Upload documents to your brain
+terra> /brain upload README.md
+✅ Document uploaded successfully to your Terra brain
 
-# Search your knowledge base
-terra> /vector search "API authentication"
-🔍 Searching your knowledge base...
-📚 Found 3 relevant documents...
+# Upload knowledge to your brain  
+terra> /brain upload deployment-guide.md
+✅ Knowledge uploaded successfully to your Terra brain
 ```
 
 ### 🧠 Enhanced AI Capabilities
@@ -336,7 +335,7 @@ terra> /compare "Explain dependency injection" --models qwen,gpt-4,claude
 
 # Knowledge-enhanced responses
 terra> /enhance "How do I implement OAuth2?"
-🚀 Enhancing response with Terra knowledge base...
+🚀 Enhancing response with Terra brain...
 ```
 
 ## Commands Reference
@@ -353,10 +352,9 @@ terra> /enhance "How do I implement OAuth2?"
 
 ### Terra-Specific Commands
 
-- **`/vector upload <file>`** - Upload document to knowledge base
-- **`/vector search <query>`** - Search your knowledge base
-- **`/vector list`** - List uploaded documents
-- **`/enhance <prompt>`** - Enhance response with Terra knowledge
+- **`/brain upload <file>`** - Upload document to your brain
+- **`/brain kt`** - Interactive Knowledge Transfer session
+- **`/enhance <prompt>`** - Enhance response with Terra brain
 - **`/compare <prompt> --models <list>`** - Compare responses across models
 
 ## Performance Benchmarks

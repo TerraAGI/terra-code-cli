@@ -6,7 +6,7 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 
 // Import the vector DB client functions
-import { uploadDocument, searchDocuments } from '@terra-code/terra-code-core';
+import { uploadDocument, searchDocuments as _searchDocuments } from '@terra-code/terra-code-core';
 
 // Define the result structure to match API response
 interface SearchResult {
@@ -21,7 +21,7 @@ interface SearchResult {
  * @param originalQuery - The original search query
  * @returns Array of key terms for follow-up searches
  */
-function extractKeyTerms(content: string, originalQuery: string): string[] {
+function _extractKeyTerms(content: string, originalQuery: string): string[] {
   // Simple term extraction - split content into words and filter
   const words = content.toLowerCase()
     .replace(/[^\w\s]/g, ' ') // Remove punctuation
@@ -48,7 +48,7 @@ function extractKeyTerms(content: string, originalQuery: string): string[] {
  * @param keyTerms - Extracted key terms from results
  * @returns Array of refined search queries
  */
-function generateRefinedQueries(originalQuery: string, initialResults: SearchResult[], keyTerms: string[]): string[] {
+function _generateRefinedQueries(originalQuery: string, initialResults: SearchResult[], keyTerms: string[]): string[] {
   const refinedQueries: string[] = [];
   
   // Strategy 1: Combine original query with key terms
@@ -80,7 +80,7 @@ function generateRefinedQueries(originalQuery: string, initialResults: SearchRes
  * @param originalQuery - The original search query
  * @returns Array of alternative search queries
  */
-function generateAlternativeQueries(originalQuery: string): string[] {
+function _generateAlternativeQueries(originalQuery: string): string[] {
   const alternatives: string[] = [];
   
   // Strategy 1: Broaden the search by removing specific terms
@@ -185,7 +185,7 @@ function getSynonyms(query: string): string[] {
  * @param keyTerms - Extracted key terms from the result
  * @returns Array of deep-dive search queries
  */
-function generateDeepDiveQueries(originalQuery: string, mostRelevantResult: SearchResult, keyTerms: string[]): string[] {
+function _generateDeepDiveQueries(originalQuery: string, mostRelevantResult: SearchResult, keyTerms: string[]): string[] {
   const deepDiveQueries: string[] = [];
   
   // Strategy 1: Focus on specific aspects mentioned in the result
@@ -300,13 +300,13 @@ function generateContextualQueries(originalQuery: string, content: string): stri
 }
 
 export const vectorCommand: SlashCommand = {
-  name: 'vector',
-  description: 'Commands for interacting with the vector database.',
+  name: 'brain',
+  description: 'Commands for interacting with your development brain.',
   kind: CommandKind.BUILT_IN,
   subCommands: [
     {
       name: 'upload',
-      description: 'Upload a file to the vector database.',
+      description: 'Upload a file to your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, args) => {
         // Parse arguments - only file path is needed, collection is auto-generated
@@ -325,7 +325,7 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Usage: /vector upload <file_path>\\n\\nNote: File paths with spaces should be quoted (e.g., "C:\\path\\with spaces\\file.txt"). Collection name is automatically generated from your Terra credentials.',
+              text: 'Usage: /brain upload <file_path>\\n\\nNote: File paths with spaces should be quoted (e.g., "C:\\path\\with spaces\\file.txt"). Collection name is automatically generated from your Terra credentials.',
             },
             Date.now(),
           );
@@ -493,9 +493,10 @@ export const vectorCommand: SlashCommand = {
         }
       },
     },
+    /*
     {
       name: 'search',
-      description: 'Search documents in the vector database.',
+      description: 'Search documents in your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, args) => {
         // Parse arguments - only query is needed, collection is auto-generated
@@ -505,7 +506,7 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Usage: /vector search <query>\\n\\nNote: Collection name is automatically generated from your Terra credentials.',
+              text: 'Usage: /brain search <query>\\n\\nNote: Collection name is automatically generated from your Terra credentials.',
             },
             Date.now(),
           );
@@ -601,14 +602,14 @@ export const vectorCommand: SlashCommand = {
     },
     {
       name: 'intelligent',
-      description: 'Intelligent agentic search using the KT knowledge base with multi-depth exploration.',
+      description: 'Intelligent agentic search using your brain with multi-depth exploration.',
       kind: CommandKind.BUILT_IN,
       action: async (context, args) => {
         if (!args || args.trim() === '') {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Usage: /vector intelligent <your question or query>\\n\\nThis command will intelligently search the KT knowledge base and provide comprehensive answers.',
+              text: 'Usage: /brain intelligent <your question or query>\\n\\nThis command will intelligently search the KT knowledge base and provide comprehensive answers.',
             },
             Date.now(),
           );
@@ -861,9 +862,10 @@ export const vectorCommand: SlashCommand = {
         }
       },
     },
+    */
     {
       name: 'kt',
-      description: 'Interactive KT (Knowledge Transfer) collection from developers and team leads.',
+      description: 'Interactive Knowledge Transfer session to feed your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, _args) => {
         // Check if we have Terra credentials
@@ -929,7 +931,7 @@ Start by asking them what specific knowledge, processes, or information they wan
     },
     {
       name: 'finish',
-      description: 'Complete the current KT session and upload the conversation to the vector database.',
+      description: 'Complete the current KT session and upload the conversation to your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, _args) => {
         // Check if we have Terra credentials
@@ -1059,14 +1061,14 @@ Start by asking them what specific knowledge, processes, or information they wan
     },
     {
       name: 'cancel',
-      description: 'Cancel the current KT session without saving.',
+      description: 'Cancel the current KT session without saving to your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, _args) => {
         context.ui.addItem(
           {
             type: MessageType.INFO,
             text: '❌ KT session cancelled. No knowledge was saved to the database.\n\n' +
-                  'You can start a new KT session anytime with `/vector kt`.',
+                  'You can start a new KT session anytime with `/brain kt`.',
           },
           Date.now(),
         );

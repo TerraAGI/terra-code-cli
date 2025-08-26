@@ -141,31 +141,23 @@ Slash commands provide meta-level control over the CLI itself.
     - **Persistent setting:** Vim mode preference is saved to `~/.qwen/settings.json` and restored between sessions
   - **Status indicator:** When enabled, shows `[NORMAL]` or `[INSERT]` in the footer
 
-- **`/vector`**
-  - **Description:** Commands for interacting with the vector database.
+- **`/brain`**
+  - **Description:** Commands for interacting with your development brain.
   - **Sub-commands:**
     - **`upload`**:
-      - **Description:** Upload a file to the vector database.
-      - **Usage:** `/vector upload <file_path>`
-      - **Details:** This command uploads a file to the vector database. The file path can be absolute or relative to the current working directory. Collection name is automatically generated from your Terra credentials.
-    - **`search`**:
-      - **Description:** Search for documents in the vector database.
-      - **Usage:** `/vector search <query>`
-      - **Details:** This command performs a semantic search within your personal KT collection. Collection name is automatically generated from your Terra credentials.
-    - **`intelligent`**:
-      - **Description:** Intelligent agentic search using the KT knowledge base with multi-depth exploration.
-      - **Usage:** `/vector intelligent <query>`
-      - **Details:** This command performs advanced search with multiple refinement strategies to find comprehensive information in your KT knowledge base.
+      - **Description:** Upload a file to your brain.
+      - **Usage:** `/brain upload <file_path>`
+      - **Details:** This command uploads a file to your brain. The file path can be absolute or relative to the current working directory. Collection name is automatically generated from your Terra credentials.
     - **`kt`**:
-      - **Description:** Start an interactive KT (Knowledge Transfer) collection session.
-      - **Usage:** `/vector kt`
+      - **Description:** Start an interactive Knowledge Transfer session for your brain.
+      - **Usage:** `/brain kt`
       - **Details:** Initiates a conversational session for collecting knowledge from developers and team leads. The entire conversation is recorded and can be uploaded using `/finish`.
     - **`finish`**:
-      - **Description:** Complete the current KT session and upload the conversation to the vector database.
+      - **Description:** Complete the current KT session and upload the conversation to your brain.
       - **Usage:** `/finish`
       - **Details:** Saves the current conversation and uploads it to your KT collection. Use this after completing a knowledge sharing session.
     - **`cancel`**:
-      - **Description:** Cancel the current KT session without saving.
+      - **Description:** Cancel the current KT session without saving to your brain.
       - **Usage:** `/cancel`
       - **Details:** Aborts the current KT session without saving any knowledge to the database.
 
