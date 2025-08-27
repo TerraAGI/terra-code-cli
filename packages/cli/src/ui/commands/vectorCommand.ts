@@ -1,5 +1,5 @@
 // packages/cli/src/ui/commands/vectorCommand.ts
-import { CommandKind, SlashCommand, SlashCommandActionReturn } from './types.js';
+import { CommandKind, SlashCommand } from './types.js';
 import { MessageType } from '../types.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -488,9 +488,285 @@ async function ensureKTDirectory(projectRoot: string): Promise<string> {
 
 export const vectorCommand: SlashCommand = {
   name: 'brain',
-  description: 'Manage your Terra knowledge brain - upload documents, start KT sessions, and search knowledge.',
+  description: 'Manage your Terra knowledge brain - capture knowledge, upload documents, and remember facts.',
   kind: CommandKind.BUILT_IN,
   subCommands: [
+    {
+      name: 'kt',
+      description: 'Knowledge Transfer session management.',
+      kind: CommandKind.BUILT_IN,
+      subCommands: [
+        {
+          name: 'start',
+          description: 'Start an interactive Knowledge Transfer session to capture expertise.',
+          kind: CommandKind.BUILT_IN,
+          action: async (context, _args) => {
+            // Check if we have Terra credentials
+            let terraApiKey = process.env.TERRA_API_KEY;
+            let terraUsername = process.env.TERRA_USERNAME;
+            
+            if (!terraApiKey || !terraUsername) {
+              if (context.services.settings) {
+                terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
+                terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+              }
+            }
+            
+            if (!terraApiKey || !terraUsername) {
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            // Initialize KT session state
+            const chat = await context.services.config?.getGeminiClient()?.getChat();
+            if (!chat) {
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: 'No chat client available to start KT session.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            const currentHistory = chat.getHistory();
+            currentKTSession = {
+              isActive: true,
+              startHistoryIndex: currentHistory.length,
+              sessionId: `kt_${Date.now()}`
+            };
+
+            // Start interactive KT collection session
+            context.ui.addItem(
+              {
+                type: MessageType.INFO,
+                text: '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
+                      'This session will help you collect knowledge from developers and team leads.\n' +
+                      'The entire conversation will be recorded and saved as technical documentation.\n\n' +
+                      'Available commands during this session:\n' +
+                      '• Type "/brain kt finish" when you\'re done sharing knowledge to complete and save the session\n' +
+                      '• Type "/brain kt cancel" to abort the collection without saving\n\n' +
+                      'What knowledge would you like to share with the team?',
+              },
+              Date.now(),
+            );
+
+            // Return a special action that will handle the interactive collection
+            return {
+              type: 'submit_prompt',
+              content: `I'm starting an interactive KT (Knowledge Transfer) collection session. 
+
+The user (a developer or team lead) wants to share their knowledge through a conversation with me. This entire conversation will be recorded and saved as technical documentation.
+
+IMPORTANT: This is a special KT collection session. I need to:
+
+1. Help them share their knowledge in a conversational way
+2. Ask follow-up questions to get more details
+3. Help them structure their knowledge clearly
+4. Watch for special commands during the session
+
+Available commands during this session:
+• When they type "/brain kt finish" - I should help them complete the session and summarize what we've collected
+• When they type "/brain kt cancel" - I should acknowledge that they want to abort the session
+
+The goal is to capture valuable knowledge that can help other team members. I should be collaborative and ask good follow-up questions to get comprehensive information.
+
+Start by asking them what specific knowledge, processes, or information they want to share with the team.`
+            };
+          },
+        },
+        {
+          name: 'finish',
+          description: 'Complete the current KT session and save the documentation locally and upload to your brain.',
+          kind: CommandKind.BUILT_IN,
+          action: async (context, _args) => {
+            // Check if we have an active KT session
+            if (!currentKTSession || !currentKTSession.isActive) {
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: 'No active KT session found. Start a session with `/brain kt start` first.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            // Check if we have Terra credentials
+            let terraApiKey = process.env.TERRA_API_KEY;
+            let terraUsername = process.env.TERRA_USERNAME;
+            
+            if (!terraApiKey || !terraUsername) {
+              if (context.services.settings) {
+                terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
+                terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+              }
+            }
+            
+            if (!terraApiKey || !terraUsername) {
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            // Get the current conversation history
+            const chat = await context.services.config?.getGeminiClient()?.getChat();
+            if (!chat) {
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: 'No chat client available to save conversation.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            const history = chat.getHistory();
+            if (history.length <= currentKTSession.startHistoryIndex) {
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: 'No conversation found to save in this KT session.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            try {
+              // Extract knowledge from KT session
+              const geminiClient = context.services.config?.getGeminiClient() || null;
+              const rawKnowledge = await extractKnowledgeFromKTSession(history, currentKTSession.startHistoryIndex, geminiClient);
+              
+              if (!rawKnowledge.trim()) {
+                context.ui.addItem(
+                  {
+                    type: MessageType.ERROR,
+                    text: 'No meaningful knowledge content found in this session.\n\n' +
+                          'Tips for better KT sessions:\n' +
+                          '• Share specific technical details, processes, or insights\n' +
+                          '• Explain implementation approaches, configurations, or workflows\n' +
+                          '• Provide concrete examples, code snippets, or step-by-step procedures\n' +
+                          '• Avoid finishing the session too early - add substantial content first\n\n' +
+                          'Try starting a new session with "/brain kt start" and sharing more detailed knowledge.',
+                  },
+                  Date.now(),
+                );
+                return;
+              }
+
+              // Format as technical documentation
+              const technicalDoc = formatAsTechnicalDoc(rawKnowledge, terraUsername);
+
+              // Create filename
+              const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+              const fileName = `kt_${terraUsername}_${timestamp}.md`;
+              const uploadFileName = `kt_${terraUsername}_${timestamp}.txt`;
+
+              // Ensure .kt directory exists
+              const projectRoot = context.services.config?.getWorkingDir() || process.cwd();
+              const ktDir = await ensureKTDirectory(projectRoot);
+              const localFilePath = path.join(ktDir, fileName);
+
+              // Save file locally
+              await fs.writeFile(localFilePath, technicalDoc, 'utf8');
+
+              context.ui.addItem(
+                {
+                  type: MessageType.INFO,
+                  text: `📝 KT session completed! Saving documentation to ".kt/${fileName}"...`,
+                },
+                Date.now(),
+              );
+
+              // Upload to vector database
+              const userCollectionName = `${terraUsername}_kt`;
+              const fileBuffer = Buffer.from(technicalDoc, 'utf8');
+              const result = await uploadDocument(fileBuffer, uploadFileName, userCollectionName, terraApiKey);
+
+              if (result.success) {
+                context.ui.addItem(
+                  {
+                    type: MessageType.INFO,
+                    text: `✅ Successfully saved KT documentation:\n` +
+                          `   📁 Local: .kt/${fileName}\n` +
+                          `   🧠 Brain: Collection "${userCollectionName}"\n\n` +
+                          `The knowledge you shared has been documented and can now be searched by other team members.`,
+                  },
+                  Date.now(),
+                );
+              } else {
+                context.ui.addItem(
+                  {
+                    type: MessageType.ERROR,
+                    text: `⚠️ Documentation saved locally but failed to upload to brain: ${result.error || 'Unknown error'}\n` +
+                          `Local file: .kt/${fileName}`,
+                  },
+                  Date.now(),
+                );
+              }
+
+              // Clear KT session state
+              currentKTSession = null;
+
+            } catch (error: unknown) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              context.ui.addItem(
+                {
+                  type: MessageType.ERROR,
+                  text: `Error saving KT session: ${errorMessage}`,
+                },
+                Date.now(),
+              );
+              // Clear KT session state on error
+              currentKTSession = null;
+            }
+          },
+        },
+        {
+          name: 'cancel',
+          description: 'Cancel the current KT session without saving.',
+          kind: CommandKind.BUILT_IN,
+          action: async (context, _args) => {
+            if (!currentKTSession || !currentKTSession.isActive) {
+              context.ui.addItem(
+                {
+                  type: MessageType.INFO,
+                  text: 'No active KT session to cancel.',
+                },
+                Date.now(),
+              );
+              return;
+            }
+
+            // Clear KT session state
+            currentKTSession = null;
+
+            context.ui.addItem(
+              {
+                type: MessageType.INFO,
+                text: '❌ KT session cancelled. No knowledge was saved.\n\n' +
+                      'You can start a new KT session anytime with `/brain kt start`.',
+              },
+              Date.now(),
+            );
+          },
+        },
+      ],
+    },
     {
       name: 'upload',
       description: 'Upload a document to your brain.',
@@ -503,216 +779,20 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Usage: /brain upload <file_path>\\n\\nNote: File paths with spaces should be quoted (e.g., "C:\\path\\with spaces\\file.txt"). Collection name is automatically generated from your Terra credentials.',
+              text: 'Usage: /brain upload <file_path>\n\nExample: /brain upload README.md\n\nNote: Collection name is automatically generated from your Terra credentials.',
             },
             Date.now(),
           );
           return;
         }
 
-        // Handle quoted file paths properly
-        let filePath = trimmedArgs;
-        
-        // Remove surrounding quotes if they exist
-        if ((filePath.startsWith('"') && filePath.endsWith('"')) || 
-            (filePath.startsWith("'") && filePath.endsWith("'"))) {
-          filePath = filePath.slice(1, -1);
-        }
-        
-        // Clean up any extra whitespace and handle Windows path issues
-        filePath = filePath.trim();
-        
-                // Handle Windows path edge cases
-        if (process.platform === 'win32') {
-          // Remove any extra quotes that might have been added by the CLI framework
-          filePath = filePath.replace(/^"+|"+$/g, '');
-          // Handle backslash escaping issues
-          filePath = filePath.replace(/\\\\/g, '\\');
-        }
-        
-        // Additional validation for the parsed path
-        if (!filePath || filePath.length === 0) {
+        const filePath = trimmedArgs.trim();
+
+        if (!filePath) {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'File path is required and cannot be empty.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-        
-        // Check if the path looks valid
-        if (filePath.includes('undefined') || filePath.includes('null')) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: `Invalid file path detected: "${filePath}"`,
-            },
-            Date.now(),
-          );
-          return;
-        }
-        
-        // Handle both absolute and relative paths
-        let absolutePath = '';
-        
-        try {
-          if (path.isAbsolute(filePath)) {
-            // If it's already an absolute path, use it as-is
-            absolutePath = filePath;
-          } else {
-            // If it's a relative path, resolve it from current working directory
-            absolutePath = context.services.config
-              ? path.resolve(context.services.config.getWorkingDir(), filePath)
-              : path.resolve(process.cwd(), filePath);
-          }
-
-          // Normalize the path to handle different path separators
-          absolutePath = path.normalize(absolutePath);
-          
-          // Check if file exists (basic validation)
-          try {
-            await fs.access(absolutePath);
-          } catch {
-            context.ui.addItem(
-              {
-                type: MessageType.ERROR,
-                text: `File not found: ${absolutePath}`,
-              },
-              Date.now(),
-            );
-            return;
-          }
-
-          // Get Terra credentials from environment or settings
-          let terraApiKey = process.env.TERRA_API_KEY;
-          let terraUsername = process.env.TERRA_USERNAME;
-          
-          // If not in env, try to get from settings
-          if (!terraApiKey || !terraUsername) {
-            if (context.services.settings) {
-              terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-              terraUsername = terraUsername || context.services.settings.merged.terraUsername;
-            }
-          }
-          
-          if (!terraApiKey || !terraUsername) {
-            context.ui.addItem(
-              {
-                type: MessageType.ERROR,
-                text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
-              },
-              Date.now(),
-            );
-            return;
-          }
-
-          // Use user's collection name
-          const userCollectionName = `${terraUsername}_kt`;
-          
-          context.ui.addItem(
-            {
-              type: MessageType.INFO,
-              text: `Uploading file "${path.basename(absolutePath)}"...`,
-            },
-            Date.now(),
-          );
-          
-          // Read the file and upload
-          const fileBuffer = await fs.readFile(absolutePath);
-          const fileName = path.basename(absolutePath);
-          const result = await uploadDocument(fileBuffer, fileName, userCollectionName, terraApiKey);
-
-          if (result.success) {
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `Successfully uploaded "${fileName}".`,
-              },
-              Date.now(),
-            );
-          } else {
-            context.ui.addItem(
-              {
-                type: MessageType.ERROR,
-                text: `Failed to upload file: ${result.error || 'Unknown error'}`,
-              },
-              Date.now(),
-            );
-          }
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: `Error uploading file "${path.basename(absolutePath)}": ${errorMessage}`,
-            },
-            Date.now(),
-          );
-        }
-      },
-    },
-    {
-      name: 'remember',
-      description: 'Remember a fact or preference in your brain.',
-      kind: CommandKind.BUILT_IN,
-      action: (context, args): SlashCommandActionReturn | void => {
-        if (!args || args.trim() === '') {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'Usage: /brain remember <fact to remember>',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        const fact = args.trim();
-        
-        context.ui.addItem(
-          {
-            type: MessageType.INFO,
-            text: `🧠 Remembering: "${fact}"`,
-          },
-          Date.now(),
-        );
-
-        return {
-          type: 'tool',
-          toolName: 'save_memory',
-          toolArgs: { fact },
-        };
-      },
-    },
-    /*
-    {
-      name: 'search',
-      description: 'Search documents in your brain.',
-      kind: CommandKind.BUILT_IN,
-      action: async (context, args) => {
-        // Parse arguments - only query is needed, collection is auto-generated
-        const trimmedArgs = args.trim();
-        
-        if (!trimmedArgs) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'Usage: /brain search <query>\\n\\nNote: Collection name is automatically generated from your Terra credentials.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        const query = trimmedArgs.trim();
-
-        if (!query) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'Search query is required.',
+              text: 'File path is required.',
             },
             Date.now(),
           );
@@ -738,45 +818,38 @@ export const vectorCommand: SlashCommand = {
         const userCollectionName = `${terraUsername}_kt`;
         
         try {
+          // Resolve the file path
+          const resolvedPath = path.isAbsolute(filePath)
+            ? filePath
+            : path.resolve(process.cwd(), filePath);
+
+          // Check if file exists and read it
+          const fileBuffer = await fs.readFile(resolvedPath);
+          const fileName = path.basename(resolvedPath);
+
           context.ui.addItem(
             {
               type: MessageType.INFO,
-              text: `Searching collection '${userCollectionName}' for: "${query}"`,
+              text: `Uploading "${fileName}" to your brain...`,
             },
             Date.now(),
           );
 
-          const result = await searchDocuments(query, userCollectionName, 5, terraApiKey); // Default limit of 5
+          const result = await uploadDocument(fileBuffer, fileName, userCollectionName, terraApiKey);
           
           if (result.success) {
-            const results = result.results ?? [];
-            if (results.length === 0) {
-              context.ui.addItem(
-                {
-                  type: MessageType.INFO,
-                  text: 'No results found.',
-                },
-                Date.now(),
-              );
-            } else {
-              let responseText = `Found ${results.length} result(s):\\n`;
-              results.forEach((res: SearchResult, index: number) => {
-                responseText += `\n--- Result ${index + 1} (Score: ${res.score?.toFixed(4) ?? 'N/A'}) ---\n${res.content ?? 'No content'}\n`;
-              });
-              
-              context.ui.addItem(
-                {
-                  type: MessageType.INFO,
-                  text: responseText,
-                },
-                Date.now(),
-              );
-            }
+            context.ui.addItem(
+              {
+                type: MessageType.INFO,
+                text: `✅ Successfully uploaded "${fileName}" to collection "${userCollectionName}".`,
+              },
+              Date.now(),
+            );
           } else {
             context.ui.addItem(
               {
                 type: MessageType.ERROR,
-                text: `Search failed: ${result.error || 'Unknown error'}`,
+                text: `Failed to upload file: ${result.error || 'Unknown error'}`,
               },
               Date.now(),
             );
@@ -786,7 +859,7 @@ export const vectorCommand: SlashCommand = {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: `Error during search: ${errorMessage}`,
+              text: `Error uploading file: ${errorMessage}`,
             },
             Date.now(),
           );
@@ -794,535 +867,50 @@ export const vectorCommand: SlashCommand = {
       },
     },
     {
-      name: 'intelligent',
-      description: 'Intelligent agentic search using your brain with multi-depth exploration.',
+      name: 'remember',
+      description: 'Store a personal fact or preference that persists across sessions.',
       kind: CommandKind.BUILT_IN,
       action: async (context, args) => {
-        if (!args || args.trim() === '') {
+        const trimmedArgs = args.trim();
+        
+        if (!trimmedArgs) {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Usage: /brain intelligent <your question or query>\\n\\nThis command will intelligently search the KT knowledge base and provide comprehensive answers.',
+              text: 'Usage: /brain remember <fact_or_preference>\n\nExample: /brain remember "I prefer TypeScript over JavaScript"\n\nThis will be remembered across all future sessions.',
             },
             Date.now(),
           );
           return;
         }
 
-        const query = args.trim();
-        
-        // Get Terra credentials from environment or settings
-        let terraApiKey = process.env.TERRA_API_KEY;
-        let terraUsername = process.env.TERRA_USERNAME;
-        
-        // If not in env, try to get from settings
-        if (!terraApiKey || !terraUsername) {
-          if (context.services.settings) {
-            terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-            terraUsername = terraUsername || context.services.settings.merged.terraUsername;
-          }
-        }
-        
-        if (!terraApiKey || !terraUsername) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
-            },
-            Date.now(),
-          );
-          return;
-        }
+        const memory = trimmedArgs;
 
-        // Use user's collection name
-        const collectionName = `${terraUsername}_kt`;
-        
         try {
+          // Use the memory tool to store the fact
           context.ui.addItem(
             {
               type: MessageType.INFO,
-              text: `Performing intelligent search for: "${query}"`,
+              text: `🧠 Remembering: "${memory}"`,
             },
             Date.now(),
           );
 
-          // Initial search
-          const initialResult = await searchDocuments(query, collectionName, 3, terraApiKey);
-          
-          if (!initialResult.success) {
-            context.ui.addItem(
-              {
-                type: MessageType.ERROR,
-                text: `Search failed: ${initialResult.error || 'Unknown error'}`,
-              },
-              Date.now(),
-            );
-            return;
-          }
-
-          const initialResults = initialResult.results ?? [];
-          let allResults: SearchResult[] = [...initialResults];
-          
-                    // If we have initial results, perform agentic search refinement
-          if (initialResults.length > 0) {
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `Found ${initialResults.length} initial result(s). Performing agentic search refinement...`,
-              },
-              Date.now(),
-            );
-
-            // Extract key terms and concepts from initial results
-            const keyTerms = extractKeyTerms(initialResults[0].content, query);
-            
-            // Refine the search query based on initial results
-            const refinedQueries = generateRefinedQueries(query, initialResults, keyTerms);
-            
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `Generated ${refinedQueries.length} refined search queries based on initial results.`,
-              },
-              Date.now(),
-            );
-
-            // Perform refined searches
-            for (const refinedQuery of refinedQueries.slice(0, 3)) {
-              context.ui.addItem(
-                {
-                  type: MessageType.INFO,
-                  text: `Searching with refined query: "${refinedQuery}"`,
-                },
-                Date.now(),
-              );
-
-              const refinedResult = await searchDocuments(refinedQuery, collectionName, 2, terraApiKey);
-              if (refinedResult.success && refinedResult.results && refinedResult.results.length > 0) {
-                context.ui.addItem(
-                  {
-                    type: MessageType.INFO,
-                    text: `Found ${refinedResult.results.length} result(s) for refined query "${refinedQuery}":`,
-                  },
-                  Date.now(),
-                );
-
-                refinedResult.results.forEach((res: SearchResult, index: number) => {
-                  context.ui.addItem(
-                    {
-                      type: MessageType.INFO,
-                      text: `  ${index + 1}. (Score: ${res.score?.toFixed(4) ?? 'N/A'}) ${res.content?.substring(0, 200) ?? 'No content'}...`,
-                    },
-                    Date.now(),
-                  );
-                });
-
-                allResults = allResults.concat(refinedResult.results);
-              }
-            }
-          } else {
-            // Try alternative search strategies if no initial results
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: 'No direct results found. Trying alternative search strategies...',
-              },
-              Date.now(),
-            );
-            
-            // Generate alternative queries when no initial results
-            const alternativeQueries = generateAlternativeQueries(query);
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `Trying alternative search strategies: ${alternativeQueries.slice(0, 3).join(', ')}`,
-              },
-              Date.now(),
-            );
-            
-            for (const altQuery of alternativeQueries.slice(0, 3)) {
-              const altResult = await searchDocuments(altQuery, collectionName, 2, terraApiKey);
-              if (altResult.success && altResult.results && altResult.results.length > 0) {
-                context.ui.addItem(
-                  {
-                    type: MessageType.INFO,
-                    text: `Found ${altResult.results.length} result(s) for alternative query "${altQuery}":`,
-                  },
-                  Date.now(),
-                );
-                allResults = allResults.concat(altResult.results);
-              }
-            }
-          }
-
-          // Display comprehensive results
-          if (allResults.length === 0) {
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: 'No results found in the KT knowledge base for your query.',
-              },
-              Date.now(),
-            );
-          } else {
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `\\n=== COMPREHENSIVE RESULTS (${allResults.length} total) ===`,
-              },
-              Date.now(),
-            );
-
-            allResults.forEach((res: SearchResult, index: number) => {
-              context.ui.addItem(
-                {
-                  type: MessageType.INFO,
-                  text: `\\n--- Result ${index + 1} (Score: ${res.score?.toFixed(4) ?? 'N/A'}) ---\\n${res.content ?? 'No content'}`,
-                },
-                Date.now(),
-              );
-            });
-          }
-
-          // Perform agentic deep-dive search on most relevant result
-          if (initialResults.length > 0) {
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `\\n=== PERFORMING AGENTIC DEEP-DIVE SEARCH ===`,
-              },
-              Date.now(),
-            );
-            
-            const deepTerms = extractKeyTerms(initialResults[0].content, query);
-            let deepResults: SearchResult[] = [];
-            
-            // Generate deep-dive queries based on the most relevant result
-            const deepDiveQueries = generateDeepDiveQueries(query, initialResults[0], deepTerms);
-            
-            for (const deepQuery of deepDiveQueries.slice(0, 3)) {
-              context.ui.addItem(
-                {
-                  type: MessageType.INFO,
-                  text: `Deep-dive search: "${deepQuery}"`,
-                },
-                Date.now(),
-              );
-              
-              const deepResult = await searchDocuments(deepQuery, collectionName, 2, terraApiKey);
-              if (deepResult.success && deepResult.results && deepResult.results.length > 0) {
-                context.ui.addItem(
-                  {
-                    type: MessageType.INFO,
-                    text: `\\n=== DEEP-DIVE RESULTS for "${deepQuery}" ===`,
-                  },
-                  Date.now(),
-                );
-
-                deepResult.results.forEach((res: SearchResult, index: number) => {
-                  context.ui.addItem(
-                    {
-                      type: MessageType.INFO,
-                      text: `${index + 1}. (Score: ${res.score?.toFixed(4) ?? 'N/A'}) ${res.content ?? 'No content'}`,
-                    },
-                    Date.now(),
-                  );
-                });
-
-                deepResults = deepResults.concat(deepResult.results);
-              }
-            }
-
-            if (deepResults.length > 0) {
-              context.ui.addItem(
-                {
-                  type: MessageType.INFO,
-                  text: `\\n🎯 Agentic search completed! Found ${allResults.length + deepResults.length} total insights through intelligent query refinement.`,
-                },
-                Date.now(),
-              );
-            }
-          }
+          // Return a memory tool call
+          return {
+            type: 'submit_prompt',
+            content: `Please use the memory tool to remember this fact: "${memory}"`
+          };
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: `Error during intelligent search: ${errorMessage}`,
+              text: `Error storing memory: ${errorMessage}`,
             },
             Date.now(),
           );
         }
-      },
-    },
-    */
-    {
-      name: 'kt',
-      description: 'Interactive Knowledge Transfer session to feed your brain.',
-      kind: CommandKind.BUILT_IN,
-      action: async (context, _args) => {
-        // Check if we have Terra credentials
-        let terraApiKey = process.env.TERRA_API_KEY;
-        let terraUsername = process.env.TERRA_USERNAME;
-        
-        if (!terraApiKey || !terraUsername) {
-          if (context.services.settings) {
-            terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-            terraUsername = terraUsername || context.services.settings.merged.terraUsername;
-          }
-        }
-        
-        if (!terraApiKey || !terraUsername) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        // Initialize KT session state
-        const chat = await context.services.config?.getGeminiClient()?.getChat();
-        if (!chat) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'No chat client available to start KT session.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        const currentHistory = chat.getHistory();
-        currentKTSession = {
-          isActive: true,
-          startHistoryIndex: currentHistory.length,
-          sessionId: `kt_${Date.now()}`
-        };
-
-        // Start interactive KT collection session
-        context.ui.addItem(
-          {
-            type: MessageType.INFO,
-            text: '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
-                  'This session will help you collect knowledge from developers and team leads.\n' +
-                  'The entire conversation will be recorded and saved as technical documentation.\n\n' +
-                  'Available commands during this session:\n' +
-                  '• Type "/finish" when you\'re done sharing knowledge to complete and save the session\n' +
-                  '• Type "/cancel" to abort the collection without saving\n\n' +
-                  'What knowledge would you like to share with the team?',
-          },
-          Date.now(),
-        );
-
-        // Return a special action that will handle the interactive collection
-        return {
-          type: 'submit_prompt',
-          content: `I'm starting an interactive KT (Knowledge Transfer) collection session. 
-
-The user (a developer or team lead) wants to share their knowledge through a conversation with me. This entire conversation will be recorded and saved as technical documentation.
-
-IMPORTANT: This is a special KT collection session. I need to:
-
-1. Help them share their knowledge in a conversational way
-2. Ask follow-up questions to get more details
-3. Help them structure their knowledge clearly
-4. Watch for special commands during the session
-
-Available commands during this session:
-• When they type "/finish" - I should help them complete the session and summarize what we've collected
-• When they type "/cancel" - I should acknowledge that they want to abort the session
-
-The goal is to capture valuable knowledge that can help other team members. I should be collaborative and ask good follow-up questions to get comprehensive information.
-
-Start by asking them what specific knowledge, processes, or information they want to share with the team.`
-        };
-      },
-    },
-    {
-      name: 'finish',
-      description: 'Complete the current KT session and save the documentation locally and upload to your brain.',
-      kind: CommandKind.BUILT_IN,
-      action: async (context, _args) => {
-        // Check if we have an active KT session
-        if (!currentKTSession || !currentKTSession.isActive) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'No active KT session found. Start a session with `/brain kt` first.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        // Check if we have Terra credentials
-        let terraApiKey = process.env.TERRA_API_KEY;
-        let terraUsername = process.env.TERRA_USERNAME;
-        
-        if (!terraApiKey || !terraUsername) {
-          if (context.services.settings) {
-            terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-            terraUsername = terraUsername || context.services.settings.merged.terraUsername;
-          }
-        }
-        
-        if (!terraApiKey || !terraUsername) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'Terra credentials not found. Terra credentials are automatically registered when you authenticate with Qwen/OpenAI/Gemini. Please authenticate first.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        // Get the current conversation history
-        const chat = await context.services.config?.getGeminiClient()?.getChat();
-        if (!chat) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'No chat client available to save conversation.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        const history = chat.getHistory();
-        if (history.length <= currentKTSession.startHistoryIndex) {
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: 'No conversation found to save in this KT session.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        try {
-          // Extract knowledge from KT session
-          const geminiClient = context.services.config?.getGeminiClient() || null;
-          const rawKnowledge = await extractKnowledgeFromKTSession(history, currentKTSession.startHistoryIndex, geminiClient);
-          
-          if (!rawKnowledge.trim()) {
-            context.ui.addItem(
-              {
-                type: MessageType.ERROR,
-                text: 'No meaningful knowledge content found in this session.\n\n' +
-                      'Tips for better KT sessions:\n' +
-                      '• Share specific technical details, processes, or insights\n' +
-                      '• Explain implementation approaches, configurations, or workflows\n' +
-                      '• Provide concrete examples, code snippets, or step-by-step procedures\n' +
-                      '• Avoid finishing the session too early - add substantial content first\n\n' +
-                      'Try starting a new session with "/brain kt" and sharing more detailed knowledge.',
-              },
-              Date.now(),
-            );
-            return;
-          }
-
-          // Format as technical documentation
-          const technicalDoc = formatAsTechnicalDoc(rawKnowledge, terraUsername);
-
-          // Create filename
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const fileName = `kt_${terraUsername}_${timestamp}.md`;
-          const uploadFileName = `kt_${terraUsername}_${timestamp}.txt`;
-
-                     // Ensure .kt directory exists
-           const projectRoot = context.services.config?.getWorkingDir() || process.cwd();
-          const ktDir = await ensureKTDirectory(projectRoot);
-          const localFilePath = path.join(ktDir, fileName);
-
-          // Save file locally
-          await fs.writeFile(localFilePath, technicalDoc, 'utf8');
-
-          context.ui.addItem(
-            {
-              type: MessageType.INFO,
-              text: `📝 KT session completed! Saving documentation to ".kt/${fileName}"...`,
-            },
-            Date.now(),
-          );
-
-          // Upload to vector database
-          const userCollectionName = `${terraUsername}_kt`;
-          const fileBuffer = Buffer.from(technicalDoc, 'utf8');
-          const result = await uploadDocument(fileBuffer, uploadFileName, userCollectionName, terraApiKey);
-
-          if (result.success) {
-            context.ui.addItem(
-              {
-                type: MessageType.INFO,
-                text: `✅ Successfully saved KT documentation:\n` +
-                      `   📁 Local: .kt/${fileName}\n` +
-                      `   🧠 Brain: Collection "${userCollectionName}"\n\n` +
-                      `The knowledge you shared has been documented and can now be searched by other team members.`,
-              },
-              Date.now(),
-            );
-          } else {
-            context.ui.addItem(
-              {
-                type: MessageType.ERROR,
-                text: `⚠️ Documentation saved locally but failed to upload to brain: ${result.error || 'Unknown error'}\n` +
-                      `Local file: .kt/${fileName}`,
-              },
-              Date.now(),
-            );
-          }
-
-          // Clear KT session state
-          currentKTSession = null;
-
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          context.ui.addItem(
-            {
-              type: MessageType.ERROR,
-              text: `Error saving KT session: ${errorMessage}`,
-            },
-            Date.now(),
-          );
-          // Clear KT session state on error
-          currentKTSession = null;
-        }
-      },
-    },
-    {
-      name: 'cancel',
-      description: 'Cancel the current KT session without saving to your brain.',
-      kind: CommandKind.BUILT_IN,
-      action: async (context, _args) => {
-        if (!currentKTSession || !currentKTSession.isActive) {
-          context.ui.addItem(
-            {
-              type: MessageType.INFO,
-              text: 'No active KT session to cancel.',
-            },
-            Date.now(),
-          );
-          return;
-        }
-
-        // Clear KT session state
-        currentKTSession = null;
-
-        context.ui.addItem(
-          {
-            type: MessageType.INFO,
-            text: '❌ KT session cancelled. No knowledge was saved.\n\n' +
-                  'You can start a new KT session anytime with `/brain kt`.',
-          },
-          Date.now(),
-        );
       },
     },
   ],

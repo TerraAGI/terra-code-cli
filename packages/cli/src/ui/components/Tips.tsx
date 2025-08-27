@@ -19,10 +19,10 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
     <Box flexDirection="column">
       <Text bold color={Colors.AccentPurple}>🧠 Terra&apos;s Superpowers:</Text>
       <Text color={Colors.Foreground}>
-        1. <Text bold color={Colors.AccentPurple}>/brain upload</Text> - Build your development brain with docs, code, and knowledge
+        1. <Text bold color={Colors.AccentPurple}>/brain kt</Text> - Interactive Knowledge Transfer sessions to capture team expertise
       </Text>
       <Text color={Colors.Foreground}>
-        2. <Text bold color={Colors.AccentPurple}>/brain kt</Text> - Interactive Knowledge Transfer sessions to capture team expertise
+        2. <Text bold color={Colors.AccentPurple}>/brain upload</Text> - Build your development brain with docs, code, and knowledge
       </Text>
       <Text color={Colors.Foreground}>
         3. <Text bold color={Colors.AccentPurple}>/brain remember</Text> - Store personal facts and preferences that persist across sessions
