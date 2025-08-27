@@ -135,39 +135,68 @@ You can start a new KT session anytime with /vector kt.
 - On-call responsibilities
 - Knowledge sharing practices
 
-## File Format
+## File Format and Storage
 
-When a KT session is completed, the conversation is saved in a structured text format:
+When a KT session is completed, the knowledge is processed and saved in two ways:
+
+### 1. Local Documentation (`.kt` directory)
+
+Knowledge is automatically saved as structured technical documentation in your project's `.kt` directory:
 
 ```markdown
-# Knowledge Transfer Session
+# Deployment Process for Microservices
 
-Date: 2024-01-15T10:30:00.000Z
-Participant: username
-Type: Interactive KT Collection
+**Author:** username
+**Date:** 2024-01-15
+**Type:** Knowledge Transfer Documentation
 
-## Conversation Transcript
+---
 
-### Developer/Team Lead
+## Overview
 
-I want to share our deployment process for the microservices...
+Our deployment process uses Docker containers with Kubernetes for scalability and maintainability...
 
-### AI Assistant
+## Details
 
-Great! Tell me about your deployment process. What tools do you use?...
-
-### Developer/Team Lead
-
-We use Docker containers with Kubernetes...
+We follow a GitOps approach where:
+- All infrastructure is defined as code
+- Deployments are triggered through Git commits
+- Monitoring and rollback strategies are automated
 ```
 
-This format makes the knowledge easily readable and searchable while maintaining the conversational context.
+**File Location:** `.kt/kt_username_2024-01-15T10-30-00-000Z.md`
+
+**Benefits:**
+- ✅ **Version controlled** - Files are part of your repository
+- ✅ **Offline accessible** - No need for internet connection to read
+- ✅ **Team visible** - Shared through normal Git workflows
+- ✅ **Searchable** - Standard markdown files searchable by IDEs and tools
+
+### 2. Vector Database Upload
+
+The same documentation is automatically uploaded to your personal collection named `{username}_kt` in the Terra knowledge brain for AI-powered search and retrieval.
 
 ## Integration with Vector Database
 
 All KT sessions are automatically uploaded to your personal collection named `{username}_kt`. This collection can be searched using:
 
-- `/vector search <query>` - Basic search within your KT collection
-- `/vector intelligent <query>` - Advanced search with multiple refinement strategies
+- `/brain search <query>` - Basic search within your KT collection
+- `/brain intelligent <query>` - Advanced search with multiple refinement strategies
 
-The AI automatically uses your Terra credentials to ensure all knowledge is properly associated with your account and accessible to your team. 
+The AI automatically uses your Terra credentials to ensure all knowledge is properly associated with your account and accessible to your team.
+
+## Repository Structure
+
+After using KT sessions, your repository will have:
+
+```
+your-project/
+├── .kt/
+│   ├── kt_john_2024-01-15T10-30-00-000Z.md
+│   ├── kt_jane_2024-01-16T14-20-15-000Z.md
+│   └── kt_bob_2024-01-17T09-45-30-000Z.md
+├── src/
+└── ...
+```
+
+**Note:** Add `.kt/` to your `.gitignore` if you prefer not to version control KT documentation, though we recommend keeping it for team knowledge sharing. 

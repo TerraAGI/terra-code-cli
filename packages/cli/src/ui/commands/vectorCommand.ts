@@ -3,7 +3,8 @@ import { CommandKind, SlashCommand, SlashCommandActionReturn } from './types.js'
 import { MessageType } from '../types.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import * as os from 'os';
+import { Content } from '@google/genai';
+import { GeminiClient } from '@terra-code/terra-code-core';
 
 // Import the vector DB client functions
 import { uploadDocument, searchDocuments as _searchDocuments } from '@terra-code/terra-code-core';
@@ -299,14 +300,200 @@ function generateContextualQueries(originalQuery: string, content: string): stri
   return queries;
 }
 
+// KT Session state management
+interface KTSession {
+  isActive: boolean;
+  startHistoryIndex: number;
+  sessionId: string;
+}
+
+// Global KT session state (could be moved to context if needed)
+let currentKTSession: KTSession | null = null;
+
+// Helper function to extract knowledge from KT session messages using LLM
+async function extractKnowledgeFromKTSession(
+  history: Content[], 
+  startIndex: number, 
+  geminiClient: GeminiClient | null
+): Promise<string> {
+  // Fallback: static extraction if no LLM available
+  if (!geminiClient) {
+    return extractKnowledgeStatically(history, startIndex);
+  }
+
+  // Get raw conversation content
+  const rawContent = extractKnowledgeStatically(history, startIndex);
+  
+  if (!rawContent.trim()) {
+    return '';
+  }
+
+  // Use LLM to intelligently process the knowledge
+  try {
+    const enhancedKnowledge = await processKnowledgeWithLLM(rawContent, geminiClient);
+    return enhancedKnowledge || rawContent; // Fallback to raw if LLM fails
+  } catch (error) {
+    console.warn('LLM knowledge processing failed, using static extraction:', error);
+    return rawContent;
+  }
+}
+
+// Static extraction as fallback
+function extractKnowledgeStatically(history: Content[], startIndex: number): string {
+  let knowledgeContent = '';
+  
+  console.log(`[KT Debug] Processing ${history.length - startIndex} messages from index ${startIndex}`);
+  
+  // Process messages from KT session start to current
+  for (let i = startIndex; i < history.length; i++) {
+    const message = history[i];
+    const content = message.parts?.map((part) => part.text).join('') || '';
+    
+    if (content.trim() && message.role === 'user') {
+      const text = content.trim();
+      
+      console.log(`[KT Debug] User message ${i}: "${text.substring(0, 100)}..."`);
+      
+      // Skip KT commands
+      if (text.startsWith('/brain') || text.startsWith('/finish') || text.startsWith('/cancel')) {
+        console.log(`[KT Debug] Skipping command: ${text}`);
+        continue;
+      }
+      
+      // Skip tool calls and system-generated content
+      if (text.includes('<tool_call>') || 
+          text.includes('<function=') || 
+          text.includes('🚀 MANDATORY KNOWLEDGE RECALL') ||
+          text.includes('🚀 KNOWLEDGE RECALL FIRST') ||
+          text.includes('USER QUERY:') ||
+          text.includes('MANDATORY INSTRUCTIONS:') ||
+          text.includes('CRITICAL INSTRUCTIONS:')) {
+        console.log(`[KT Debug] Skipping tool call/system content: ${text.substring(0, 50)}...`);
+        continue;
+      }
+      
+      // Only include meaningful user knowledge content
+      if (text.length > 10) { // Minimum meaningful content length
+        console.log(`[KT Debug] Adding knowledge content: "${text}"`);
+        knowledgeContent += text + '\n\n';
+      }
+    }
+  }
+  
+  const result = knowledgeContent.trim();
+  console.log(`[KT Debug] Final extracted content length: ${result.length}`);
+  console.log(`[KT Debug] Final content preview: "${result.substring(0, 200)}..."`);
+  
+  return result;
+}
+
+// LLM-based knowledge processing
+async function processKnowledgeWithLLM(rawContent: string, geminiClient: GeminiClient): Promise<string> {
+  const prompt = `You are a technical knowledge curator. Transform the following conversational knowledge sharing into structured, professional technical documentation.
+
+INSTRUCTIONS:
+1. Extract the core technical knowledge, processes, and insights
+2. Remove conversational filler and redundancy
+3. Organize into logical sections with clear headings
+4. Maintain all specific technical details, commands, configurations, etc.
+5. Use professional technical writing style
+6. Focus on actionable information that would help other developers
+7. If the content is minimal, create a brief but professional documentation entry
+8. Expand on implied technical details where appropriate
+
+CONTENT ANALYSIS:
+- Look for service names, technologies, architectures, processes
+- Identify implementation details, patterns, best practices
+- Note any business logic, workflows, or system interactions
+- Extract technical specifications and requirements
+
+RAW KNOWLEDGE CONTENT:
+${rawContent}
+
+FORMATTING REQUIREMENTS:
+- Use markdown formatting with clear section headers
+- Start with a brief overview if sufficient context exists
+- Include relevant technical sections (Architecture, Implementation, Configuration, etc.)
+- For minimal content, create a concise but complete knowledge entry
+- Do not include meta-commentary about the content quality
+
+Transform this into well-structured technical documentation:`;
+
+  const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
+  
+  try {
+    const response = await geminiClient.generateContent(
+      contents,
+      { 
+        maxOutputTokens: 2000,
+        temperature: 0.1 // Low temperature for consistent, factual output
+      },
+      new AbortController().signal
+    );
+    
+    // Extract text from response
+    if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const result = response.candidates[0].content.parts[0].text.trim();
+      console.log(`[KT Debug] LLM processed content length: ${result.length}`);
+      console.log(`[KT Debug] LLM result preview: "${result.substring(0, 200)}..."`);
+      return result;
+    }
+    
+    return '';
+  } catch (error) {
+    throw new Error(`LLM processing failed: ${error}`);
+  }
+}
+
+// Helper function to format knowledge as technical documentation
+function formatAsTechnicalDoc(processedKnowledge: string, username: string): string {
+  const timestamp = new Date().toISOString();
+  const title = generateDocTitle(processedKnowledge);
+  
+  let doc = `# ${title}\n\n`;
+  doc += `**Author:** ${username}\n`;
+  doc += `**Date:** ${timestamp.split('T')[0]}\n`;
+  doc += `**Type:** Knowledge Transfer Documentation\n\n`;
+  doc += `---\n\n`;
+  
+  // The processedKnowledge should already be well-structured from LLM processing
+  doc += processedKnowledge;
+  
+  return doc;
+}
+
+// Helper function to generate a meaningful title from content
+function generateDocTitle(content: string): string {
+  const lines = content.split('\n').filter(line => line.trim());
+  if (lines.length === 0) return 'Knowledge Transfer Session';
+  
+  const firstLine = lines[0].trim();
+  // Extract key topics/concepts for title
+  const words = firstLine.split(' ').slice(0, 8).join(' ');
+  return words.length > 50 ? words.substring(0, 47) + '...' : words;
+}
+
+
+
+// Helper function to ensure .kt directory exists
+async function ensureKTDirectory(projectRoot: string): Promise<string> {
+  const ktDir = path.join(projectRoot, '.kt');
+  try {
+    await fs.access(ktDir);
+  } catch {
+    await fs.mkdir(ktDir, { recursive: true });
+  }
+  return ktDir;
+}
+
 export const vectorCommand: SlashCommand = {
   name: 'brain',
-  description: 'Commands for interacting with your development brain.',
+  description: 'Manage your Terra knowledge brain - upload documents, start KT sessions, and search knowledge.',
   kind: CommandKind.BUILT_IN,
   subCommands: [
     {
       name: 'upload',
-      description: 'Upload a file to your brain.',
+      description: 'Upload a document to your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, args) => {
         // Parse arguments - only file path is needed, collection is auto-generated
@@ -896,15 +1083,35 @@ export const vectorCommand: SlashCommand = {
           return;
         }
 
+        // Initialize KT session state
+        const chat = await context.services.config?.getGeminiClient()?.getChat();
+        if (!chat) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'No chat client available to start KT session.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        const currentHistory = chat.getHistory();
+        currentKTSession = {
+          isActive: true,
+          startHistoryIndex: currentHistory.length,
+          sessionId: `kt_${Date.now()}`
+        };
+
         // Start interactive KT collection session
         context.ui.addItem(
           {
             type: MessageType.INFO,
             text: '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
                   'This session will help you collect knowledge from developers and team leads.\n' +
-                  'The entire conversation will be recorded and uploaded to your KT knowledge base.\n\n' +
+                  'The entire conversation will be recorded and saved as technical documentation.\n\n' +
                   'Available commands during this session:\n' +
-                  '• Type "/finish" when you\'re done sharing knowledge to complete and upload the session\n' +
+                  '• Type "/finish" when you\'re done sharing knowledge to complete and save the session\n' +
                   '• Type "/cancel" to abort the collection without saving\n\n' +
                   'What knowledge would you like to share with the team?',
           },
@@ -916,7 +1123,7 @@ export const vectorCommand: SlashCommand = {
           type: 'submit_prompt',
           content: `I'm starting an interactive KT (Knowledge Transfer) collection session. 
 
-The user (a developer or team lead) wants to share their knowledge through a conversation with me. This entire conversation will be recorded and uploaded to their KT knowledge base.
+The user (a developer or team lead) wants to share their knowledge through a conversation with me. This entire conversation will be recorded and saved as technical documentation.
 
 IMPORTANT: This is a special KT collection session. I need to:
 
@@ -937,9 +1144,21 @@ Start by asking them what specific knowledge, processes, or information they wan
     },
     {
       name: 'finish',
-      description: 'Complete the current KT session and upload the conversation to your brain.',
+      description: 'Complete the current KT session and save the documentation locally and upload to your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, _args) => {
+        // Check if we have an active KT session
+        if (!currentKTSession || !currentKTSession.isActive) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'No active KT session found. Start a session with `/brain kt` first.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
         // Check if we have Terra credentials
         let terraApiKey = process.env.TERRA_API_KEY;
         let terraUsername = process.env.TERRA_USERNAME;
@@ -976,83 +1195,93 @@ Start by asking them what specific knowledge, processes, or information they wan
         }
 
         const history = chat.getHistory();
-        if (history.length === 0) {
+        if (history.length <= currentKTSession.startHistoryIndex) {
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'No conversation found to save.',
+              text: 'No conversation found to save in this KT session.',
             },
             Date.now(),
           );
           return;
         }
 
-        // Create a formatted text file from the conversation
-        let conversationText = `# Knowledge Transfer Session\n\n`;
-        conversationText += `Date: ${new Date().toISOString()}\n`;
-        conversationText += `Participant: ${terraUsername}\n`;
-        conversationText += `Type: Interactive KT Collection\n\n`;
-        conversationText += `## Conversation Transcript\n\n`;
-
-        for (const message of history) {
-          const role = message.role === 'user' ? 'Developer/Team Lead' : 'AI Assistant';
-          const content = message.parts?.map(part => part.text).join('') || '';
-          
-          if (content.trim()) {
-            conversationText += `### ${role}\n\n${content}\n\n`;
-          }
-        }
-
-        // Create a temporary file
-        const tempDir = os.tmpdir();
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const fileName = `kt_session_${terraUsername}_${timestamp}.txt`;
-        const tempFilePath = path.join(tempDir, fileName);
-
         try {
-          // Write the conversation to the temporary file
-          await fs.writeFile(tempFilePath, conversationText, 'utf8');
-
-          // Use user's collection name
-          const userCollectionName = `${terraUsername}_kt`;
+          // Extract knowledge from KT session
+          const geminiClient = context.services.config?.getGeminiClient() || null;
+          const rawKnowledge = await extractKnowledgeFromKTSession(history, currentKTSession.startHistoryIndex, geminiClient);
           
+          if (!rawKnowledge.trim()) {
+            context.ui.addItem(
+              {
+                type: MessageType.ERROR,
+                text: 'No meaningful knowledge content found in this session.\n\n' +
+                      'Tips for better KT sessions:\n' +
+                      '• Share specific technical details, processes, or insights\n' +
+                      '• Explain implementation approaches, configurations, or workflows\n' +
+                      '• Provide concrete examples, code snippets, or step-by-step procedures\n' +
+                      '• Avoid finishing the session too early - add substantial content first\n\n' +
+                      'Try starting a new session with "/brain kt" and sharing more detailed knowledge.',
+              },
+              Date.now(),
+            );
+            return;
+          }
+
+          // Format as technical documentation
+          const technicalDoc = formatAsTechnicalDoc(rawKnowledge, terraUsername);
+
+          // Create filename
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const fileName = `kt_${terraUsername}_${timestamp}.md`;
+          const uploadFileName = `kt_${terraUsername}_${timestamp}.txt`;
+
+                     // Ensure .kt directory exists
+           const projectRoot = context.services.config?.getWorkingDir() || process.cwd();
+          const ktDir = await ensureKTDirectory(projectRoot);
+          const localFilePath = path.join(ktDir, fileName);
+
+          // Save file locally
+          await fs.writeFile(localFilePath, technicalDoc, 'utf8');
+
           context.ui.addItem(
             {
               type: MessageType.INFO,
-              text: `📝 KT session completed! Saving conversation to "${fileName}"...`,
+              text: `📝 KT session completed! Saving documentation to ".kt/${fileName}"...`,
             },
             Date.now(),
           );
 
-          // Read the file and upload
-          const fileBuffer = await fs.readFile(tempFilePath);
-          const result = await uploadDocument(fileBuffer, fileName, userCollectionName, terraApiKey);
+          // Upload to vector database
+          const userCollectionName = `${terraUsername}_kt`;
+          const fileBuffer = Buffer.from(technicalDoc, 'utf8');
+          const result = await uploadDocument(fileBuffer, uploadFileName, userCollectionName, terraApiKey);
 
           if (result.success) {
             context.ui.addItem(
               {
                 type: MessageType.INFO,
-                text: `✅ Successfully uploaded KT session "${fileName}" to collection "${userCollectionName}".\n\n` +
-                      `The knowledge you shared has been saved to your team's knowledge base and can now be searched by other team members.`,
+                text: `✅ Successfully saved KT documentation:\n` +
+                      `   📁 Local: .kt/${fileName}\n` +
+                      `   🧠 Brain: Collection "${userCollectionName}"\n\n` +
+                      `The knowledge you shared has been documented and can now be searched by other team members.`,
               },
               Date.now(),
             );
-
-            // Clean up the temporary file
-            try {
-              await fs.unlink(tempFilePath);
-            } catch (_cleanupError) {
-              // Ignore cleanup errors
-            }
           } else {
             context.ui.addItem(
               {
                 type: MessageType.ERROR,
-                text: `Failed to upload KT session: ${result.error || 'Unknown error'}`,
+                text: `⚠️ Documentation saved locally but failed to upload to brain: ${result.error || 'Unknown error'}\n` +
+                      `Local file: .kt/${fileName}`,
               },
               Date.now(),
             );
           }
+
+          // Clear KT session state
+          currentKTSession = null;
+
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           context.ui.addItem(
@@ -1062,6 +1291,8 @@ Start by asking them what specific knowledge, processes, or information they wan
             },
             Date.now(),
           );
+          // Clear KT session state on error
+          currentKTSession = null;
         }
       },
     },
@@ -1070,10 +1301,24 @@ Start by asking them what specific knowledge, processes, or information they wan
       description: 'Cancel the current KT session without saving to your brain.',
       kind: CommandKind.BUILT_IN,
       action: async (context, _args) => {
+        if (!currentKTSession || !currentKTSession.isActive) {
+          context.ui.addItem(
+            {
+              type: MessageType.INFO,
+              text: 'No active KT session to cancel.',
+            },
+            Date.now(),
+          );
+          return;
+        }
+
+        // Clear KT session state
+        currentKTSession = null;
+
         context.ui.addItem(
           {
             type: MessageType.INFO,
-            text: '❌ KT session cancelled. No knowledge was saved to the database.\n\n' +
+            text: '❌ KT session cancelled. No knowledge was saved.\n\n' +
                   'You can start a new KT session anytime with `/brain kt`.',
           },
           Date.now(),
