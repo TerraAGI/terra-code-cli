@@ -19,13 +19,13 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
     <Box flexDirection="column">
       <Text bold color={Colors.AccentPurple}>🧠 Terra&apos;s Superpowers:</Text>
       <Text color={Colors.Foreground}>
-        1. <Text bold color={Colors.AccentPurple}>/brain kt</Text> - Interactive Knowledge Transfer sessions to capture team expertise
+        1. <Text bold color={Colors.AccentPurple}>/brain kt</Text> - Provide team, domain and org expertise to Terra by interactive Knowledge Transfer sessions
       </Text>
       <Text color={Colors.Foreground}>
-        2. <Text bold color={Colors.AccentPurple}>/brain upload</Text> - Build your development brain with docs, code, and knowledge
+        2. <Text bold color={Colors.AccentPurple}>/brain upload</Text> - Upload docs, domain knowledge to Terra&apos;s knowledge base. Example: &quot;/brain upload C:\\Users\\JohnDoe\\Documents\\online_order_flow.md&quot;
       </Text>
       <Text color={Colors.Foreground}>
-        3. <Text bold color={Colors.AccentPurple}>/brain remember</Text> - Store personal facts and preferences that persist across sessions
+        3. <Text bold color={Colors.AccentPurple}>/brain remember</Text> - Store personal facts and preferences. Example: &quot;/brain remember I am a software engineer in TerraAGI&quot;
       </Text>
       <Text color={Colors.Foreground}>
         4. <Text bold color={Colors.AccentPurple}>Auto-enhanced responses</Text> - AI automatically uses your brain&apos;s knowledge

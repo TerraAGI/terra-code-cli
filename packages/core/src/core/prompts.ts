@@ -17,6 +17,7 @@ import { WriteFileTool } from '../tools/write-file.js';
 import process from 'node:process';
 import { isGitRepository } from '../utils/gitUtils.js';
 import { MemoryTool, GEMINI_CONFIG_DIR } from '../tools/memoryTool.js';
+import { VectorKnowledgeTool } from '../tools/vectorKnowledgeTool.js';
 
 export interface ModelTemplateMapping {
   baseUrls?: string[];
@@ -166,6 +167,8 @@ When requested to perform tasks like fixing bugs, adding features, refactoring, 
 6. **Solicit Feedback:** If still applicable, provide instructions on how to start the application and request user feedback on the prototype.
 
 # Operational Guidelines
+
+## You MUST MANDATORILY check whole Knowledge base using the '${VectorKnowledgeTool.Name}' tool before saying that you dont know about something.
 
 ## Tone and Style (CLI Interaction)
 - **Concise & Direct:** Adopt a professional, direct, and concise tone suitable for a CLI environment.
