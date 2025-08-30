@@ -116,6 +116,20 @@ export const authCommand: SlashCommand = {
             context.services.settings.setValue(SettingScope.User, 'selectedAuthType', AuthType.USE_OPENAI);
           }
 
+          // Validate OpenAI authentication requirements
+          const { validateAuthMethod } = await import('../../config/auth.js');
+          const validationError = validateAuthMethod(AuthType.USE_OPENAI);
+          if (validationError) {
+            context.ui.addItem(
+              {
+                type: 'error',
+                text: `OpenAI authentication validation failed: ${validationError}`,
+              },
+              Date.now(),
+            );
+            return;
+          }
+
           // Actually authenticate with OpenAI
           if (context.services.config) {
             await context.services.config.refreshAuth(AuthType.USE_OPENAI);

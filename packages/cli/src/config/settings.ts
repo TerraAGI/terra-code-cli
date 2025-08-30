@@ -302,8 +302,9 @@ export function loadEnvironment(settings?: Settings): void {
             continue;
           }
 
-          // Load variable only if it's not already set in the environment.
-          if (!Object.hasOwn(process.env, key)) {
+          // For .qwen/.env files, always override existing environment variables
+          // For regular .env files, only load if not already set
+          if (!isProjectEnvFile || !Object.hasOwn(process.env, key)) {
             process.env[key] = parsedEnv[key];
           }
         }
