@@ -443,8 +443,9 @@ export const useGeminiStream = (
           );
           
           // Automatically inject KB check for every user query
-          const enhancedQuery = await injectAutomaticKBCheck(trimmedQuery, config);
-          
+          // const enhancedQuery = await injectAutomaticKBCheck(trimmedQuery, config); // uncomment later if needed- switeched off automatic recall for now.
+          const enhancedQuery = trimmedQuery;
+
           // Show user that KB check is happening automatically
           if (enhancedQuery !== trimmedQuery) {
             addItem(
