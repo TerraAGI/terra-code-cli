@@ -475,12 +475,17 @@ function generateDocTitle(content: string): string {
 
 
 
-// Helper function to ensure .kt directory exists
-async function ensureKTDirectory(projectRoot: string): Promise<string> {
-  const ktDir = path.join(projectRoot, '.kt');
+// Helper function to ensure global .terra/kt directory exists
+async function ensureKTDirectory(): Promise<string> {
+  // Use user's home directory for global storage
+  const homeDir = process.env.HOME || process.env.USERPROFILE || process.cwd();
+  const terraDir = path.join(homeDir, '.terra');
+  const ktDir = path.join(terraDir, 'kt');
+  
   try {
     await fs.access(ktDir);
   } catch {
+    // Create both .terra and .terra/kt directories if they don't exist
     await fs.mkdir(ktDir, { recursive: true });
   }
   return ktDir;
@@ -552,8 +557,7 @@ export const vectorCommand: SlashCommand = {
                       'The entire conversation will be recorded and saved for future use.\n\n' +
                       'Available commands during this session:\n' +
                       '• Type "/brain kt finish" when you\'re done sharing knowledge to complete and save the session\n' +
-                      '• Type "/brain kt cancel" to abort the collection without saving\n\n' +
-                      'What knowledge would you like to share with me today',
+                      '• Type "/brain kt cancel" to abort the collection without saving\n\n',
               },
               Date.now(),
             );
@@ -572,10 +576,11 @@ IMPORTANT: This is a special KT collection session. I need to:
 3. Help them structure their knowledge clearly
 4. Watch for special commands during the session
 5. Respond minimal and to the point
+6. IMPORTANT: When the session ends (via /brain kt finish or /brain kt cancel), I should immediately stop asking KT-related questions and return to normal conversation mode
 
 Available commands during this session:
-• When they type "/brain kt finish" - I should help them complete the session and summarize what we've collected
-• When they type "/brain kt cancel" - I should acknowledge that they want to abort the session
+• When they type "/brain kt finish" - I should help them complete the session and summarize what we've collected, then return to normal mode
+• When they type "/brain kt cancel" - I should acknowledge that they want to abort the session, then return to normal mode
 
 The goal is to capture valuable knowledge that can help other team members. I should be collaborative and ask good follow-up questions to get comprehensive information.
 
@@ -677,9 +682,8 @@ Start by asking them what specific knowledge, processes, or information they wan
               const fileName = `kt_${terraUsername}_${timestamp}.md`;
               const uploadFileName = `kt_${terraUsername}_${timestamp}.txt`;
 
-              // Ensure .kt directory exists
-              const projectRoot = context.services.config?.getWorkingDir() || process.cwd();
-              const ktDir = await ensureKTDirectory(projectRoot);
+              // Ensure global .terra/kt directory exists
+              const ktDir = await ensureKTDirectory();
               const localFilePath = path.join(ktDir, fileName);
 
               // Save file locally
@@ -688,7 +692,7 @@ Start by asking them what specific knowledge, processes, or information they wan
               context.ui.addItem(
                 {
                   type: MessageType.INFO,
-                  text: `📝 KT session completed! Saving documentation to ".kt/${fileName}"...`,
+                  text: `📝 KT session completed! Saving documentation...`,
                 },
                 Date.now(),
               );
@@ -702,10 +706,7 @@ Start by asking them what specific knowledge, processes, or information they wan
                 context.ui.addItem(
                   {
                     type: MessageType.INFO,
-                    text: `✅ Successfully saved KT documentation:\n` +
-                          `   📁 Local: .kt/${fileName}\n` +
-                          `   🧠 Brain: Collection "${userCollectionName}"\n\n` +
-                          `The knowledge you shared has been documented and can now be searched by other team members.`,
+                    text: `✅ Successfully saved KT documentation to Terra's 🧠 Brain"\n\n`,
                   },
                   Date.now(),
                 );
@@ -714,7 +715,7 @@ Start by asking them what specific knowledge, processes, or information they wan
                   {
                     type: MessageType.ERROR,
                     text: `⚠️ Documentation saved locally but failed to upload to brain: ${result.error || 'Unknown error'}\n` +
-                          `Local file: .kt/${fileName}`,
+                          `Local file: ~/.terra/kt/${fileName}`,
                   },
                   Date.now(),
                 );
@@ -722,6 +723,12 @@ Start by asking them what specific knowledge, processes, or information they wan
 
               // Clear KT session state
               currentKTSession = null;
+
+              // Return a message to end the KT session context
+              return {
+                type: 'submit_prompt',
+                content: `KT SESSION COMPLETED - The KT (Knowledge Transfer) session has been successfully completed and saved. I should now return to normal conversation mode and stop asking KT-related follow-up questions. The user is no longer in a KT session.`
+              };
 
             } catch (error: unknown) {
               const errorMessage = error instanceof Error ? error.message : String(error);
@@ -764,6 +771,12 @@ Start by asking them what specific knowledge, processes, or information they wan
               },
               Date.now(),
             );
+
+            // Return a message to end the KT session context
+            return {
+              type: 'submit_prompt',
+              content: `KT SESSION ENDED - The KT (Knowledge Transfer) session has been cancelled. I should now return to normal conversation mode and stop asking KT-related follow-up questions. The user is no longer in a KT session.`
+            };
           },
         },
       ],
@@ -878,14 +891,36 @@ Start by asking them what specific knowledge, processes, or information they wan
           context.ui.addItem(
             {
               type: MessageType.ERROR,
-              text: 'Usage: /brain remember <fact_or_preference>\n\nExample: /brain remember "I prefer TypeScript over JavaScript"\n\nThis will be remembered across all future sessions.',
+              text: 'Usage: /brain remember <fact_or_preference> [--scope global|project]\n\nExamples:\n  /brain remember "I prefer TypeScript over JavaScript"\n  /brain remember "Aryan is my team mate" --scope global\n  /brain remember "This project uses React" --scope project\n\nGlobal scope saves to ~/.terra-code/TERRA.md (shared across all projects)\nProject scope saves to ./TERRA.md (current project only)',
             },
             Date.now(),
           );
           return;
         }
 
-        const memory = trimmedArgs;
+        // Parse arguments to extract scope
+        let memory = trimmedArgs;
+        let scope: 'global' | 'project' = 'global'; // default to global
+
+        // Check for --scope parameter
+        const scopeMatch = trimmedArgs.match(/--scope\s+(global|project)/i);
+        if (scopeMatch) {
+          scope = scopeMatch[1].toLowerCase() as 'global' | 'project';
+          // Remove the --scope parameter from the memory text
+          memory = trimmedArgs.replace(/--scope\s+(global|project)/i, '').trim();
+        }
+
+        // Validate that we still have memory content after removing scope
+        if (!memory) {
+          context.ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: 'Usage: /brain remember <fact_or_preference> [--scope global|project]\n\nPlease provide a fact or preference to remember.',
+            },
+            Date.now(),
+          );
+          return;
+        }
 
         try {
           // Use the memory tool to store the fact
@@ -897,10 +932,11 @@ Start by asking them what specific knowledge, processes, or information they wan
             Date.now(),
           );
 
-          // Return a memory tool call
+          // Return a memory tool call with the specified scope
           return {
-            type: 'submit_prompt',
-            content: `Please use the memory tool to remember this fact: "${memory}"`
+            type: 'tool',
+            toolName: 'save_memory',
+            toolArgs: { fact: memory, scope },
           };
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : String(error);

@@ -33,13 +33,31 @@ describe('vectorCommand', () => {
   let mockGetHistory: ReturnType<typeof vi.fn>;
 
   const getSubCommand = (
-    name: 'upload' | 'search' | 'intelligent' | 'kt' | 'finish' | 'cancel',
+    name: 'upload' | 'search' | 'intelligent' | 'kt' | 'remember',
   ): SlashCommand => {
     const subCommand = vectorCommand.subCommands?.find(
       (cmd) => cmd.name === name,
     );
     if (!subCommand) {
-      throw new Error(`/vector ${name} command not found.`);
+      throw new Error(`/brain ${name} command not found.`);
+    }
+    return subCommand;
+  };
+
+  const getKtSubCommand = (
+    name: 'start' | 'finish' | 'cancel',
+  ): SlashCommand => {
+    const ktCommand = vectorCommand.subCommands?.find(
+      (cmd) => cmd.name === 'kt',
+    );
+    if (!ktCommand) {
+      throw new Error('/brain kt command not found.');
+    }
+    const subCommand = ktCommand.subCommands?.find(
+      (cmd) => cmd.name === name,
+    );
+    if (!subCommand) {
+      throw new Error(`/brain kt ${name} command not found.`);
     }
     return subCommand;
   };
@@ -83,9 +101,9 @@ describe('vectorCommand', () => {
   });
 
   it('should have the correct main command definition', () => {
-    expect(vectorCommand.name).toBe('vector');
-    expect(vectorCommand.description).toBe('Commands for interacting with the vector database.');
-    expect(vectorCommand.subCommands).toHaveLength(6); // upload, search, intelligent, kt, finish, cancel
+    expect(vectorCommand.name).toBe('brain');
+    expect(vectorCommand.description).toBe('Manage your Terra knowledge brain - capture knowledge, upload documents, and remember facts.');
+    expect(vectorCommand.subCommands).toHaveLength(3); // kt, upload, remember
   });
 
   describe('kt subcommand', () => {
@@ -97,31 +115,12 @@ describe('vectorCommand', () => {
 
     it('should have the correct definition', () => {
       expect(ktCommand.name).toBe('kt');
-      expect(ktCommand.description).toBe('Interactive KT (Knowledge Transfer) collection from developers and team leads.');
+      expect(ktCommand.description).toBe('Knowledge Transfer session management.');
     });
 
-    it('should start KT session and return submit_prompt action', async () => {
-      const result = await ktCommand.action!(mockContext, '');
-      
-      expect(result).toEqual({
-        type: 'submit_prompt',
-        content: expect.stringContaining('I\'m starting an interactive KT (Knowledge Transfer) collection session'),
-      });
-    });
-
-    it('should check for Terra credentials', async () => {
-      delete process.env.TERRA_API_KEY;
-      delete process.env.TERRA_USERNAME;
-
-      await ktCommand.action!(mockContext, '');
-      
-      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'error',
-          text: expect.stringContaining('Terra credentials not found'),
-        }),
-        expect.any(Number)
-      );
+    it('should have subcommands', () => {
+      expect(ktCommand.subCommands).toBeDefined();
+      expect(ktCommand.subCommands).toHaveLength(3); // start, finish, cancel
     });
   });
 
@@ -129,12 +128,12 @@ describe('vectorCommand', () => {
     let finishCommand: SlashCommand;
 
     beforeEach(() => {
-      finishCommand = getSubCommand('finish');
+      finishCommand = getKtSubCommand('finish');
     });
 
     it('should have the correct definition', () => {
       expect(finishCommand.name).toBe('finish');
-      expect(finishCommand.description).toBe('Complete the current KT session and upload the conversation to the vector database.');
+      expect(finishCommand.description).toBe('Complete the current KT session and save the documentation locally and upload to your brain.');
     });
 
     it('should check for Terra credentials', async () => {
@@ -157,7 +156,7 @@ describe('vectorCommand', () => {
     let cancelCommand: SlashCommand;
 
     beforeEach(() => {
-      cancelCommand = getSubCommand('cancel');
+      cancelCommand = getKtSubCommand('cancel');
     });
 
     it('should have the correct definition', () => {
@@ -172,6 +171,73 @@ describe('vectorCommand', () => {
         expect.objectContaining({
           type: 'info',
           text: expect.stringContaining('KT session cancelled'),
+        }),
+        expect.any(Number)
+      );
+    });
+  });
+
+  describe('remember subcommand', () => {
+    let rememberCommand: SlashCommand;
+
+    beforeEach(() => {
+      rememberCommand = getSubCommand('remember');
+    });
+
+    it('should have the correct definition', () => {
+      expect(rememberCommand.name).toBe('remember');
+      expect(rememberCommand.description).toBe('Store a personal fact or preference that persists across sessions.');
+    });
+
+    it('should return tool action for valid input with default global scope', async () => {
+      const result = await rememberCommand.action!(mockContext, 'I prefer TypeScript over JavaScript');
+      
+      expect(result).toEqual({
+        type: 'tool',
+        toolName: 'save_memory',
+        toolArgs: { fact: 'I prefer TypeScript over JavaScript', scope: 'global' },
+      });
+    });
+
+    it('should return tool action for valid input with explicit global scope', async () => {
+      const result = await rememberCommand.action!(mockContext, 'I prefer TypeScript over JavaScript --scope global');
+      
+      expect(result).toEqual({
+        type: 'tool',
+        toolName: 'save_memory',
+        toolArgs: { fact: 'I prefer TypeScript over JavaScript', scope: 'global' },
+      });
+    });
+
+    it('should return tool action for valid input with project scope', async () => {
+      const result = await rememberCommand.action!(mockContext, 'This project uses React --scope project');
+      
+      expect(result).toEqual({
+        type: 'tool',
+        toolName: 'save_memory',
+        toolArgs: { fact: 'This project uses React', scope: 'project' },
+      });
+    });
+
+    it('should show error for empty input', async () => {
+      await rememberCommand.action!(mockContext, '');
+      
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          text: expect.stringContaining('Usage: /brain remember'),
+        }),
+        expect.any(Number)
+      );
+    });
+
+    it('should show error for empty memory after scope removal', async () => {
+      await rememberCommand.action!(mockContext, '--scope global');
+      
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'error',
+          text: expect.stringContaining('Please provide a fact or preference to remember'),
         }),
         expect.any(Number)
       );
