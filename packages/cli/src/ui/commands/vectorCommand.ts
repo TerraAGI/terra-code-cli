@@ -498,7 +498,7 @@ export const vectorCommand: SlashCommand = {
       subCommands: [
         {
           name: 'start',
-          description: 'Start an interactive Knowledge Transfer session to capture expertise.',
+          description: 'Start an interactive Knowledge Transfer session to Provide your expertise.',
           kind: CommandKind.BUILT_IN,
           action: async (context, _args) => {
             // Check if we have Terra credentials
@@ -548,12 +548,12 @@ export const vectorCommand: SlashCommand = {
               {
                 type: MessageType.INFO,
                 text: '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
-                      'This session will help you collect knowledge from developers and team leads.\n' +
-                      'The entire conversation will be recorded and saved as technical documentation.\n\n' +
+                      'This session will help Terra collect knowledge from developers and team leads.\n' +
+                      'The entire conversation will be recorded and saved for future use.\n\n' +
                       'Available commands during this session:\n' +
                       '• Type "/brain kt finish" when you\'re done sharing knowledge to complete and save the session\n' +
                       '• Type "/brain kt cancel" to abort the collection without saving\n\n' +
-                      'What knowledge would you like to share with the team?',
+                      'What knowledge would you like to share with me today',
               },
               Date.now(),
             );
@@ -571,6 +571,7 @@ IMPORTANT: This is a special KT collection session. I need to:
 2. Ask follow-up questions to get more details
 3. Help them structure their knowledge clearly
 4. Watch for special commands during the session
+5. Respond minimal and to the point
 
 Available commands during this session:
 • When they type "/brain kt finish" - I should help them complete the session and summarize what we've collected
@@ -578,7 +579,7 @@ Available commands during this session:
 
 The goal is to capture valuable knowledge that can help other team members. I should be collaborative and ask good follow-up questions to get comprehensive information.
 
-Start by asking them what specific knowledge, processes, or information they want to share with the team.`
+Start by asking them what specific knowledge, processes, or information they want to share with Terra today.`
             };
           },
         },
