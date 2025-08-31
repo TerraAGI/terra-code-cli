@@ -64,9 +64,6 @@ export class VectorDB {
       await this.loadData();
 
       this.isInitialized = true;
-      console.log(
-        `Vector database initialized with ${this.useFAISS ? 'FAISS' : 'simplified'} backend`,
-      );
     } catch (error) {
       console.error('Failed to initialize vector database:', error);
       throw error;
@@ -79,19 +76,7 @@ export class VectorDB {
       const faissModule = (await import('faiss-node')) as FAISSModule;
       this.faissIndex = new faissModule.IndexFlatIP(1536); // voyage-code-3 embedding dimension
       this.useFAISS = true;
-      console.log('FAISS initialized successfully');
-    } catch (error) {
-      console.warn('FAISS not available, using simplified backend:', error);
-      
-      // Provide helpful error message for Windows users
-      if (process.platform === 'win32') {
-        console.log('💡 To enable FAISS on Windows:');
-        console.log('   1. Install Visual Studio Build Tools 2019 or later');
-        console.log('   2. Install Python 3.8+ and ensure it\'s in PATH');
-        console.log('   3. Run: npm rebuild faiss-node');
-        console.log('   4. Or use the simplified backend (current mode)');
-      }
-      
+    } catch (_error) {
       this.useFAISS = false;
     }
   }

@@ -87,29 +87,19 @@ export async function getSemanticEngine(): Promise<SemanticEngine> {
 
 export function isSemanticAvailable(): boolean {
   // Check if semantic is enabled in config, even if not yet initialized
-  const available = semanticConfig?.enabled === true;
-  console.log(
-    `[DEBUG] Semantic available check: config=${semanticConfig?.enabled}, available=${available}`,
-  );
-  return available;
+  return semanticConfig?.enabled === true;
 }
 
 export async function initializeSemantic(
   config: SemanticConfig,
 ): Promise<void> {
-  console.log(`[DEBUG] Initializing semantic with config:`, {
-    enabled: config.enabled,
-    model: config.voyageAI.model,
-  });
   semanticConfig = config;
   if (!config.enabled) {
-    console.log(`[DEBUG] Semantic disabled in config, skipping initialization`);
     return;
   }
 
   const engine = await getSemanticEngine();
   await engine.initialize(config);
-  console.log(`[DEBUG] Semantic initialization complete`);
 }
 
 export async function searchSemantic(

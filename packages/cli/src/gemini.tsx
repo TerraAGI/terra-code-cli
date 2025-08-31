@@ -205,15 +205,18 @@ export async function main() {
 
   await config.initialize();
 
-  // Initialize semantic analysis if enabled - do this early before sandbox
-  console.log('[DEBUG] Checking semantic settings:', {
-    semantic: settings.merged.semantic,
-    enabled: settings.merged.semantic?.enabled,
-  });
+        // Extend tool registry with semantic search tool
+      try {
+        const { extendToolRegistry } = await import('./tools/semanticSearchTool.js');
+        const toolRegistry = await config.getToolRegistry();
+        extendToolRegistry(toolRegistry);
+      } catch (_error) {
+        // Silently continue without semantic search tool
+      }
 
+  // Initialize semantic analysis if enabled - do this early before sandbox
   if (settings.merged.semantic?.enabled) {
     try {
-      console.log('[DEBUG] Semantic is enabled, initializing...');
       const semanticConfig = {
         ...settings.merged.semantic,
         chunking: {
@@ -224,13 +227,9 @@ export async function main() {
         },
       };
       await initializeSemantic(semanticConfig);
-      console.log('[DEBUG] Semantic analysis initialized successfully');
-    } catch (error) {
-      console.warn('Failed to initialize semantic analysis:', error);
+    } catch (_error) {
       // Continue without semantic features
     }
-  } else {
-    console.log('[DEBUG] Semantic is not enabled in settings');
   }
 
   if (config.getIdeMode() && config.getIdeModeFeature()) {
