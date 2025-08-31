@@ -1,10 +1,13 @@
 {
   "name": "@terra-code/terra-code",
-  "version": "0.0.32",
+  "version": "0.0.37",
   "engines": {
     "node": ">=20.0.0"
   },
   "type": "module",
+  "bin": {
+    "terra": "packages/cli/dist/terra-launcher.js"
+  },
   "workspaces": [
     "packages/*"
   ],

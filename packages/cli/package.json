@@ -1,6 +1,6 @@
 {
   "name": "@terra-code/terra-code",
-  "version": "0.0.32",
+  "version": "0.0.39",
   "description": "Terra Code",
   "repository": {
     "type": "git",
@@ -77,8 +77,7 @@
     "pretty-format": "^30.0.2",
     "react-dom": "^19.1.0",
     "typescript": "^5.3.3",
-    "vitest": "^3.1.1",
-    "@terra-code/terra-code-test-utils": "file:../test-utils"
+    "vitest": "^3.1.1"
   },
   "engines": {
     "node": ">=20"
