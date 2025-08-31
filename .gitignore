@@ -43,3 +43,6 @@ packages/vscode-ide-companion/*.vsix
 # Qwen Code Configs
 .qwen/
 logs/
+
+#Terra Code Configs
+.terra/
