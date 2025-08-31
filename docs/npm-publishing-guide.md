@@ -329,3 +329,87 @@ If a bad version is published:
 ---
 
 **Remember**: Always test locally before publishing, and ensure all packages are built and working correctly with the new version.
+
+## Current Recommended Publishing Approach (Updated 2024)
+
+Based on recent fixes to dependency and working directory issues, the following approach is now recommended:
+
+### 1. Version Synchronization
+
+**Directory**: Root project directory (`terra-code/`)
+
+Ensure all packages have identical versions:
+
+```bash
+# All packages should have the same version
+# - package.json (root)
+# - packages/cli/package.json  
+# - packages/core/package.json
+# - packages/test-utils/package.json
+```
+
+### 2. Build with Dependencies
+
+**Directory**: Root project directory (`terra-code/`)
+
+The current build process automatically installs dependencies in the dist directory:
+
+```bash
+npm run build
+```
+
+**Expected Output**: Should show dependencies being installed in CLI dist directory.
+
+### 3. Test Locally Before Publishing
+
+**Directory**: Root project directory (`terra-code/`)
+
+```bash
+# Test the launcher directly
+node packages/cli/dist/terra-launcher.js --help
+
+# Test from different directory (verifies working directory fix)
+cd ..
+node terra-code/packages/cli/dist/terra-launcher.js --version
+cd terra-code
+```
+
+### 4. Publish from Root Directory
+
+**Directory**: Root project directory (`terra-code/`)
+
+The current setup allows publishing from the root directory:
+
+```bash
+npm publish
+```
+
+This publishes the CLI package with all dependencies properly included.
+
+### 5. Verify Installation
+
+**Directory**: Any directory (global installation test)
+
+```bash
+npm uninstall -g @terra-code/terra-code
+npm install -g @terra-code/terra-code
+terra --version
+```
+
+### Key Differences from Previous Approach
+
+- **Dependencies**: Now automatically installed in dist directory during build
+- **Launcher**: Uses compiled `index.js` instead of bundled `terra.js` to avoid dynamic require issues
+- **Working Directory**: Fixed to use `process.cwd()` instead of launcher directory
+- **Single Publish**: Can publish from root directory instead of individual packages
+
+### Troubleshooting Current Issues
+
+If you encounter dynamic require errors:
+- Ensure you're using the latest build process
+- Verify dependencies are installed in dist directory
+- Check that launcher points to `index.js`, not `terra.js`
+
+If working directory issues persist:
+- Verify launcher uses `cwd: process.cwd()`
+- Test from different directories to confirm fix

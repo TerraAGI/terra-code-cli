@@ -35,7 +35,7 @@ execSync('node ../../scripts/copy_files.js', { stdio: 'inherit' });
 // copy package.json to dist
 copyFileSync('package.json', join('dist', 'package.json'));
 
-// If this is the CLI package, copy the bundled file
+// If this is the CLI package, copy the bundled file and create launcher
 if (process.cwd().includes('cli')) {
   try {
     copyFileSync('../../bundle/terra.js', join('dist', 'terra.js'));
@@ -43,6 +43,37 @@ if (process.cwd().includes('cli')) {
     console.warn(
       'Warning: Could not copy bundled file, bundle may not exist yet',
     );
+  }
+  
+  // Create the terra-launcher.js file with correct working directory
+  const launcherContent = `#!/usr/bin/env node
+
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Run the CLI using the compiled JavaScript
+const args = process.argv.slice(2);
+const child = spawn(process.execPath, [join(__dirname, 'index.js'), ...args], {
+  stdio: 'inherit',
+  cwd: process.cwd(),
+  env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' }
+});
+
+child.on('exit', (code) => {
+  process.exit(code);
+});`;
+  
+  writeFileSync(join('dist', 'terra-launcher.js'), launcherContent);
+  
+  // Install dependencies in dist directory
+  try {
+    execSync('npm install --omit=dev', { stdio: 'inherit', cwd: join(process.cwd(), 'dist') });
+  } catch (error) {
+    console.warn('Warning: Could not install dependencies in dist directory:', error.message);
   }
 }
 

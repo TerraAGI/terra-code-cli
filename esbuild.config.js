@@ -66,6 +66,7 @@ const result = await esbuild.build({
     'buffer',
     'process',
     'assert',
+    'signal-exit',
     'fsevents', // macOS-specific
     'esbuild', // Build tool, not runtime
     // Don't externalize @terra-code packages - bundle them together
