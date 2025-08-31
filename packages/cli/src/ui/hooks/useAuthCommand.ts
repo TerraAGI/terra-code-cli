@@ -41,9 +41,13 @@ export const useAuthCommand = (
         setIsAuthenticating(true);
         await config.refreshAuth(authType);
         console.log(`Authenticated via "${authType}".`);
-        
+
         // Auto-register Terra credentials after successful authentication
-        if (authType === AuthType.QWEN_OAUTH || authType === AuthType.USE_OPENAI || authType === AuthType.USE_GEMINI) {
+        if (
+          authType === AuthType.QWEN_OAUTH ||
+          authType === AuthType.USE_OPENAI ||
+          authType === AuthType.USE_GEMINI
+        ) {
           try {
             const terraResult = await autoRegisterTerraCredentials({
               setValue: (scope: string, key: string, value: string) => {
@@ -52,17 +56,23 @@ export const useAuthCommand = (
                 }
               },
               terraApiKey: settings.merged.terraApiKey,
-              terraUsername: settings.merged.terraUsername
+              terraUsername: settings.merged.terraUsername,
             });
-            
+
             if (terraResult.success) {
-              console.log(`Successfully authenticated for ${authType} as well as TerraAGI - ${terraResult.message}`);
+              console.log(
+                `Successfully authenticated for ${authType} as well as TerraAGI - ${terraResult.message}`,
+              );
             } else {
-              console.log(`Authenticated via "${authType}". TerraAGI registration skipped: ${terraResult.message}`);
+              console.log(
+                `Authenticated via "${authType}". TerraAGI registration skipped: ${terraResult.message}`,
+              );
             }
           } catch (_terraError) {
             // Don't fail the main auth flow if Terra registration fails
-            console.log(`Authenticated via "${authType}". TerraAGI registration failed silently.`);
+            console.log(
+              `Authenticated via "${authType}". TerraAGI registration failed silently.`,
+            );
           }
         }
       } catch (e) {

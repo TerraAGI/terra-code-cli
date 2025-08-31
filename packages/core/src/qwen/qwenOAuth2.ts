@@ -694,9 +694,12 @@ async function authWithQwenDeviceFlow(
           'error',
           `Error during authentication: ${errorMessage}`,
         );
-        
+
         // If it's a network error, wait before retrying
-        if (errorMessage.includes('network') || errorMessage.includes('ECONNREFUSED')) {
+        if (
+          errorMessage.includes('network') ||
+          errorMessage.includes('ECONNREFUSED')
+        ) {
           await new Promise((resolve) => setTimeout(resolve, pollInterval));
           continue;
         }
@@ -714,8 +717,7 @@ async function authWithQwenDeviceFlow(
     );
     return { success: false, reason: 'timeout' };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     qwenOAuth2Events.emit(
       QwenOAuth2Event.AuthProgress,
       'error',

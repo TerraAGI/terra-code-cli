@@ -51,8 +51,6 @@ export const validateAuthMethod = (authMethod: string): string | null => {
     return null;
   }
 
-
-
   return 'Invalid auth method selected.';
 };
 
@@ -68,9 +66,11 @@ export const setOpenAIModel = (model: string): void => {
   process.env.OPENAI_MODEL = model;
 };
 
-export const getTerraApiKey = (): string | undefined => process.env.TERRA_API_KEY;
+export const getTerraApiKey = (): string | undefined =>
+  process.env.TERRA_API_KEY;
 
-export const getTerraUsername = (): string | undefined => process.env.TERRA_USERNAME;
+export const getTerraUsername = (): string | undefined =>
+  process.env.TERRA_USERNAME;
 
 export const setTerraCredentials = (apiKey: string, username: string): void => {
   process.env.TERRA_API_KEY = apiKey;
@@ -81,46 +81,52 @@ export const setTerraCredentials = (apiKey: string, username: string): void => {
  * Automatically registers Terra credentials after successful Qwen/OpenAI authentication
  * This happens silently in the background to provide seamless vector DB access
  */
-export async function autoRegisterTerraCredentials(settings?: { setValue?: (scope: string, key: string, value: string) => void; terraApiKey?: string; terraUsername?: string }): Promise<{ success: boolean; message: string }> {
+export async function autoRegisterTerraCredentials(settings?: {
+  setValue?: (scope: string, key: string, value: string) => void;
+  terraApiKey?: string;
+  terraUsername?: string;
+}): Promise<{ success: boolean; message: string }> {
   try {
     // Check if Terra credentials already exist
     let terraApiKey = process.env.TERRA_API_KEY;
     let terraUsername = process.env.TERRA_USERNAME;
-    
+
     // If not in env, try to get from settings
     if ((!terraApiKey || !terraUsername) && settings) {
       terraApiKey = terraApiKey || settings.terraApiKey;
       terraUsername = terraUsername || settings.terraUsername;
     }
-    
+
     // If we already have Terra credentials, skip registration
     if (terraApiKey && terraUsername) {
-      return { 
-        success: true, 
-        message: 'Terra credentials already available' 
+      return {
+        success: true,
+        message: 'Terra credentials already available',
       };
     }
-    
+
     // Perform Terra registration with the correct API format
     console.log('Attempting Terra registration...');
     const requestBody = {
-      request_id: `terra_cli_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      request_id: `terra_cli_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     };
-    
+
     const response = await fetch('http://api.terra-agi.com:8000/v1/register', {
       method: 'POST',
       headers: {
-        'accept': 'application/json',
+        accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
-    
-    console.log(`Terra registration response: ${response.status} ${response.statusText}`);
-    
+
+    console.log(
+      `Terra registration response: ${response.status} ${response.statusText}`,
+    );
+
     if (!response.ok) {
       let errorDetails = `${response.status} ${response.statusText}`;
-      
+
       // Try to get more detailed error information
       try {
         const errorData = await response.json();
@@ -130,42 +136,41 @@ export async function autoRegisterTerraCredentials(settings?: { setValue?: (scop
       } catch {
         // If we can't parse the error response, just use the status
       }
-      
-      return { 
-        success: false, 
-        message: `Terra registration failed: ${errorDetails}` 
+
+      return {
+        success: false,
+        message: `Terra registration failed: ${errorDetails}`,
       };
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success || !data.data.api_key || !data.data.username) {
-      return { 
-        success: false, 
-        message: 'Invalid Terra registration response' 
+      return {
+        success: false,
+        message: 'Invalid Terra registration response',
       };
     }
-    
+
     // Store credentials in environment
     process.env.TERRA_API_KEY = data.data.api_key;
     process.env.TERRA_USERNAME = data.data.username;
-    
+
     // Store credentials in settings if available
     if (settings && typeof settings.setValue === 'function') {
       settings.setValue('User', 'terraApiKey', data.data.api_key);
       settings.setValue('User', 'terraUsername', data.data.username);
     }
-    
-    return { 
-      success: true, 
-      message: `TerraAGI vector search activated with username: ${data.data.username}` 
+
+    return {
+      success: true,
+      message: `TerraAGI vector search activated with username: ${data.data.username}`,
     };
-    
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return { 
-      success: false, 
-      message: `Terra registration error: ${errorMessage}` 
+    return {
+      success: false,
+      message: `Terra registration error: ${errorMessage}`,
     };
   }
 }

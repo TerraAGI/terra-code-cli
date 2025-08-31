@@ -89,7 +89,11 @@ describe('MemoryTool', () => {
     let testFilePath: string;
 
     beforeEach(() => {
-      testFilePath = path.join(os.homedir(), '.terra-code', DEFAULT_CONTEXT_FILENAME);
+      testFilePath = path.join(
+        os.homedir(),
+        '.terra-code',
+        DEFAULT_CONTEXT_FILENAME,
+      );
     });
 
     it('should create section and save a fact if file does not exist', async () => {
@@ -290,7 +294,9 @@ describe('MemoryTool', () => {
         expect(result.title).toBe(
           `Confirm Memory Save: ${expectedPath} (global)`,
         );
-        expect(result.fileName).toContain(path.join('mock', 'home', '.terra-code'));
+        expect(result.fileName).toContain(
+          path.join('mock', 'home', '.terra-code'),
+        );
         expect(result.fileName).toContain('TERRA.md');
         expect(result.fileDiff).toContain('Index: TERRA.md');
         expect(result.fileDiff).toContain('+## Terra Added Memories');

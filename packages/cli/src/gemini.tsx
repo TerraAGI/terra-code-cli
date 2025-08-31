@@ -45,6 +45,7 @@ import { checkForUpdates } from './ui/utils/updateCheck.js';
 import { handleAutoUpdate } from './utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from './utils/events.js';
 import { SettingsContext } from './ui/contexts/SettingsContext.js';
+import { initializeSemantic } from './semantic/index.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -134,13 +135,16 @@ export async function main() {
   // Suppress punycode deprecation warning
   process.removeAllListeners('warning');
   process.on('warning', (warning) => {
-    if (warning.name === 'DeprecationWarning' && warning.message.includes('punycode')) {
+    if (
+      warning.name === 'DeprecationWarning' &&
+      warning.message.includes('punycode')
+    ) {
       return; // Suppress punycode deprecation warnings
     }
     // Allow other warnings to pass through
     console.warn(warning.name, warning.message);
   });
-  
+
   setupUnhandledRejectionHandler();
   const workspaceRoot = process.cwd();
   const settings = loadSettings(workspaceRoot);
@@ -200,6 +204,34 @@ export async function main() {
   setMaxSizedBoxDebugging(config.getDebugMode());
 
   await config.initialize();
+
+  // Initialize semantic analysis if enabled - do this early before sandbox
+  console.log('[DEBUG] Checking semantic settings:', {
+    semantic: settings.merged.semantic,
+    enabled: settings.merged.semantic?.enabled,
+  });
+
+  if (settings.merged.semantic?.enabled) {
+    try {
+      console.log('[DEBUG] Semantic is enabled, initializing...');
+      const semanticConfig = {
+        ...settings.merged.semantic,
+        chunking: {
+          ...settings.merged.semantic.chunking,
+          supportedExtensions: [
+            ...settings.merged.semantic.chunking.supportedExtensions,
+          ],
+        },
+      };
+      await initializeSemantic(semanticConfig);
+      console.log('[DEBUG] Semantic analysis initialized successfully');
+    } catch (error) {
+      console.warn('Failed to initialize semantic analysis:', error);
+      // Continue without semantic features
+    }
+  } else {
+    console.log('[DEBUG] Semantic is not enabled in settings');
+  }
 
   if (config.getIdeMode() && config.getIdeModeFeature()) {
     await config.getIdeClient().connect();

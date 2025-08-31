@@ -79,7 +79,10 @@ enum StreamProcessingStatus {
  * This is more accurate than pattern matching for intent detection
  * Works with any authenticated model provider (Gemini, OpenAI, Qwen, etc.)
  */
-async function shouldUseKnowledgeBase(userQuery: string, config: Config): Promise<boolean> {
+async function shouldUseKnowledgeBase(
+  userQuery: string,
+  config: Config,
+): Promise<boolean> {
   try {
     const intentPrompt = `You are an intent classifier. Analyze this user query and determine if it would benefit from searching a knowledge base for technical context, documentation, or existing implementations.
 
@@ -104,7 +107,10 @@ Respond with only "true" or "false".`;
     if (!geminiClient?.isInitialized?.()) {
       // Fallback to basic heuristics if LLM not available
       const lowerQuery = userQuery.toLowerCase().trim();
-      return lowerQuery.length > 15 && !(/^(hi|hello|hey|thanks?|yes|no|ok|cool|bye)!?$/i.test(lowerQuery));
+      return (
+        lowerQuery.length > 15 &&
+        !/^(hi|hello|hey|thanks?|yes|no|ok|cool|bye)!?$/i.test(lowerQuery)
+      );
     }
 
     // Check if we have an authenticated provider
@@ -120,68 +126,87 @@ Respond with only "true" or "false".`;
 
     const response = await geminiClient.generateContent(
       [{ role: 'user', parts: [{ text: intentPrompt }] }],
-      { 
+      {
         temperature: 0.1, // Low temperature for consistent classification
-        maxOutputTokens: 10 // Only need "true" or "false"
+        maxOutputTokens: 10, // Only need "true" or "false"
       },
-      abortController.signal
+      abortController.signal,
     );
-    
+
     // Extract text from response (works for all providers)
     const result = response.candidates?.[0]?.content?.parts
-      ?.filter(part => part.text)
-      ?.map(part => part.text)
+      ?.filter((part) => part.text)
+      ?.map((part) => part.text)
       ?.join('')
       ?.trim()
       ?.toLowerCase();
-      
+
     return result === 'true';
   } catch (error) {
     // Fallback to conservative approach on error
     const authType = config.getContentGeneratorConfig()?.authType;
-    console.debug(`Intent classification failed for provider ${authType}, using fallback:`, error);
-    
+    console.debug(
+      `Intent classification failed for provider ${authType}, using fallback:`,
+      error,
+    );
+
     // Use more conservative fallback - only search for longer, likely technical queries
     const lowerQuery = userQuery.toLowerCase().trim();
-    return lowerQuery.length > 20 && 
-           (lowerQuery.includes('how') || 
-            lowerQuery.includes('what') || 
-            lowerQuery.includes('error') ||
-            lowerQuery.includes('implement') ||
-            lowerQuery.includes('help') ||
-            lowerQuery.includes('?'));
+    return (
+      lowerQuery.length > 20 &&
+      (lowerQuery.includes('how') ||
+        lowerQuery.includes('what') ||
+        lowerQuery.includes('error') ||
+        lowerQuery.includes('implement') ||
+        lowerQuery.includes('help') ||
+        lowerQuery.includes('?'))
+    );
   }
 }
 
-async function injectAutomaticKBCheck(userQuery: string, config: Config): Promise<string> {
-
+async function injectAutomaticKBCheck(
+  userQuery: string,
+  config: Config,
+): Promise<string> {
   // Check if Terra credentials are available
   const terraApiKey = process.env.TERRA_API_KEY;
   const terraUsername = process.env.TERRA_USERNAME;
-  
+
   if (!terraApiKey || !terraUsername) {
     // No Terra credentials, return original query
     return userQuery;
   }
-  
+
   // Skip KB check for certain types of queries
   const skipKBCheck = [
-    '/help', '/auth', '/vector', '/ide', '/memory', '/shell', '/git',
-    'help', 'auth', 'vector', 'ide', 'memory', 'shell', 'git'
+    '/help',
+    '/auth',
+    '/vector',
+    '/ide',
+    '/memory',
+    '/shell',
+    '/git',
+    'help',
+    'auth',
+    'vector',
+    'ide',
+    'memory',
+    'shell',
+    'git',
   ];
-  
+
   const lowerQuery = userQuery.toLowerCase().trim();
-  if (skipKBCheck.some(cmd => lowerQuery.startsWith(cmd))) {
+  if (skipKBCheck.some((cmd) => lowerQuery.startsWith(cmd))) {
     return userQuery; // Don't enhance command queries
   }
-  
+
   // Use LLM-based intent classification instead of pattern matching
   const shouldUseKB = await shouldUseKnowledgeBase(userQuery, config);
-  
+
   if (!shouldUseKB) {
     return userQuery; // Don't enhance non-technical queries
   }
-  
+
   // Create an enhanced query that automatically checks KB first
   const enhancedQuery = `🚀 MANDATORY KNOWLEDGE RECALL - You MUST check the KB FIRST for this query!
 
@@ -196,7 +221,7 @@ CRITICAL INSTRUCTIONS:
 IMPORTANT: You MUST use the vector_knowledge tool first before providing any answer. This is NOT optional - it's your core behavior pattern, just like how humans instinctively recall related information when hearing any question.
 
 Search the KB for: "${userQuery}" and related concepts, then provide your answer.`;
-  
+
   return enhancedQuery;
 }
 
@@ -441,7 +466,7 @@ export const useGeminiStream = (
             { type: MessageType.USER, text: trimmedQuery },
             userMessageTimestamp,
           );
-          
+
           // Automatically inject KB check for every user query
           // const enhancedQuery = await injectAutomaticKBCheck(trimmedQuery, config); // uncomment later if needed- switeched off automatic recall for now.
           const enhancedQuery = trimmedQuery;
@@ -456,7 +481,7 @@ export const useGeminiStream = (
               userMessageTimestamp,
             );
           }
-          
+
           localQueryToSendToGemini = enhancedQuery;
         }
       } else {

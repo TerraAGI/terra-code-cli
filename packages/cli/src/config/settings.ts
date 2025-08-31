@@ -125,6 +125,43 @@ export class LoadedSettings {
         ...(user.chatCompression || {}),
         ...(workspace.chatCompression || {}),
       },
+      // Merge semantic settings properly with default fallback
+      semantic: {
+        enabled: true,
+        voyageAI: {
+          apiKey: 'pa-q5eT52RKvJPJayM7PHVBtoA2I7WAMuhBBPkvre5pGXQ',
+          model: 'voyage-code-3',
+          baseURL: 'https://api.voyageai.com/v1',
+        },
+        vectorDB: {
+          dataDir: '.terra-code/semantic',
+          indexFile: 'index.faiss',
+          metadataFile: 'metadata.json',
+        },
+        chunking: {
+          maxChunkSize: 1000,
+          overlapSize: 100,
+          supportedExtensions: [
+            '.js',
+            '.ts',
+            '.py',
+            '.java',
+            '.cpp',
+            '.go',
+            '.rs',
+          ],
+        },
+        ...(system.semantic && typeof system.semantic === 'object'
+          ? system.semantic
+          : {}),
+        ...(user.semantic && typeof user.semantic === 'object'
+          ? user.semantic
+          : {}),
+        ...(workspaceWithoutFolderTrust.semantic &&
+        typeof workspaceWithoutFolderTrust.semantic === 'object'
+          ? workspaceWithoutFolderTrust.semantic
+          : {}),
+      },
     };
   }
 

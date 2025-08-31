@@ -225,7 +225,7 @@ export class IDEServer {
 const createMcpServer = (diffManager: DiffManager) => {
   const server = new McpServer(
     {
-              name: 'terra-code-companion-mcp-server',
+      name: 'terra-code-companion-mcp-server',
       version: '1.0.0',
     },
     { capabilities: { logging: {} } },

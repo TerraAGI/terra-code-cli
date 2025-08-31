@@ -17,28 +17,56 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
   return (
     <Box flexDirection="column">
-      <Text bold color={Colors.AccentPurple}>🧠 Terra&apos;s Superpowers:</Text>
-      <Text color={Colors.Foreground}>
-        1. <Text bold color={Colors.AccentPurple}>/brain kt</Text> - Provide team, domain and org expertise to Terra by interactive Knowledge Transfer sessions
+      <Text bold color={Colors.AccentPurple}>
+        🧠 Terra&apos;s Superpowers:
       </Text>
       <Text color={Colors.Foreground}>
-        2. <Text bold color={Colors.AccentPurple}>/brain upload</Text> - Upload docs, domain knowledge to Terra&apos;s knowledge base. Example: &quot;/brain upload C:\\Users\\JohnDoe\\Documents\\online_order_flow.md&quot;
+        1.{' '}
+        <Text bold color={Colors.AccentPurple}>
+          /brain kt
+        </Text>{' '}
+        - Provide team, domain and org expertise to Terra by interactive
+        Knowledge Transfer sessions
       </Text>
       <Text color={Colors.Foreground}>
-        3. <Text bold color={Colors.AccentPurple}>/brain remember</Text> - Store personal facts and preferences. Example: &quot;/brain remember I am a software engineer in TerraAGI&quot;
+        2.{' '}
+        <Text bold color={Colors.AccentPurple}>
+          /brain upload
+        </Text>{' '}
+        - Upload docs, domain knowledge to Terra&apos;s knowledge base. Example:
+        &quot;/brain upload
+        C:\\Users\\JohnDoe\\Documents\\online_order_flow.md&quot;
       </Text>
       <Text color={Colors.Foreground}>
-        4. <Text bold color={Colors.AccentPurple}>Auto-enhanced responses</Text> - AI automatically uses your brain&apos;s knowledge
+        3.{' '}
+        <Text bold color={Colors.AccentPurple}>
+          /brain remember
+        </Text>{' '}
+        - Store personal facts and preferences. Example: &quot;/brain remember I
+        am a software engineer in TerraAGI&quot;
       </Text>
-      
+      <Text color={Colors.Foreground}>
+        4.{' '}
+        <Text bold color={Colors.AccentPurple}>
+          Auto-enhanced responses
+        </Text>{' '}
+        - AI automatically uses your brain&apos;s knowledge
+      </Text>
+
       <Box height={1} />
-      
-      <Text bold color={Colors.Foreground}>Getting Started:</Text>
+
+      <Text bold color={Colors.Foreground}>
+        Getting Started:
+      </Text>
       <Text color={Colors.Foreground}>
         • Ask questions, edit files, or run commands naturally
       </Text>
       <Text color={Colors.Foreground}>
-        • Use <Text bold color={Colors.AccentPurple}>@filename</Text> to reference specific files
+        • Use{' '}
+        <Text bold color={Colors.AccentPurple}>
+          @filename
+        </Text>{' '}
+        to reference specific files
       </Text>
       {geminiMdFileCount === 0 && (
         <Text color={Colors.Foreground}>
@@ -50,7 +78,11 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
         </Text>
       )}
       <Text color={Colors.Foreground}>
-        • Type <Text bold color={Colors.AccentPurple}>/help</Text> for complete command reference
+        • Type{' '}
+        <Text bold color={Colors.AccentPurple}>
+          /help
+        </Text>{' '}
+        for complete command reference
       </Text>
     </Box>
   );

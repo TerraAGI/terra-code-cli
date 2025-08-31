@@ -84,7 +84,12 @@ export const useQwenAuth = (
         authStatus: status,
         authMessage: message || null,
         // Only stop authenticating on final states
-        isQwenAuthenticating: !['success', 'error', 'timeout', 'rate_limit'].includes(status),
+        isQwenAuthenticating: ![
+          'success',
+          'error',
+          'timeout',
+          'rate_limit',
+        ].includes(status),
       }));
     };
 
@@ -96,7 +101,7 @@ export const useQwenAuth = (
     return () => {
       qwenOAuth2Events.off(QwenOAuth2Event.AuthUri, handleDeviceAuth);
       qwenOAuth2Events.off(QwenOAuth2Event.AuthProgress, handleAuthProgress);
-      
+
       // Cancel any ongoing auth when unmounting
       qwenOAuth2Events.emit(QwenOAuth2Event.AuthCancel);
     };

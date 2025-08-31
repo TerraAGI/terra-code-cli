@@ -43,6 +43,7 @@ sed -i 's/"version": "0.0.X"/"version": "0.0.Y"/g' packages/test-utils/package.j
 ```
 
 **Manual Method** (if sed doesn't work on Windows):
+
 - Open each `package.json` file
 - Update the `"version"` field to the target version
 - Save all files
@@ -67,6 +68,7 @@ npm publish --access public
 ```
 
 **Expected Output**:
+
 ```
 📦  @terra-code/terra-code@0.0.Y
 + @terra-code/terra-code@0.0.Y
@@ -82,6 +84,7 @@ npm publish --access public
 ```
 
 **Expected Output**:
+
 ```
 📦  @terra-code/terra-code-core@0.0.Y
 + @terra-code/terra-code-core@0.0.Y
@@ -103,55 +106,70 @@ Should display the new version number.
 ## Important Notes
 
 ### Version Consistency
+
 - **NEVER** publish packages with different versions
 - All packages in the monorepo must have identical version numbers
 - The esbuild configuration will fail if versions don't match
 
 ### Package Dependencies
+
 - CLI package depends on core package
 - Core package is independent
 - Test-utils package is marked as `"private": true` and should not be published
 
 ### Publishing Order
+
 1. **Core package first** (if it has no dependencies)
 2. **CLI package second** (depends on core)
 3. **Test-utils package** (if needed, but currently private)
 
 ### Access Control
+
 - Use `--access public` for all packages
 - Ensure you're logged in as the correct npm user (`npm whoami`)
 
 ## Troubleshooting
 
 ### Version Mismatch Error
+
 ```
 Error: Version mismatch: CLI version X != Core version Y
 ```
+
 **Solution**: Update all package.json files to have the same version.
 
 ### Permission Denied
+
 ```
 npm ERR! 403 Forbidden - PUT https://registry.npmjs.org/@terra-code/...
 ```
-**Solution**: 
+
+**Solution**:
+
 - Check `npm whoami` - should show `terraagi`
 - Ensure you have access to the `@terra-code` organization
 - Try `npm login` again
 
 ### Build Failures
+
 ```
 Build failed with X errors
 ```
+
 **Solution**:
+
 - Check for TypeScript compilation errors
 - Ensure all dependencies are installed (`npm ci`)
 - Verify Node.js version compatibility
 
 ### Global Installation Issues
+
 ```
 terra : The term 'terra' is not recognized
 ```
+
 **Solution**:
+
 - Always install from CLI package: `npm install -g ./packages/cli`
 - Never install from root: `npm install -g .` (root has no bin entry)
 - Uninstall and reinstall if needed
@@ -175,24 +193,27 @@ For developers and contributors who want to test the CLI package locally before 
 When testing the CLI package from source, you need to install the specific CLI package rather than the root package to ensure the `terra` command is properly created.
 
 1. **Build the packages first:**
+
    ```bash
    npm run build
    ```
 
 2. **Install the CLI package globally (not the root package):**
+
    ```bash
    # Navigate to the CLI package directory
    cd packages/cli
-   
+
    # Install the CLI package globally
    npm install -g .
    ```
 
 3. **Verify the installation:**
+
    ```bash
    # Check if terra command files were created
    ls "C:\Users\[YourUsername]\AppData\Roaming\npm\terra*"
-   
+
    # Test the terra command
    terra --help
    ```
@@ -212,12 +233,15 @@ The root package (`@terra-code/terra-code`) doesn't contain the `bin` configurat
 If the `terra` command is not recognized after installation:
 
 1. **Check if you installed the wrong package:**
+
    ```bash
    npm list -g --depth=0
    ```
+
    Look for `@terra-code/terra-code` (root package) vs `@terra-code/terra-code` (CLI package)
 
 2. **Uninstall and reinstall correctly:**
+
    ```bash
    npm uninstall -g @terra-code/terra-code
    cd packages/cli
@@ -304,4 +328,4 @@ If a bad version is published:
 
 ---
 
-**Remember**: Always test locally before publishing, and ensure all packages are built and working correctly with the new version. 
+**Remember**: Always test locally before publishing, and ensure all packages are built and working correctly with the new version.

@@ -7,7 +7,10 @@ import { Content } from '@google/genai';
 import { GeminiClient } from '@terra-code/terra-code-core';
 
 // Import the vector DB client functions
-import { uploadDocument, searchDocuments as _searchDocuments } from '@terra-code/terra-code-core';
+import {
+  uploadDocument,
+  searchDocuments as _searchDocuments,
+} from '@terra-code/terra-code-core';
 
 // Define the result structure to match API response
 interface SearchResult {
@@ -24,21 +27,43 @@ interface SearchResult {
  */
 function _extractKeyTerms(content: string, originalQuery: string): string[] {
   // Simple term extraction - split content into words and filter
-  const words = content.toLowerCase()
+  const words = content
+    .toLowerCase()
     .replace(/[^\w\s]/g, ' ') // Remove punctuation
     .split(/\s+/)
-    .filter(word => 
-      word.length > 4 && // Only meaningful words
-      !['the', 'and', 'for', 'with', 'this', 'that', 'will', 'from', 'into', 'during', 'including', 'until', 'against', 'among', 'throughout', 'despite', 'towards', 'upon'].includes(word)
+    .filter(
+      (word) =>
+        word.length > 4 && // Only meaningful words
+        ![
+          'the',
+          'and',
+          'for',
+          'with',
+          'this',
+          'that',
+          'will',
+          'from',
+          'into',
+          'during',
+          'including',
+          'until',
+          'against',
+          'among',
+          'throughout',
+          'despite',
+          'towards',
+          'upon',
+        ].includes(word),
     );
 
   // Get unique words (max 5) and also include query terms not already found
   const uniqueWords = [...new Set(words)].slice(0, 5);
-  const queryTerms = originalQuery.toLowerCase()
+  const queryTerms = originalQuery
+    .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter(word => word.length > 3 && !uniqueWords.includes(word));
-  
+    .filter((word) => word.length > 3 && !uniqueWords.includes(word));
+
   return [...uniqueWords, ...queryTerms.slice(0, 3)];
 }
 
@@ -49,21 +74,25 @@ function _extractKeyTerms(content: string, originalQuery: string): string[] {
  * @param keyTerms - Extracted key terms from results
  * @returns Array of refined search queries
  */
-function _generateRefinedQueries(originalQuery: string, initialResults: SearchResult[], keyTerms: string[]): string[] {
+function _generateRefinedQueries(
+  originalQuery: string,
+  initialResults: SearchResult[],
+  keyTerms: string[],
+): string[] {
   const refinedQueries: string[] = [];
-  
+
   // Strategy 1: Combine original query with key terms
   for (const term of keyTerms.slice(0, 3)) {
     refinedQueries.push(`${originalQuery} ${term}`);
   }
-  
+
   // Strategy 2: Extract specific concepts from results
-  const resultTexts = initialResults.map(r => r.content).join(' ');
+  const resultTexts = initialResults.map((r) => r.content).join(' ');
   const concepts = extractConcepts(resultTexts);
   for (const concept of concepts.slice(0, 2)) {
     refinedQueries.push(`${originalQuery} ${concept}`);
   }
-  
+
   // Strategy 3: Create more specific queries based on content patterns
   if (initialResults.length > 0) {
     const firstResult = initialResults[0].content;
@@ -72,7 +101,7 @@ function _generateRefinedQueries(originalQuery: string, initialResults: SearchRe
       refinedQueries.push(`${term} ${originalQuery}`);
     }
   }
-  
+
   return refinedQueries;
 }
 
@@ -83,23 +112,25 @@ function _generateRefinedQueries(originalQuery: string, initialResults: SearchRe
  */
 function _generateAlternativeQueries(originalQuery: string): string[] {
   const alternatives: string[] = [];
-  
+
   // Strategy 1: Broaden the search by removing specific terms
   const words = originalQuery.split(/\s+/);
   if (words.length > 2) {
     alternatives.push(words.slice(0, -1).join(' ')); // Remove last word
     alternatives.push(words.slice(1).join(' ')); // Remove first word
   }
-  
+
   // Strategy 2: Use synonyms or related terms
   const synonyms = getSynonyms(originalQuery);
   alternatives.push(...synonyms.slice(0, 2));
-  
+
   // Strategy 3: Break down complex queries
   if (originalQuery.includes('how to') || originalQuery.includes('what is')) {
-    alternatives.push(originalQuery.replace('how to', '').replace('what is', '').trim());
+    alternatives.push(
+      originalQuery.replace('how to', '').replace('what is', '').trim(),
+    );
   }
-  
+
   return alternatives;
 }
 
@@ -112,16 +143,19 @@ function extractConcepts(text: string): string[] {
   // Simple concept extraction - look for capitalized phrases and technical terms
   const concepts: string[] = [];
   const sentences = text.split(/[.!?]+/);
-  
+
   for (const sentence of sentences) {
     const words = sentence.trim().split(/\s+/);
     for (let i = 0; i < words.length - 1; i++) {
-      if (words[i][0] === words[i][0]?.toUpperCase() && words[i + 1][0] === words[i + 1][0]?.toUpperCase()) {
+      if (
+        words[i][0] === words[i][0]?.toUpperCase() &&
+        words[i + 1][0] === words[i + 1][0]?.toUpperCase()
+      ) {
         concepts.push(`${words[i]} ${words[i + 1]}`);
       }
     }
   }
-  
+
   return concepts.slice(0, 5);
 }
 
@@ -131,21 +165,25 @@ function extractConcepts(text: string): string[] {
  * @param _originalQuery - The original query for context (unused but kept for future use)
  * @returns Array of specific terms
  */
-function extractSpecificTerms(content: string, _originalQuery: string): string[] {
+function extractSpecificTerms(
+  content: string,
+  _originalQuery: string,
+): string[] {
   const terms: string[] = [];
-  
+
   // Look for technical patterns (e.g., "API", "function", "method", etc.)
-  const technicalPatterns = /\b(api|function|method|class|interface|module|package|service|endpoint|database|query|search|upload|download)\b/gi;
+  const technicalPatterns =
+    /\b(api|function|method|class|interface|module|package|service|endpoint|database|query|search|upload|download)\b/gi;
   const matches = content.match(technicalPatterns);
-  
+
   if (matches) {
     terms.push(...matches.slice(0, 3));
   }
-  
+
   // Look for domain-specific terms
   const domainTerms = content.match(/\b[A-Z][a-z]+(?:[A-Z][a-z]+)*\b/g) || [];
   terms.push(...domainTerms.slice(0, 3));
-  
+
   return terms;
 }
 
@@ -157,25 +195,25 @@ function extractSpecificTerms(content: string, _originalQuery: string): string[]
 function getSynonyms(query: string): string[] {
   // Simple synonym mapping - can be expanded
   const synonymMap: Record<string, string[]> = {
-    'error': ['issue', 'problem', 'bug', 'failure'],
-    'help': ['assist', 'support', 'guide', 'tutorial'],
-    'setup': ['install', 'configure', 'initialize', 'prepare'],
-    'test': ['verify', 'validate', 'check', 'examine'],
-    'create': ['build', 'make', 'generate', 'develop'],
-    'update': ['modify', 'change', 'edit', 'revise'],
-    'delete': ['remove', 'erase', 'clear', 'drop'],
-    'search': ['find', 'lookup', 'query', 'discover'],
-    'upload': ['import', 'add', 'insert', 'submit'],
-    'download': ['export', 'save', 'retrieve', 'fetch']
+    error: ['issue', 'problem', 'bug', 'failure'],
+    help: ['assist', 'support', 'guide', 'tutorial'],
+    setup: ['install', 'configure', 'initialize', 'prepare'],
+    test: ['verify', 'validate', 'check', 'examine'],
+    create: ['build', 'make', 'generate', 'develop'],
+    update: ['modify', 'change', 'edit', 'revise'],
+    delete: ['remove', 'erase', 'clear', 'drop'],
+    search: ['find', 'lookup', 'query', 'discover'],
+    upload: ['import', 'add', 'insert', 'submit'],
+    download: ['export', 'save', 'retrieve', 'fetch'],
   };
-  
+
   const lowerQuery = query.toLowerCase();
   for (const [key, synonyms] of Object.entries(synonymMap)) {
     if (lowerQuery.includes(key)) {
       return synonyms;
     }
   }
-  
+
   return [];
 }
 
@@ -186,33 +224,37 @@ function getSynonyms(query: string): string[] {
  * @param keyTerms - Extracted key terms from the result
  * @returns Array of deep-dive search queries
  */
-function _generateDeepDiveQueries(originalQuery: string, mostRelevantResult: SearchResult, keyTerms: string[]): string[] {
+function _generateDeepDiveQueries(
+  originalQuery: string,
+  mostRelevantResult: SearchResult,
+  keyTerms: string[],
+): string[] {
   const deepDiveQueries: string[] = [];
-  
+
   // Strategy 1: Focus on specific aspects mentioned in the result
   const content = mostRelevantResult.content.toLowerCase();
   const aspects = extractAspects(content);
   for (const aspect of aspects.slice(0, 2)) {
     deepDiveQueries.push(`${aspect} ${originalQuery}`);
   }
-  
+
   // Strategy 2: Create more specific technical queries
   const technicalTerms = extractTechnicalTerms(content);
   for (const term of technicalTerms.slice(0, 2)) {
     deepDiveQueries.push(`${originalQuery} ${term} implementation`);
     deepDiveQueries.push(`${term} ${originalQuery} examples`);
   }
-  
+
   // Strategy 3: Use key terms for additional queries
   for (const keyTerm of keyTerms.slice(0, 2)) {
     deepDiveQueries.push(`${keyTerm} ${originalQuery}`);
     deepDiveQueries.push(`${originalQuery} ${keyTerm} details`);
   }
-  
+
   // Strategy 4: Generate contextual follow-up queries
   const contextualQueries = generateContextualQueries(originalQuery, content);
   deepDiveQueries.push(...contextualQueries.slice(0, 2));
-  
+
   return deepDiveQueries;
 }
 
@@ -223,7 +265,7 @@ function _generateDeepDiveQueries(originalQuery: string, mostRelevantResult: Sea
  */
 function extractAspects(content: string): string[] {
   const aspects: string[] = [];
-  
+
   // Look for aspect indicators
   const aspectPatterns = [
     /\b(performance|speed|efficiency|optimization)\b/gi,
@@ -231,16 +273,16 @@ function extractAspects(content: string): string[] {
     /\b(scalability|scaling|load|capacity)\b/gi,
     /\b(compatibility|integration|api|interface)\b/gi,
     /\b(error|exception|handling|logging)\b/gi,
-    /\b(testing|validation|verification|quality)\b/gi
+    /\b(testing|validation|verification|quality)\b/gi,
   ];
-  
+
   for (const pattern of aspectPatterns) {
     const matches = content.match(pattern);
     if (matches) {
       aspects.push(...matches.slice(0, 2));
     }
   }
-  
+
   return aspects;
 }
 
@@ -251,7 +293,7 @@ function extractAspects(content: string): string[] {
  */
 function extractTechnicalTerms(content: string): string[] {
   const terms: string[] = [];
-  
+
   // Look for technical patterns
   const technicalPatterns = [
     /\b(database|sql|nosql|mongodb|postgresql)\b/gi,
@@ -259,16 +301,16 @@ function extractTechnicalTerms(content: string): string[] {
     /\b(cache|redis|memcached|session)\b/gi,
     /\b(queue|message|event|stream)\b/gi,
     /\b(microservice|service|endpoint|gateway)\b/gi,
-    /\b(container|docker|kubernetes|deployment)\b/gi
+    /\b(container|docker|kubernetes|deployment)\b/gi,
   ];
-  
+
   for (const pattern of technicalPatterns) {
     const matches = content.match(pattern);
     if (matches) {
       terms.push(...matches.slice(0, 2));
     }
   }
-  
+
   return terms;
 }
 
@@ -278,25 +320,28 @@ function extractTechnicalTerms(content: string): string[] {
  * @param content - The content to analyze
  * @returns Array of contextual queries
  */
-function generateContextualQueries(originalQuery: string, content: string): string[] {
+function generateContextualQueries(
+  originalQuery: string,
+  content: string,
+): string[] {
   const queries: string[] = [];
-  
+
   // Look for "how to" opportunities
   if (content.includes('error') || content.includes('problem')) {
     queries.push(`how to fix ${originalQuery}`);
     queries.push(`troubleshooting ${originalQuery}`);
   }
-  
+
   if (content.includes('setup') || content.includes('install')) {
     queries.push(`how to configure ${originalQuery}`);
     queries.push(`${originalQuery} best practices`);
   }
-  
+
   if (content.includes('api') || content.includes('endpoint')) {
     queries.push(`${originalQuery} documentation`);
     queries.push(`${originalQuery} examples`);
   }
-  
+
   return queries;
 }
 
@@ -312,9 +357,9 @@ let currentKTSession: KTSession | null = null;
 
 // Helper function to extract knowledge from KT session messages using LLM
 async function extractKnowledgeFromKTSession(
-  history: Content[], 
-  startIndex: number, 
-  geminiClient: GeminiClient | null
+  history: Content[],
+  startIndex: number,
+  geminiClient: GeminiClient | null,
 ): Promise<string> {
   // Fallback: static extraction if no LLM available
   if (!geminiClient) {
@@ -323,72 +368,99 @@ async function extractKnowledgeFromKTSession(
 
   // Get raw conversation content
   const rawContent = extractKnowledgeStatically(history, startIndex);
-  
+
   if (!rawContent.trim()) {
     return '';
   }
 
   // Use LLM to intelligently process the knowledge
   try {
-    const enhancedKnowledge = await processKnowledgeWithLLM(rawContent, geminiClient);
+    const enhancedKnowledge = await processKnowledgeWithLLM(
+      rawContent,
+      geminiClient,
+    );
     return enhancedKnowledge || rawContent; // Fallback to raw if LLM fails
   } catch (error) {
-    console.warn('LLM knowledge processing failed, using static extraction:', error);
+    console.warn(
+      'LLM knowledge processing failed, using static extraction:',
+      error,
+    );
     return rawContent;
   }
 }
 
 // Static extraction as fallback
-function extractKnowledgeStatically(history: Content[], startIndex: number): string {
+function extractKnowledgeStatically(
+  history: Content[],
+  startIndex: number,
+): string {
   let knowledgeContent = '';
-  
-  console.log(`[KT Debug] Processing ${history.length - startIndex} messages from index ${startIndex}`);
-  
+
+  console.log(
+    `[KT Debug] Processing ${history.length - startIndex} messages from index ${startIndex}`,
+  );
+
   // Process messages from KT session start to current
   for (let i = startIndex; i < history.length; i++) {
     const message = history[i];
     const content = message.parts?.map((part) => part.text).join('') || '';
-    
+
     if (content.trim() && message.role === 'user') {
       const text = content.trim();
-      
-      console.log(`[KT Debug] User message ${i}: "${text.substring(0, 100)}..."`);
-      
+
+      console.log(
+        `[KT Debug] User message ${i}: "${text.substring(0, 100)}..."`,
+      );
+
       // Skip KT commands
-      if (text.startsWith('/brain') || text.startsWith('/finish') || text.startsWith('/cancel')) {
+      if (
+        text.startsWith('/brain') ||
+        text.startsWith('/finish') ||
+        text.startsWith('/cancel')
+      ) {
         console.log(`[KT Debug] Skipping command: ${text}`);
         continue;
       }
-      
+
       // Skip tool calls and system-generated content
-      if (text.includes('<tool_call>') || 
-          text.includes('<function=') || 
-          text.includes('🚀 MANDATORY KNOWLEDGE RECALL') ||
-          text.includes('🚀 KNOWLEDGE RECALL FIRST') ||
-          text.includes('USER QUERY:') ||
-          text.includes('MANDATORY INSTRUCTIONS:') ||
-          text.includes('CRITICAL INSTRUCTIONS:')) {
-        console.log(`[KT Debug] Skipping tool call/system content: ${text.substring(0, 50)}...`);
+      if (
+        text.includes('<tool_call>') ||
+        text.includes('<function=') ||
+        text.includes('🚀 MANDATORY KNOWLEDGE RECALL') ||
+        text.includes('🚀 KNOWLEDGE RECALL FIRST') ||
+        text.includes('USER QUERY:') ||
+        text.includes('MANDATORY INSTRUCTIONS:') ||
+        text.includes('CRITICAL INSTRUCTIONS:')
+      ) {
+        console.log(
+          `[KT Debug] Skipping tool call/system content: ${text.substring(0, 50)}...`,
+        );
         continue;
       }
-      
+
       // Only include meaningful user knowledge content
-      if (text.length > 10) { // Minimum meaningful content length
+      if (text.length > 10) {
+        // Minimum meaningful content length
         console.log(`[KT Debug] Adding knowledge content: "${text}"`);
         knowledgeContent += text + '\n\n';
       }
     }
   }
-  
+
   const result = knowledgeContent.trim();
   console.log(`[KT Debug] Final extracted content length: ${result.length}`);
-  console.log(`[KT Debug] Final content preview: "${result.substring(0, 200)}..."`);
-  
+  console.log(
+    `[KT Debug] Final content preview: "${result.substring(0, 200)}..."`,
+  );
+
   return result;
 }
 
 // LLM-based knowledge processing
-async function processKnowledgeWithLLM(rawContent: string, geminiClient: GeminiClient): Promise<string> {
+async function processKnowledgeWithLLM(
+  rawContent: string,
+  geminiClient: GeminiClient,
+): Promise<string> {
   const prompt = `You are a technical knowledge curator. Transform the following conversational knowledge sharing into structured, professional technical documentation.
 
 INSTRUCTIONS:
@@ -420,25 +492,27 @@ FORMATTING REQUIREMENTS:
 Transform this into well-structured technical documentation:`;
 
   const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
-  
+
   try {
     const response = await geminiClient.generateContent(
       contents,
-      { 
+      {
         maxOutputTokens: 2000,
-        temperature: 0.1 // Low temperature for consistent, factual output
+        temperature: 0.1, // Low temperature for consistent, factual output
       },
-      new AbortController().signal
+      new AbortController().signal,
     );
-    
+
     // Extract text from response
     if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
       const result = response.candidates[0].content.parts[0].text.trim();
       console.log(`[KT Debug] LLM processed content length: ${result.length}`);
-      console.log(`[KT Debug] LLM result preview: "${result.substring(0, 200)}..."`);
+      console.log(
+        `[KT Debug] LLM result preview: "${result.substring(0, 200)}..."`,
+      );
       return result;
     }
-    
+
     return '';
   } catch (error) {
     throw new Error(`LLM processing failed: ${error}`);
@@ -446,34 +520,35 @@ Transform this into well-structured technical documentation:`;
 }
 
 // Helper function to format knowledge as technical documentation
-function formatAsTechnicalDoc(processedKnowledge: string, username: string): string {
+function formatAsTechnicalDoc(
+  processedKnowledge: string,
+  username: string,
+): string {
   const timestamp = new Date().toISOString();
   const title = generateDocTitle(processedKnowledge);
-  
+
   let doc = `# ${title}\n\n`;
   doc += `**Author:** ${username}\n`;
   doc += `**Date:** ${timestamp.split('T')[0]}\n`;
   doc += `**Type:** Knowledge Transfer Documentation\n\n`;
   doc += `---\n\n`;
-  
+
   // The processedKnowledge should already be well-structured from LLM processing
   doc += processedKnowledge;
-  
+
   return doc;
 }
 
 // Helper function to generate a meaningful title from content
 function generateDocTitle(content: string): string {
-  const lines = content.split('\n').filter(line => line.trim());
+  const lines = content.split('\n').filter((line) => line.trim());
   if (lines.length === 0) return 'Knowledge Transfer Session';
-  
+
   const firstLine = lines[0].trim();
   // Extract key topics/concepts for title
   const words = firstLine.split(' ').slice(0, 8).join(' ');
   return words.length > 50 ? words.substring(0, 47) + '...' : words;
 }
-
-
 
 // Helper function to ensure global .terra/kt directory exists
 async function ensureKTDirectory(): Promise<string> {
@@ -481,7 +556,7 @@ async function ensureKTDirectory(): Promise<string> {
   const homeDir = process.env.HOME || process.env.USERPROFILE || process.cwd();
   const terraDir = path.join(homeDir, '.terra');
   const ktDir = path.join(terraDir, 'kt');
-  
+
   try {
     await fs.access(ktDir);
   } catch {
@@ -493,7 +568,8 @@ async function ensureKTDirectory(): Promise<string> {
 
 export const vectorCommand: SlashCommand = {
   name: 'brain',
-  description: 'Manage your Terra knowledge brain - capture knowledge, upload documents, and remember facts.',
+  description:
+    'Manage your Terra knowledge brain - capture knowledge, upload documents, and remember facts.',
   kind: CommandKind.BUILT_IN,
   subCommands: [
     {
@@ -503,20 +579,24 @@ export const vectorCommand: SlashCommand = {
       subCommands: [
         {
           name: 'start',
-          description: 'Start an interactive Knowledge Transfer session to Provide your expertise.',
+          description:
+            'Start an interactive Knowledge Transfer session to Provide your expertise.',
           kind: CommandKind.BUILT_IN,
           action: async (context, _args) => {
             // Check if we have Terra credentials
             let terraApiKey = process.env.TERRA_API_KEY;
             let terraUsername = process.env.TERRA_USERNAME;
-            
+
             if (!terraApiKey || !terraUsername) {
               if (context.services.settings) {
-                terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-                terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+                terraApiKey =
+                  terraApiKey || context.services.settings.merged.terraApiKey;
+                terraUsername =
+                  terraUsername ||
+                  context.services.settings.merged.terraUsername;
               }
             }
-            
+
             if (!terraApiKey || !terraUsername) {
               context.ui.addItem(
                 {
@@ -529,7 +609,9 @@ export const vectorCommand: SlashCommand = {
             }
 
             // Initialize KT session state
-            const chat = await context.services.config?.getGeminiClient()?.getChat();
+            const chat = await context.services.config
+              ?.getGeminiClient()
+              ?.getChat();
             if (!chat) {
               context.ui.addItem(
                 {
@@ -545,19 +627,20 @@ export const vectorCommand: SlashCommand = {
             currentKTSession = {
               isActive: true,
               startHistoryIndex: currentHistory.length,
-              sessionId: `kt_${Date.now()}`
+              sessionId: `kt_${Date.now()}`,
             };
 
             // Start interactive KT collection session
             context.ui.addItem(
               {
                 type: MessageType.INFO,
-                text: '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
-                      'This session will help Terra collect knowledge from developers and team leads.\n' +
-                      'The entire conversation will be recorded and saved for future use.\n\n' +
-                      'Available commands during this session:\n' +
-                      '• Type "/brain kt finish" when you\'re done sharing knowledge to complete and save the session\n' +
-                      '• Type "/brain kt cancel" to abort the collection without saving\n\n',
+                text:
+                  '🚀 Starting Interactive KT (Knowledge Transfer) Session...\n\n' +
+                  'This session will help Terra collect knowledge from developers and team leads.\n' +
+                  'The entire conversation will be recorded and saved for future use.\n\n' +
+                  'Available commands during this session:\n' +
+                  '• Type "/brain kt finish" when you\'re done sharing knowledge to complete and save the session\n' +
+                  '• Type "/brain kt cancel" to abort the collection without saving\n\n',
               },
               Date.now(),
             );
@@ -584,13 +667,14 @@ Available commands during this session:
 
 The goal is to capture valuable knowledge that can help other team members. I should be collaborative and ask good follow-up questions to get comprehensive information.
 
-Start by asking them what specific knowledge, processes, or information they want to share with Terra today.`
+Start by asking them what specific knowledge, processes, or information they want to share with Terra today.`,
             };
           },
         },
         {
           name: 'finish',
-          description: 'Complete the current KT session and save the documentation locally and upload to your brain.',
+          description:
+            'Complete the current KT session and save the documentation locally and upload to your brain.',
           kind: CommandKind.BUILT_IN,
           action: async (context, _args) => {
             // Check if we have an active KT session
@@ -608,14 +692,17 @@ Start by asking them what specific knowledge, processes, or information they wan
             // Check if we have Terra credentials
             let terraApiKey = process.env.TERRA_API_KEY;
             let terraUsername = process.env.TERRA_USERNAME;
-            
+
             if (!terraApiKey || !terraUsername) {
               if (context.services.settings) {
-                terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-                terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+                terraApiKey =
+                  terraApiKey || context.services.settings.merged.terraApiKey;
+                terraUsername =
+                  terraUsername ||
+                  context.services.settings.merged.terraUsername;
               }
             }
-            
+
             if (!terraApiKey || !terraUsername) {
               context.ui.addItem(
                 {
@@ -628,7 +715,9 @@ Start by asking them what specific knowledge, processes, or information they wan
             }
 
             // Get the current conversation history
-            const chat = await context.services.config?.getGeminiClient()?.getChat();
+            const chat = await context.services.config
+              ?.getGeminiClient()
+              ?.getChat();
             if (!chat) {
               context.ui.addItem(
                 {
@@ -654,20 +743,26 @@ Start by asking them what specific knowledge, processes, or information they wan
 
             try {
               // Extract knowledge from KT session
-              const geminiClient = context.services.config?.getGeminiClient() || null;
-              const rawKnowledge = await extractKnowledgeFromKTSession(history, currentKTSession.startHistoryIndex, geminiClient);
-              
+              const geminiClient =
+                context.services.config?.getGeminiClient() || null;
+              const rawKnowledge = await extractKnowledgeFromKTSession(
+                history,
+                currentKTSession.startHistoryIndex,
+                geminiClient,
+              );
+
               if (!rawKnowledge.trim()) {
                 context.ui.addItem(
                   {
                     type: MessageType.ERROR,
-                    text: 'No meaningful knowledge content found in this session.\n\n' +
-                          'Tips for better KT sessions:\n' +
-                          '• Share specific technical details, processes, or insights\n' +
-                          '• Explain implementation approaches, configurations, or workflows\n' +
-                          '• Provide concrete examples, code snippets, or step-by-step procedures\n' +
-                          '• Avoid finishing the session too early - add substantial content first\n\n' +
-                          'Try starting a new session with "/brain kt start" and sharing more detailed knowledge.',
+                    text:
+                      'No meaningful knowledge content found in this session.\n\n' +
+                      'Tips for better KT sessions:\n' +
+                      '• Share specific technical details, processes, or insights\n' +
+                      '• Explain implementation approaches, configurations, or workflows\n' +
+                      '• Provide concrete examples, code snippets, or step-by-step procedures\n' +
+                      '• Avoid finishing the session too early - add substantial content first\n\n' +
+                      'Try starting a new session with "/brain kt start" and sharing more detailed knowledge.',
                   },
                   Date.now(),
                 );
@@ -675,7 +770,10 @@ Start by asking them what specific knowledge, processes, or information they wan
               }
 
               // Format as technical documentation
-              const technicalDoc = formatAsTechnicalDoc(rawKnowledge, terraUsername);
+              const technicalDoc = formatAsTechnicalDoc(
+                rawKnowledge,
+                terraUsername,
+              );
 
               // Create filename
               const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -700,7 +798,12 @@ Start by asking them what specific knowledge, processes, or information they wan
               // Upload to vector database
               const userCollectionName = `${terraUsername}_kt`;
               const fileBuffer = Buffer.from(technicalDoc, 'utf8');
-              const result = await uploadDocument(fileBuffer, uploadFileName, userCollectionName, terraApiKey);
+              const result = await uploadDocument(
+                fileBuffer,
+                uploadFileName,
+                userCollectionName,
+                terraApiKey,
+              );
 
               if (result.success) {
                 context.ui.addItem(
@@ -714,8 +817,9 @@ Start by asking them what specific knowledge, processes, or information they wan
                 context.ui.addItem(
                   {
                     type: MessageType.ERROR,
-                    text: `⚠️ Documentation saved locally but failed to upload to brain: ${result.error || 'Unknown error'}\n` +
-                          `Local file: ~/.terra/kt/${fileName}`,
+                    text:
+                      `⚠️ Documentation saved locally but failed to upload to brain: ${result.error || 'Unknown error'}\n` +
+                      `Local file: ~/.terra/kt/${fileName}`,
                   },
                   Date.now(),
                 );
@@ -727,11 +831,11 @@ Start by asking them what specific knowledge, processes, or information they wan
               // Return a message to end the KT session context
               return {
                 type: 'submit_prompt',
-                content: `KT SESSION COMPLETED - The KT (Knowledge Transfer) session has been successfully completed and saved. I should now return to normal conversation mode and stop asking KT-related follow-up questions. The user is no longer in a KT session.`
+                content: `KT SESSION COMPLETED - The KT (Knowledge Transfer) session has been successfully completed and saved. I should now return to normal conversation mode and stop asking KT-related follow-up questions. The user is no longer in a KT session.`,
               };
-
             } catch (error: unknown) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
               context.ui.addItem(
                 {
                   type: MessageType.ERROR,
@@ -766,8 +870,9 @@ Start by asking them what specific knowledge, processes, or information they wan
             context.ui.addItem(
               {
                 type: MessageType.INFO,
-                text: '❌ KT session cancelled. No knowledge was saved.\n\n' +
-                      'You can start a new KT session anytime with `/brain kt start`.',
+                text:
+                  '❌ KT session cancelled. No knowledge was saved.\n\n' +
+                  'You can start a new KT session anytime with `/brain kt start`.',
               },
               Date.now(),
             );
@@ -775,7 +880,7 @@ Start by asking them what specific knowledge, processes, or information they wan
             // Return a message to end the KT session context
             return {
               type: 'submit_prompt',
-              content: `KT SESSION ENDED - The KT (Knowledge Transfer) session has been cancelled. I should now return to normal conversation mode and stop asking KT-related follow-up questions. The user is no longer in a KT session.`
+              content: `KT SESSION ENDED - The KT (Knowledge Transfer) session has been cancelled. I should now return to normal conversation mode and stop asking KT-related follow-up questions. The user is no longer in a KT session.`,
             };
           },
         },
@@ -788,7 +893,7 @@ Start by asking them what specific knowledge, processes, or information they wan
       action: async (context, args) => {
         // Parse arguments - only file path is needed, collection is auto-generated
         const trimmedArgs = args.trim();
-        
+
         if (!trimmedArgs) {
           context.ui.addItem(
             {
@@ -816,7 +921,7 @@ Start by asking them what specific knowledge, processes, or information they wan
         // Get Terra credentials
         const terraApiKey = process.env.TERRA_API_KEY;
         const terraUsername = process.env.TERRA_USERNAME;
-        
+
         if (!terraApiKey || !terraUsername) {
           context.ui.addItem(
             {
@@ -830,7 +935,7 @@ Start by asking them what specific knowledge, processes, or information they wan
 
         // Use user's collection name
         const userCollectionName = `${terraUsername}_kt`;
-        
+
         try {
           // Resolve the file path
           const resolvedPath = path.isAbsolute(filePath)
@@ -849,8 +954,13 @@ Start by asking them what specific knowledge, processes, or information they wan
             Date.now(),
           );
 
-          const result = await uploadDocument(fileBuffer, fileName, userCollectionName, terraApiKey);
-          
+          const result = await uploadDocument(
+            fileBuffer,
+            fileName,
+            userCollectionName,
+            terraApiKey,
+          );
+
           if (result.success) {
             context.ui.addItem(
               {
@@ -869,7 +979,8 @@ Start by asking them what specific knowledge, processes, or information they wan
             );
           }
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           context.ui.addItem(
             {
               type: MessageType.ERROR,
@@ -882,11 +993,12 @@ Start by asking them what specific knowledge, processes, or information they wan
     },
     {
       name: 'remember',
-      description: 'Store a personal fact or preference that persists across sessions.',
+      description:
+        'Store a personal fact or preference that persists across sessions.',
       kind: CommandKind.BUILT_IN,
       action: async (context, args) => {
         const trimmedArgs = args.trim();
-        
+
         if (!trimmedArgs) {
           context.ui.addItem(
             {
@@ -907,7 +1019,9 @@ Start by asking them what specific knowledge, processes, or information they wan
         if (scopeMatch) {
           scope = scopeMatch[1].toLowerCase() as 'global' | 'project';
           // Remove the --scope parameter from the memory text
-          memory = trimmedArgs.replace(/--scope\s+(global|project)/i, '').trim();
+          memory = trimmedArgs
+            .replace(/--scope\s+(global|project)/i, '')
+            .trim();
         }
 
         // Validate that we still have memory content after removing scope
@@ -939,7 +1053,8 @@ Start by asking them what specific knowledge, processes, or information they wan
             toolArgs: { fact: memory, scope },
           };
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           context.ui.addItem(
             {
               type: MessageType.ERROR,

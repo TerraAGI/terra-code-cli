@@ -6,4 +6,4 @@
 
 // Re-export the main function from gemini.tsx to maintain functionality
 // while allowing us to use the Terra branding
-export { main } from './gemini.js'; 
+export { main } from './gemini.js';

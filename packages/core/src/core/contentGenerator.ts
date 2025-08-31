@@ -14,7 +14,11 @@ import {
   GoogleGenAI,
 } from '@google/genai';
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
-import { DEFAULT_GEMINI_MODEL, DEFAULT_QWEN_MODEL, DEFAULT_OPENAI_MODEL } from '../config/models.js';
+import {
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_QWEN_MODEL,
+  DEFAULT_OPENAI_MODEL,
+} from '../config/models.js';
 import { Config } from '../config/config.js';
 import { getEffectiveModel } from './modelCheck.js';
 import { UserTierId } from '../code_assist/types.js';
@@ -91,7 +95,11 @@ export function createContentGeneratorConfig(
 
   // Use runtime model from config if available; otherwise, fall back to parameter or default
   // For OpenAI auth, use DEFAULT_OPENAI_MODEL as fallback, otherwise use DEFAULT_GEMINI_MODEL
-  const effectiveModel = config.getModel() || (authType === AuthType.USE_OPENAI ? DEFAULT_OPENAI_MODEL : DEFAULT_GEMINI_MODEL);
+  const effectiveModel =
+    config.getModel() ||
+    (authType === AuthType.USE_OPENAI
+      ? DEFAULT_OPENAI_MODEL
+      : DEFAULT_GEMINI_MODEL);
 
   const contentGeneratorConfig: ContentGeneratorConfig = {
     model: effectiveModel,
@@ -135,7 +143,9 @@ export function createContentGeneratorConfig(
 
   if (authType === AuthType.USE_OPENAI) {
     if (!openaiApiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is required for OpenAI authentication. Please set it in your .env file or environment variables.');
+      throw new Error(
+        'OPENAI_API_KEY environment variable is required for OpenAI authentication. Please set it in your .env file or environment variables.',
+      );
     }
     contentGeneratorConfig.apiKey = openaiApiKey;
     contentGeneratorConfig.baseUrl = openaiBaseUrl;

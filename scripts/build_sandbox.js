@@ -98,7 +98,7 @@ rmSync(join(corePackageDir, 'dist', 'terra-code-core-*.tgz'), {
   force: true,
 });
 execSync(
-      `npm pack -w @terra-code/terra-code-core --pack-destination ./packages/core/dist`,
+  `npm pack -w @terra-code/terra-code-core --pack-destination ./packages/core/dist`,
   { stdio: 'ignore' },
 );
 

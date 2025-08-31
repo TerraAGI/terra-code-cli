@@ -27,6 +27,7 @@ import { mcpCommand } from '../ui/commands/mcpCommand.js';
 import { privacyCommand } from '../ui/commands/privacyCommand.js';
 import { quitCommand } from '../ui/commands/quitCommand.js';
 import { restoreCommand } from '../ui/commands/restoreCommand.js';
+import { semanticCommand } from '../ui/commands/semanticCommand.js';
 import { statsCommand } from '../ui/commands/statsCommand.js';
 import { themeCommand } from '../ui/commands/themeCommand.js';
 import { toolsCommand } from '../ui/commands/toolsCommand.js';
@@ -72,6 +73,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       privacyCommand,
       quitCommand,
       restoreCommand(this.config),
+      semanticCommand, // Add semantic command
       statsCommand,
       themeCommand,
       toolsCommand,

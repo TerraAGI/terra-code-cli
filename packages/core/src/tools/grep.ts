@@ -121,11 +121,14 @@ class GrepToolInvocation extends BaseToolInvocation<
       const workspaceContext = this.config.getWorkspaceContext();
       const searchDirAbs = this.resolveAndValidatePath(this.params.path);
       const searchDirDisplay = this.params.path || '.';
-      
+
       // If a specific file path was provided, automatically set include to just that file
       let effectiveInclude = this.params.include;
       if (this.params.path && searchDirAbs) {
-        const originalPath = path.resolve(this.config.getTargetDir(), this.params.path);
+        const originalPath = path.resolve(
+          this.config.getTargetDir(),
+          this.params.path,
+        );
         try {
           const stats = fs.statSync(originalPath);
           if (stats.isFile()) {

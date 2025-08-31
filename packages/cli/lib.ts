@@ -8,4 +8,4 @@
 // This file exports the main function for programmatic use
 
 export { main } from './src/gemini.js';
-export type { LoadedSettings } from './src/config/settings.js'; 
+export type { LoadedSettings } from './src/config/settings.js';

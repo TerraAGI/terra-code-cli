@@ -7,21 +7,25 @@
 Terra isn't just another AI coding assistant. It's a **comprehensive development brain** that:
 
 ### **🔗 Builds Your Knowledge Universe**
+
 - **Upload any document**: READMEs, architecture docs, API specs, deployment guides
-- **Capture team knowledge**: Interactive KT sessions with senior developers  
+- **Capture team knowledge**: Interactive KT sessions with senior developers
 - **Remember across projects**: Your org-level patterns, standards, and learnings
 
 ### **🚀 Enhanced AI Responses**
+
 - **Context-aware**: AI automatically uses your uploaded knowledge in every response
 - **Project-specific**: Knows your codebase, patterns, and architectural decisions
 - **Continuous learning**: Gets smarter as you feed it more information
 
 ### **💾 Persistent Memory**
+
 - **Personal preferences**: "I prefer TypeScript", "Use async/await over Promises"
 - **Team standards**: Code style, deployment processes, review guidelines
 - **Cross-session continuity**: Never lose context between conversations
 
 ### **🔄 Multi-Model Support**
+
 - **Compare responses**: Get answers from multiple AI models simultaneously
 - **Best of both worlds**: Leverage strengths of different models for different tasks
 
@@ -74,6 +78,14 @@ terra> /compare "Explain dependency injection" --models qwen,gpt-4,claude
 ### Brain Commands (Priority)
 
 - **`/brain upload <file>`** - Upload document to your brain
-- **`/brain kt`** - Interactive Knowledge Transfer session  
+- **`/brain kt`** - Interactive Knowledge Transfer session
 - **`/brain remember <fact>`** - Remember personal facts and preferences
 - **`/compare <prompt> --models <list>`** - Compare responses across models
+
+### Semantic Analysis Commands (Optional)
+
+- **`/semantic:index <project-path>`** - Index project for semantic search
+- **`/semantic:search <query>`** - Search code using natural language
+- **`/semantic:status`** - Check semantic analysis status
+
+**Note**: Semantic analysis is disabled by default. Enable it in settings to use these features.

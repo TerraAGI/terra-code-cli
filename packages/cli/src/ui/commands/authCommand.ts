@@ -29,26 +29,39 @@ export const authCommand: SlashCommand = {
 
           // Set Qwen OAuth as the selected auth type
           if (context.services.settings) {
-            context.services.settings.setValue(SettingScope.User, 'selectedAuthType', AuthType.QWEN_OAUTH);
+            context.services.settings.setValue(
+              SettingScope.User,
+              'selectedAuthType',
+              AuthType.QWEN_OAUTH,
+            );
           }
 
           // Actually authenticate with Qwen OAuth
           if (context.services.config) {
             await context.services.config.refreshAuth(AuthType.QWEN_OAUTH);
-            
+
             // Auto-register Terra credentials after successful authentication
             try {
-              const { autoRegisterTerraCredentials } = await import('../../config/auth.js');
+              const { autoRegisterTerraCredentials } = await import(
+                '../../config/auth.js'
+              );
               const terraResult = await autoRegisterTerraCredentials({
                 setValue: (scope: string, key: string, value: string) => {
-                  if (context.services.settings && (key === 'terraApiKey' || key === 'terraUsername')) {
-                    context.services.settings.setValue(scope as SettingScope, key, value);
+                  if (
+                    context.services.settings &&
+                    (key === 'terraApiKey' || key === 'terraUsername')
+                  ) {
+                    context.services.settings.setValue(
+                      scope as SettingScope,
+                      key,
+                      value,
+                    );
                   }
                 },
                 terraApiKey: context.services.settings?.merged.terraApiKey,
-                terraUsername: context.services.settings?.merged.terraUsername
+                terraUsername: context.services.settings?.merged.terraUsername,
               });
-              
+
               if (terraResult.success) {
                 context.ui.addItem(
                   {
@@ -86,7 +99,8 @@ export const authCommand: SlashCommand = {
             Date.now(),
           );
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           context.ui.addItem(
             {
               type: 'error',
@@ -113,7 +127,11 @@ export const authCommand: SlashCommand = {
 
           // Set OpenAI as the selected auth type
           if (context.services.settings) {
-            context.services.settings.setValue(SettingScope.User, 'selectedAuthType', AuthType.USE_OPENAI);
+            context.services.settings.setValue(
+              SettingScope.User,
+              'selectedAuthType',
+              AuthType.USE_OPENAI,
+            );
           }
 
           // Validate OpenAI authentication requirements
@@ -133,20 +151,29 @@ export const authCommand: SlashCommand = {
           // Actually authenticate with OpenAI
           if (context.services.config) {
             await context.services.config.refreshAuth(AuthType.USE_OPENAI);
-            
+
             // Auto-register Terra credentials after successful authentication
             try {
-              const { autoRegisterTerraCredentials } = await import('../../config/auth.js');
+              const { autoRegisterTerraCredentials } = await import(
+                '../../config/auth.js'
+              );
               const terraResult = await autoRegisterTerraCredentials({
                 setValue: (scope: string, key: string, value: string) => {
-                  if (context.services.settings && (key === 'terraApiKey' || key === 'terraUsername')) {
-                    context.services.settings.setValue(scope as SettingScope, key, value);
+                  if (
+                    context.services.settings &&
+                    (key === 'terraApiKey' || key === 'terraUsername')
+                  ) {
+                    context.services.settings.setValue(
+                      scope as SettingScope,
+                      key,
+                      value,
+                    );
                   }
                 },
                 terraApiKey: context.services.settings?.merged.terraApiKey,
-                terraUsername: context.services.settings?.merged.terraUsername
+                terraUsername: context.services.settings?.merged.terraUsername,
               });
-              
+
               if (terraResult.success) {
                 context.ui.addItem(
                   {
@@ -184,7 +211,8 @@ export const authCommand: SlashCommand = {
             Date.now(),
           );
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           context.ui.addItem(
             {
               type: 'error',
@@ -218,7 +246,7 @@ export const authCommand: SlashCommand = {
     //       // Actually authenticate with Gemini
     //       if (context.services.config) {
     //         await context.services.config.refreshAuth(AuthType.USE_GEMINI);
-            
+
     //         // Auto-register Terra credentials after successful authentication
     //         try {
     //           const { autoRegisterTerraCredentials } = await import('../../config/auth.js');
@@ -231,7 +259,7 @@ export const authCommand: SlashCommand = {
     //             terraApiKey: context.services.settings?.merged.terraApiKey,
     //             terraUsername: context.services.settings?.merged.terraUsername
     //           });
-              
+
     //           if (terraResult.success) {
     //             context.ui.addItem(
     //               {
@@ -289,24 +317,27 @@ export const authCommand: SlashCommand = {
           let authType = 'Not set';
 
           if (context.services.settings) {
-            authType = context.services.settings.merged.selectedAuthType || 'Not set';
+            authType =
+              context.services.settings.merged.selectedAuthType || 'Not set';
           }
 
           // Check Terra credentials
           let terraApiKey = process.env.TERRA_API_KEY;
           let terraUsername = process.env.TERRA_USERNAME;
-          
+
           if (!terraApiKey || !terraUsername) {
             if (context.services.settings) {
-              terraApiKey = terraApiKey || context.services.settings.merged.terraApiKey;
-              terraUsername = terraUsername || context.services.settings.merged.terraUsername;
+              terraApiKey =
+                terraApiKey || context.services.settings.merged.terraApiKey;
+              terraUsername =
+                terraUsername || context.services.settings.merged.terraUsername;
             }
           }
 
           // Build status message
           let statusText = `🔐 Authentication Status:\n\n`;
           statusText += `📡 LLM Provider: ${authType}\n`;
-          
+
           if (terraApiKey && terraUsername) {
             statusText += `✅ Terra Vector: Configured (${terraUsername})\n`;
           } else {
@@ -365,7 +396,8 @@ export const authCommand: SlashCommand = {
             Date.now(),
           );
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           context.ui.addItem(
             {
               type: 'error',

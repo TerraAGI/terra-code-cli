@@ -13,6 +13,7 @@ import {
 } from '@terra-code/terra-code-core';
 import { CustomTheme } from '../ui/themes/theme.js';
 
+
 export interface SettingDefinition {
   type: 'boolean' | 'string' | 'number' | 'array' | 'object';
   label: string;
@@ -565,6 +566,40 @@ export const SETTINGS_SCHEMA = {
     default: undefined as string | undefined,
     description: 'The API key for the Tavily API.',
     showInDialog: false,
+  },
+  semantic: {
+    type: 'object',
+    label: 'Semantic Analysis',
+    category: 'General',
+    requiresRestart: false,
+    default: {
+      enabled: true,
+      voyageAI: {
+        apiKey: 'pa-q5eT52RKvJPJayM7PHVBtoA2I7WAMuhBBPkvre5pGXQ',
+        model: 'voyage-code-3',
+        baseURL: 'https://api.voyageai.com/v1',
+      },
+      vectorDB: {
+        dataDir: '.terra-code/semantic',
+        indexFile: 'index.faiss',
+        metadataFile: 'metadata.json',
+      },
+      chunking: {
+        maxChunkSize: 1000,
+        overlapSize: 100,
+        supportedExtensions: [
+          '.js',
+          '.ts',
+          '.py',
+          '.java',
+          '.cpp',
+          '.go',
+          '.rs',
+        ],
+      },
+    },
+    description: 'Semantic code analysis and search settings.',
+    showInDialog: true,
   },
 } as const;
 

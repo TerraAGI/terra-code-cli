@@ -4,7 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MCPServerConfig, GeminiCLIExtension } from '@terra-code/terra-code-core';
+import {
+  MCPServerConfig,
+  GeminiCLIExtension,
+} from '@terra-code/terra-code-core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';

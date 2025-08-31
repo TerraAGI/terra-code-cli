@@ -13,17 +13,20 @@ The KT system enables developers and team leads to share their knowledge in a na
 Starts an interactive KT (Knowledge Transfer) collection session.
 
 **Usage:**
+
 ```bash
 /brain kt
 ```
 
 **What it does:**
+
 - Initiates a conversational session for knowledge collection
 - Records the entire conversation between the developer and AI
 - Provides guidance on what knowledge to share
 - Allows for natural, back-and-forth discussion
 
 **Example session:**
+
 ```
 User: /brain kt
 CLI: 🚀 Starting Interactive KT (Knowledge Transfer) Session...
@@ -47,17 +50,20 @@ User: We use Docker containers with Kubernetes...
 Completes the current KT session and uploads the conversation to your brain.
 
 **Usage:**
+
 ```bash
 /finish
 ```
 
 **What it does:**
+
 - Summarizes the collected knowledge
 - Saves the entire conversation to a formatted text file
 - Uploads the file to your personal KT collection in your brain
 - Makes the knowledge searchable for other team members
 
 **Example output:**
+
 ```
 📝 KT session completed! Saving conversation to "kt_session_username_2024-01-15T10-30-00-000Z.txt"...
 ✅ Successfully uploaded KT session "kt_session_username_2024-01-15T10-30-00-000Z.txt" to collection "username_kt".
@@ -70,16 +76,19 @@ The knowledge you shared has been saved to your team's knowledge base and can no
 Cancels the current KT session without saving any knowledge.
 
 **Usage:**
+
 ```bash
 /cancel
 ```
 
 **What it does:**
+
 - Aborts the current KT session
 - No conversation is saved or uploaded
 - Returns to normal CLI operation
 
 **Example output:**
+
 ```
 ❌ KT session cancelled. No knowledge was saved to the database.
 
@@ -112,24 +121,28 @@ You can start a new KT session anytime with /vector kt.
 ## Example Use Cases
 
 ### Deployment Processes
+
 - CI/CD pipeline configurations
 - Environment setup procedures
 - Rollback strategies
 - Monitoring and alerting setup
 
 ### Code Architecture
+
 - Design patterns used in the project
 - Database schema decisions
 - API design principles
 - Testing strategies
 
 ### Troubleshooting
+
 - Common error scenarios and solutions
 - Performance optimization techniques
 - Debugging workflows
 - Log analysis patterns
 
 ### Team Workflows
+
 - Code review processes
 - Release management procedures
 - On-call responsibilities
@@ -159,6 +172,7 @@ Our deployment process uses Docker containers with Kubernetes for scalability an
 ## Details
 
 We follow a GitOps approach where:
+
 - All infrastructure is defined as code
 - Deployments are triggered through Git commits
 - Monitoring and rollback strategies are automated
@@ -167,6 +181,7 @@ We follow a GitOps approach where:
 **File Location:** `.kt/kt_username_2024-01-15T10-30-00-000Z.md`
 
 **Benefits:**
+
 - ✅ **Version controlled** - Files are part of your repository
 - ✅ **Offline accessible** - No need for internet connection to read
 - ✅ **Team visible** - Shared through normal Git workflows
@@ -199,4 +214,4 @@ your-project/
 └── ...
 ```
 
-**Note:** Add `.kt/` to your `.gitignore` if you prefer not to version control KT documentation, though we recommend keeping it for team knowledge sharing. 
+**Note:** Add `.kt/` to your `.gitignore` if you prefer not to version control KT documentation, though we recommend keeping it for team knowledge sharing.

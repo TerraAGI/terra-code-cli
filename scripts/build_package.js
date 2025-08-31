@@ -40,7 +40,9 @@ if (process.cwd().includes('cli')) {
   try {
     copyFileSync('../../bundle/terra.js', join('dist', 'terra.js'));
   } catch (_error) {
-    console.warn('Warning: Could not copy bundled file, bundle may not exist yet');
+    console.warn(
+      'Warning: Could not copy bundled file, bundle may not exist yet',
+    );
   }
 }
 

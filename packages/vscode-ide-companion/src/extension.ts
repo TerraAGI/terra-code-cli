@@ -100,10 +100,10 @@ export async function activate(context: vscode.ExtensionContext) {
       updateWorkspacePath(context);
     }),
     vscode.commands.registerCommand('terra-code.runTerraCode', () => {
-              const terraCmd = 'terra';
-        const terminal = vscode.window.createTerminal(`Terra Code`);
+      const terraCmd = 'terra';
+      const terminal = vscode.window.createTerminal(`Terra Code`);
       terminal.show();
-              terminal.sendText(terraCmd);
+      terminal.sendText(terraCmd);
     }),
     vscode.commands.registerCommand('terra-code.showNotices', async () => {
       const noticePath = vscode.Uri.joinPath(

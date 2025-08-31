@@ -67,7 +67,7 @@ export function createShowMemoryAction(
         content:
           fileCount > 0
             ? 'Hierarchical memory (TERRA.md or other context files) is loaded but content is empty.'
-: 'No hierarchical memory (TERRA.md or other context files) is currently loaded.',
+            : 'No hierarchical memory (TERRA.md or other context files) is currently loaded.',
         timestamp: new Date(),
       });
     }
