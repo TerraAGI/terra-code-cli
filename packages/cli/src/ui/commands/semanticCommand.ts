@@ -17,30 +17,11 @@ export const semanticCommand: SlashCommand = {
     const subcommand = parts[0];
     const subArgs = parts.slice(1).join(' ');
 
-    try {
+    let content;
+
+    if (subcommand) {
       switch (subcommand) {
-        case 'status':
-          return {
-            type: 'message',
-            messageType: 'info',
-            content: await semanticCommands.status(),
-          };
-
-        case 'index':
-          if (!subArgs) {
-            return {
-              type: 'message',
-              messageType: 'error',
-              content: 'Usage: /semantic:index <project-path>',
-            };
-          }
-          return {
-            type: 'message',
-            messageType: 'info',
-            content: await semanticCommands.index(subArgs),
-          };
-
-        case 'search':
+        case 'search': {
           if (!subArgs) {
             return {
               type: 'message',
@@ -48,43 +29,38 @@ export const semanticCommand: SlashCommand = {
               content: 'Usage: /semantic:search <query>',
             };
           }
-          return {
-            type: 'message',
-            messageType: 'info',
-            content: await semanticCommands.search(subArgs),
-          };
-
-        default: {
-          // Add fuzzy matching for common typos
-          const suggestions = ['status', 'index', 'search'];
-          const bestMatch = suggestions.find(s => 
-            s.startsWith(subcommand) || 
-            subcommand.startsWith(s) ||
-            s.includes(subcommand) ||
-            subcommand.includes(s)
-          );
-          
-          if (bestMatch && bestMatch !== subcommand) {
+          content = await semanticCommands.search(subArgs);
+          break;
+        }
+        case 'index': {
+          if (!subArgs) {
             return {
               type: 'message',
               messageType: 'error',
-              content: `Did you mean "/semantic ${bestMatch}"? Available commands: status, index, search`,
+              content: 'Usage: /semantic:index <project-path>',
             };
           }
-          
-          return {
-            type: 'message',
-            messageType: 'error',
-            content: `Unknown semantic subcommand: ${subcommand}. Available commands: status, index, search`,
-          };
+          content = await semanticCommands.index(subArgs);
+          break;
+        }
+        case 'status': {
+          content = await semanticCommands.status();
+          break;
+        }
+        default: {
+          const suggestions = ['status', 'index', 'search'];
+          const bestMatch = suggestions.find(s => s.startsWith(subcommand)) || suggestions[0];
+          content = `Did you mean "/semantic ${bestMatch}"? Available commands: status, index, search`;
         }
       }
-    } catch (error) {
-      return {
-        type: 'message',
-        messageType: 'error',
-        content: `Semantic command failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
+    } else {
+      content = `Unknown semantic subcommand: ${subcommand}. Available commands: status, index, search`;
     }
+
+    return {
+      type: 'message',
+      messageType: 'info',
+      content,
+    };
   },
 };

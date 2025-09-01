@@ -15,6 +15,7 @@ export class SemanticEngine {
   private preprocessor: CodePreprocessor | null = null;
   private embeddingClient: VoyageAIClient | null = null;
   private vectorDB: VectorDB | null = null;
+  private indexedProjects: Map<string, VectorDB> = new Map();
 
   async initialize(config: SemanticConfig): Promise<void> {
     this.config = config;
@@ -53,13 +54,27 @@ export class SemanticEngine {
       );
     }
 
-    // Re-initialize vectorDB with the correct project path
+    // Check if already indexed
     const resolvedConfig = {
       ...this.config.vectorDB,
       dataDir: path.resolve(projectPath, this.config.vectorDB.dataDir),
     };
-    this.vectorDB = new VectorDB(resolvedConfig);
-    await this.vectorDB.initialize();
+    
+    // Check if we already have a vector DB instance for this project
+    if (this.indexedProjects.has(projectPath)) {
+      console.log(`Project already indexed: ${projectPath}`);
+      return;
+    }
+
+    const projectVectorDB = new VectorDB(resolvedConfig);
+    await projectVectorDB.initialize();
+    
+    if (await projectVectorDB.isIndexed(resolvedConfig.dataDir)) {
+      console.log(`Project already indexed: ${projectPath}`);
+      // Store the existing instance
+      this.indexedProjects.set(projectPath, projectVectorDB);
+      return;
+    }
 
     try {
       console.log(`Discovering files in project: ${projectPath}`);
@@ -83,7 +98,7 @@ export class SemanticEngine {
               await this.embeddingClient.createBatchEmbeddings(chunks);
 
             console.log(`Storing embeddings in vector database`);
-            await this.vectorDB.addEmbeddings(embeddings, chunks);
+            await projectVectorDB.addEmbeddings(embeddings, chunks);
 
             totalChunks += chunks.length;
           }
@@ -96,6 +111,9 @@ export class SemanticEngine {
       console.log(
         `Successfully indexed ${totalChunks} chunks from ${files.length} files`,
       );
+      
+      // Store the instance for future use
+      this.indexedProjects.set(projectPath, projectVectorDB);
     } catch (error) {
       console.error('Failed to index project:', error);
       throw error;
@@ -117,6 +135,44 @@ export class SemanticEngine {
     }
 
     try {
+      // Always use current working directory for search
+      const currentProjectPath = process.cwd();
+      console.log(`Searching in current directory: ${currentProjectPath}`);
+      console.log(`Current indexedProjects cache size: ${this.indexedProjects.size}`);
+      console.log(`Cached projects: ${Array.from(this.indexedProjects.keys()).join(', ')}`);
+
+      // Check if we already have a vector DB instance for this project
+      let searchVectorDB = this.indexedProjects.get(currentProjectPath);
+
+      if (!searchVectorDB) {
+        // Check if the directory is already indexed on disk
+        const resolvedConfig = {
+          ...this.config.vectorDB,
+          dataDir: path.resolve(currentProjectPath, this.config.vectorDB.dataDir),
+        };
+        const tempVectorDB = new VectorDB(resolvedConfig);
+        await tempVectorDB.initialize();
+        
+        if (await tempVectorDB.isIndexed(resolvedConfig.dataDir)) {
+          console.log('Current directory already indexed on disk, loading existing data...');
+          // Use the existing indexed data
+          searchVectorDB = tempVectorDB;
+          this.indexedProjects.set(currentProjectPath, searchVectorDB);
+        } else {
+          console.log('Current directory not indexed, indexing now...');
+          // Auto-index the current directory
+          await this.indexProject(currentProjectPath);
+          searchVectorDB = this.indexedProjects.get(currentProjectPath);
+          
+          if (!searchVectorDB) {
+            throw new Error('Failed to create vector database for current directory');
+          }
+          console.log(`Successfully indexed and cached project: ${currentProjectPath}`);
+        }
+      } else {
+        console.log('Using existing cached index for current directory');
+      }
+
       console.log(`Creating embedding for query: "${query}"`);
       // Create a mock chunk for the query
       const queryChunk = {
@@ -137,8 +193,8 @@ export class SemanticEngine {
       const queryEmbedding =
         await this.embeddingClient.createEmbedding(queryChunk);
 
-      console.log(`Searching vector database`);
-      const results = await this.vectorDB.search(queryEmbedding, 10);
+      console.log(`Searching vector database in: ${currentProjectPath}`);
+      const results = await searchVectorDB.search(queryEmbedding, 10);
 
       // Convert to SearchResult format
       return results.map((result) => ({
@@ -161,24 +217,61 @@ export class SemanticEngine {
     indexSize: number;
     backend: string;
     isInitialized: boolean;
+    uniqueFiles: number;
+    languages: Record<string, number>;
+    duplicates: number;
+    lastIndexed: Date | null;
   }> {
     if (!this.isInitialized) {
-      return { totalChunks: 0, indexSize: 0, backend: 'none', isInitialized: false };
+      return { 
+        totalChunks: 0, 
+        indexSize: 0, 
+        backend: 'none', 
+        isInitialized: false,
+        uniqueFiles: 0,
+        languages: {},
+        duplicates: 0,
+        lastIndexed: null
+      };
     }
 
     if (!this.vectorDB) {
-      return { totalChunks: 0, indexSize: 0, backend: 'none', isInitialized: true };
+      return { 
+        totalChunks: 0, 
+        indexSize: 0, 
+        backend: 'none', 
+        isInitialized: true,
+        uniqueFiles: 0,
+        languages: {},
+        duplicates: 0,
+        lastIndexed: null
+      };
     }
 
     try {
       const stats = await this.vectorDB.getStats();
+      const detailedStats = this.vectorDB.getIndexStats();
+      
       return {
         ...stats,
         isInitialized: true,
+        uniqueFiles: detailedStats.uniqueFiles,
+        languages: detailedStats.languages,
+        duplicates: detailedStats.duplicates,
+        lastIndexed: detailedStats.lastIndexed
       };
     } catch (error) {
       console.error('Failed to get stats:', error);
-      return { totalChunks: 0, indexSize: 0, backend: 'unknown', isInitialized: true };
+      return { 
+        totalChunks: 0, 
+        indexSize: 0, 
+        backend: 'unknown', 
+        isInitialized: true,
+        uniqueFiles: 0,
+        languages: {},
+        duplicates: 0,
+        lastIndexed: null
+      };
     }
   }
 }

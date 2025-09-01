@@ -60,6 +60,10 @@ export interface SemanticEngine {
     indexSize: number;
     backend: string;
     isInitialized: boolean;
+    uniqueFiles: number;
+    languages: Record<string, number>;
+    duplicates: number;
+    lastIndexed: Date | null;
   }>;
 }
 
@@ -114,12 +118,25 @@ export async function getSemanticStats(): Promise<{
   indexSize: number;
   backend: string;
   isInitialized: boolean;
+  uniqueFiles: number;
+  languages: Record<string, number>;
+  duplicates: number;
+  lastIndexed: Date | null;
 }> {
   try {
     const engine = await getSemanticEngine();
     return engine.getStats();
   } catch (_error) {
-    return { totalChunks: 0, indexSize: 0, backend: 'error', isInitialized: false };
+    return { 
+      totalChunks: 0, 
+      indexSize: 0, 
+      backend: 'error', 
+      isInitialized: false,
+      uniqueFiles: 0,
+      languages: {},
+      duplicates: 0,
+      lastIndexed: null
+    };
   }
 }
 

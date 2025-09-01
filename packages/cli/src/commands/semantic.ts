@@ -10,21 +10,16 @@ import {
   getSemanticStats,
 } from '../semantic/index.js';
 
-export interface SemanticCommands {
-  index: (projectPath: string) => Promise<string>;
-  search: (query: string, options?: Record<string, unknown>) => Promise<string>;
-  status: () => Promise<string>;
-}
-
-export const semanticCommands: SemanticCommands = {
-  async index(projectPath: string): Promise<string> {
+export const semanticCommands = {
+  async index(projectPath?: string): Promise<string> {
     try {
       if (!isSemanticAvailable()) {
         return 'Semantic analysis is not available. Please enable it in settings first.';
       }
 
-      await indexProject(projectPath);
-      return `Successfully indexed project: ${projectPath}`;
+      const pathToIndex = projectPath || process.cwd();
+      await indexProject(pathToIndex);
+      return `Successfully indexed project: ${pathToIndex}`;
     } catch (error) {
       return `Failed to index project: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
@@ -42,10 +37,10 @@ export const semanticCommands: SemanticCommands = {
       const results = await searchSemantic(query, options);
 
       if (results.length === 0) {
-        return 'No semantically relevant code found for your query.';
+        return 'No semantically relevant code found for your query in the current directory.';
       }
 
-      let output = `Found ${results.length} semantically relevant code snippets:\n\n`;
+      let output = `Found ${results.length} semantically relevant code snippets in the current directory:\n\n`;
 
       results.forEach((result, index) => {
         output += `${index + 1}. **${result.filePath}** (Relevance: ${(result.similarity * 100).toFixed(1)}%)\n`;
@@ -69,31 +64,38 @@ export const semanticCommands: SemanticCommands = {
 
   async status(): Promise<string> {
     const available = isSemanticAvailable();
-
     if (!available) {
-      return 'Semantic analysis is disabled. Enable it in settings to use semantic features.';
+      return 'Semantic search is not available. Please enable it in settings first.';
     }
 
     try {
       const stats = await getSemanticStats();
       
-      let status = 'Semantic analysis is enabled and available.\n\n';
-      status += `**Backend**: ${stats.backend}\n`;
-      status += `**Status**: ${stats.isInitialized ? 'Initialized' : 'Not initialized'}\n`;
-      status += `**Indexed Chunks**: ${stats.totalChunks}\n`;
-      status += `**Index Size**: ${stats.indexSize} bytes\n`;
+      let output = `🔍 **Semantic Search Status**\n\n`;
+      output += `**Status:** ${stats.isInitialized ? '✅ Active' : '❌ Not Initialized'}\n`;
+      output += `**Backend:** ${stats.backend}\n`;
+      output += `**Total Chunks:** ${stats.totalChunks}\n`;
+      output += `**Unique Files:** ${stats.uniqueFiles}\n`;
+      output += `**Index Size:** ${(stats.indexSize / 1024 / 1024).toFixed(2)} MB\n`;
       
-      if (stats.backend === 'simplified') {
-        status += '\n💡 **Note**: Using simplified backend (FAISS not available).\n';
-        status += '   For better performance, install FAISS:\n';
-        status += '   1. Install Visual Studio Build Tools 2019+\n';
-        status += '   2. Install Python 3.8+ and ensure it\'s in PATH\n';
-        status += '   3. Run: npm rebuild faiss-node\n';
+      if (stats.duplicates > 0) {
+        output += `⚠️ **Duplicates Detected:** ${stats.duplicates} chunks\n`;
+        output += `   This may indicate indexing issues. Consider re-indexing.\n`;
       }
       
-      return status;
+      if (stats.languages && Object.keys(stats.languages).length > 0) {
+        output += `**Languages:** ${Object.entries(stats.languages)
+          .map(([lang, count]) => `${lang} (${count})`)
+          .join(', ')}\n`;
+      }
+      
+      if (stats.lastIndexed) {
+        output += `**Last Indexed:** ${stats.lastIndexed.toLocaleString()}\n`;
+      }
+      
+      return output;
     } catch (error) {
-      return `Semantic analysis is enabled but failed to get stats: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      return `Failed to get semantic status: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   },
 };

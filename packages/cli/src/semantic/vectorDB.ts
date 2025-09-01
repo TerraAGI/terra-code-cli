@@ -96,7 +96,7 @@ export class VectorDB {
         await this.addToFallback(embeddings);
       }
 
-      // Store metadata
+      // Store metadata - check for duplicates to prevent accumulation
       const newMetadata: VectorMetadata[] = chunks.map((chunk, _i) => ({
         id: chunk.id,
         filePath: chunk.filePath,
@@ -107,12 +107,16 @@ export class VectorDB {
         metadata: chunk.metadata,
       }));
 
-      this.metadata.push(...newMetadata);
+      // Check for duplicates and only add new metadata
+      const existingIds = new Set(this.metadata.map(m => m.id));
+      const uniqueNewMetadata = newMetadata.filter(m => !existingIds.has(m.id));
+      
+      this.metadata.push(...uniqueNewMetadata);
 
       // Save data
       await this.saveData();
 
-      console.log(`Added ${embeddings.length} embeddings to vector database`);
+      console.log(`Added ${embeddings.length} embeddings to vector database (${uniqueNewMetadata.length} new metadata entries)`);
     } catch (error) {
       console.error('Failed to add embeddings:', error);
       throw error;
@@ -243,7 +247,7 @@ export class VectorDB {
 
       if (this.useFAISS) {
         console.warn(
-          `Removing chunks for file ${filePath} requires reindexing the entire database`,
+          `Removing chunks for file ${filePath} requires rebuilding the entire database`,
         );
         // For FAISS, we'll need to rebuild the index
         // For now, just remove from metadata
@@ -310,6 +314,103 @@ export class VectorDB {
     }
 
     return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+  }
+
+  /**
+   * Check if a directory has an existing index
+   */
+  async isIndexed(indexPath: string): Promise<boolean> {
+    try {
+      const metadataPath = path.join(indexPath, this.config.metadataFile);
+      const indexPathFile = path.join(indexPath, this.config.indexFile);
+      
+      // Check if both metadata and index files exist
+      const metadataExists = await fs.promises.access(metadataPath).then(() => true).catch(() => false);
+      const indexExists = await fs.promises.access(indexPathFile).then(() => true).catch(() => false);
+      
+      return metadataExists && indexExists;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  /**
+   * Clear all existing data (useful for re-indexing)
+   */
+  async clearData(): Promise<void> {
+    try {
+      // Clear in-memory data
+      this.metadata = [];
+      this.fallbackEmbeddings = [];
+      
+      // Reset FAISS index
+      if (this.useFAISS) {
+        await this.initializeFAISS();
+      }
+      
+      // Remove existing files
+      const metadataPath = path.join(this.config.dataDir, this.config.metadataFile);
+      const embeddingsPath = path.join(this.config.dataDir, 'embeddings.json');
+      const indexPath = path.join(this.config.dataDir, this.config.indexFile);
+      
+      // Remove files if they exist
+      if (await fs.promises.access(metadataPath).then(() => true).catch(() => false)) {
+        await fs.promises.unlink(metadataPath);
+      }
+      if (await fs.promises.access(embeddingsPath).then(() => true).catch(() => false)) {
+        await fs.promises.unlink(embeddingsPath);
+      }
+      if (await fs.promises.access(indexPath).then(() => true).catch(() => false)) {
+        await fs.promises.unlink(indexPath);
+      }
+      
+      console.log('Cleared all existing vector database data');
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed indexing statistics
+   */
+  getIndexStats(): {
+    totalChunks: number;
+    uniqueFiles: number;
+    totalSize: number;
+    languages: Record<string, number>;
+    lastIndexed: Date | null;
+    duplicates: number;
+  } {
+    const uniqueFiles = new Set(this.metadata.map(m => m.filePath)).size;
+    const totalSize = this.metadata.reduce((sum, m) => sum + m.content.length, 0);
+    
+    // Count languages
+    const languages: Record<string, number> = {};
+    this.metadata.forEach(m => {
+      languages[m.language] = (languages[m.language] || 0) + 1;
+    });
+
+    // Check for potential duplicates (same file, same line range)
+    const duplicateKeys = new Set<string>();
+    const seenKeys = new Set<string>();
+    this.metadata.forEach(m => {
+      const key = `${m.filePath}:${m.startLine}-${m.endLine}`;
+      if (seenKeys.has(key)) {
+        duplicateKeys.add(key);
+      } else {
+        seenKeys.add(key);
+      }
+    });
+
+    return {
+      totalChunks: this.metadata.length,
+      uniqueFiles,
+      totalSize,
+      languages,
+      lastIndexed: this.metadata.length > 0 ? new Date() : null, // TODO: Store actual timestamp
+      duplicates: duplicateKeys.size
+    };
   }
 
   private async loadData(): Promise<void> {

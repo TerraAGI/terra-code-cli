@@ -24,6 +24,7 @@ export class SemanticSearchTool extends BaseTool<SemanticSearchParams, ToolResul
 This tool provides semantic understanding for code discovery, finding relevant code based on meaning, intent, and functionality rather than just exact text matches.
 
 **CORE CAPABILITIES:**
+- **AUTOMATIC CURRENT DIRECTORY SEARCH** - Always searches in the directory where Terra is currently running
 - Semantic understanding of code intent and functionality
 - Intelligent result ranking and relevance scoring
 - Code context and relationship analysis
@@ -38,13 +39,21 @@ This tool provides semantic understanding for code discovery, finding relevant c
 - Finding related functionality across different files
 
 **SEARCH APPROACH:**
+- **Automatically detects and uses current working directory**
+- **Auto-indexes current directory if not already indexed**
 - Semantic analysis of your query intent
 - Vector similarity search across indexed code
 - Context-aware result ranking
 - Intelligent filtering and relevance scoring
 
 **INTELLIGENT INTEGRATION:**
-This tool works best when combined with traditional search tools (grep, glob) for comprehensive coverage. Use semantic_search for understanding intent, and traditional tools for exact pattern matching.`,
+This tool works best when combined with traditional search tools (grep, glob) for comprehensive coverage. Use semantic_search for understanding intent, and traditional tools for exact pattern matching.
+
+**DIRECTORY AWARENESS:**
+- Always searches in the current directory where Terra is running
+- Automatically indexes new directories on first search
+- No need to manually specify project paths
+- Seamlessly follows directory changes`,
       Icon.FileSearch,
       {
         type: 'object',
@@ -93,12 +102,14 @@ This tool works best when combined with traditional search tools (grep, glob) fo
         const result = `🔍 **Semantic Search Results**\n\n` +
           `**Query:** ${query}\n` +
           `**Max Results:** ${maxResults}\n` +
-          `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n\n` +
+          `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n` +
+          `**Search Directory:** ${process.cwd()}\n\n` +
           `❌ **No Results Found**\n\n` +
-          `No semantically relevant code found for your query. Try:\n` +
+          `No semantically relevant code found for your query in the current directory. Try:\n` +
           `- Using different keywords\n` +
           `- Broadening your search terms\n` +
-          `- Checking if the project is properly indexed`;
+          `- Checking if the current directory contains code files\n` +
+          `- Running \`/semantic:index .\` to manually index the current directory`;
         
         return {
           llmContent: result,
@@ -109,7 +120,8 @@ This tool works best when combined with traditional search tools (grep, glob) fo
       let result = `🔍 **Semantic Search Results**\n\n` +
         `**Query:** ${query}\n` +
         `**Max Results:** ${maxResults}\n` +
-        `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n\n` +
+        `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n` +
+        `**Search Directory:** ${process.cwd()}\n\n` +
         `**Found ${results.length} semantically relevant code snippets:**\n\n`;
       
       results.forEach((searchResult, index) => {

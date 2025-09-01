@@ -35,15 +35,15 @@ We have successfully implemented a **minimally invasive and independent universa
 
 4. **Vector Storage** (`vectorDB.ts`)
    - Simplified FAISS integration
-   - Metadata management
-   - Search functionality
-   - Incremental updates
+   - Fallback to simplified vector operations
+   - Persistent storage with metadata
+   - **Directory-aware indexing** - checks if a directory is already indexed
 
-5. **Search Engine** (`search.ts`)
-   - Query understanding
-   - Intent detection
-   - Result ranking
-   - Filtering options
+5. **Semantic Engine** (`engine.ts`)
+   - **Automatic current directory detection** - always searches where Terra is running
+   - **Auto-indexing** - automatically indexes current directory if not already indexed
+   - **Smart project switching** - seamlessly follows directory changes
+   - **Performance optimization** - reuses existing indexes when possible
 
 ### **✅ Integration Points**
 
@@ -87,95 +87,38 @@ We have successfully implemented a **minimally invasive and independent universa
    - Command reference
    - Feature description
 
-## 🎯 **Key Features**
+## 🚀 **Key Features**
 
 ### **Universal Capabilities**
+- **50+ Programming Languages** - Automatic detection and processing
+- **All File Types** - Universal text file processing with smart filtering
+- **Cross-Platform** - Works on Windows, macOS, and Linux
+- **Language Agnostic** - No language-specific configuration needed
 
-- ✅ **Zero impact** on existing CLI when disabled
-- ✅ **Lazy loading** - only loads when needed
-- ✅ **Optional by default** - users choose to enable
-- ✅ **Single installation** - bundled with main package
-- ✅ **Universal support** - works with ANY programming language or file type
-- ✅ **50+ Languages** - comprehensive language support out of the box
-- ✅ **Smart filtering** - automatically excludes irrelevant files (virtual envs, dependencies, build artifacts)
-- ✅ **Size optimization** - skips large files to focus on relevant code
-- ✅ **Optimized chunking** - 4000 character chunks optimized for VoyageAI code-3 model
-- ✅ **Fast indexing** - larger chunks reduce processing overhead and improve retrieval quality
+### **Smart Filtering**
+- **Virtual Environment Exclusion** - Automatically skips `venv/`, `node_modules/`, `.git/`, etc.
+- **Build Artifact Filtering** - Excludes `dist/`, `build/`, `target/`, etc.
+- **Size Optimization** - Skips files larger than 1MB for performance
+- **Binary File Detection** - Only processes text-based files
 
-### **Semantic Capabilities**
+### **Optimized Performance**
+- **Efficient Chunking** - 1000 line chunks with 100 line overlap
+- **VoyageAI Integration** - Optimized for code-3 model (1024 tokens)
+- **Caching System** - Reuses embeddings and indexes
+- **Batch Processing** - Efficient bulk operations
 
-- ✅ **Multi-language support** (50+ programming languages)
-- ✅ **Natural language queries** - "find authentication functions"
-- ✅ **Code understanding** - function/class extraction across languages
-- ✅ **Complexity analysis** - code complexity assessment
-- ✅ **Dependency mapping** - import/require analysis for all languages
-- ✅ **Universal file processing** - handles any text file automatically
+### **🎯 AUTOMATIC CURRENT DIRECTORY SEARCH**
+- **Always Current** - Searches in the directory where Terra is currently running
+- **Auto-Indexing** - Automatically indexes new directories on first search
+- **Seamless Switching** - Follows directory changes automatically
+- **No Manual Configuration** - Users don't need to specify project paths
+- **Performance Optimized** - Reuses existing indexes when possible
 
-### **Performance & Reliability**
-
-- ✅ **Caching system** - avoid re-computation
-- ✅ **Batch processing** - efficient handling
-- ✅ **Error recovery** - graceful degradation
-- ✅ **Resource management** - memory efficient
-
-## 🚀 **Usage**
-
-### **Installation**
-
-```bash
-npm install -g terra-code-cli
-# Semantic features included but disabled by default
-```
-
-### **Enable Semantic Features**
-
-1. Open settings: `/settings`
-2. Enable semantic analysis
-3. Configure VoyageAI API key
-4. Restart CLI
-
-### **Basic Usage**
-
-```bash
-# Index a project
-terra> /semantic:index ./my-project
-
-# Search semantically
-terra> /semantic:search "find authentication functions"
-
-# Check status
-terra> /semantic:status
-```
-
-## 📊 **Technical Details**
-
-### **Dependencies Added**
-
-- `faiss-node` - Vector database
-- `tree-sitter` - AST parsing
-- `tree-sitter-*` - Language parsers
-
-### **Files Created/Modified**
-
-- **New Files**: 12 semantic module files
-- **Modified Files**: 4 existing files
-- **Total Changes**: 16 files maximum
-
-### **Architecture**
-
-```
-Terra CLI
-├── Core CLI (unchanged)
-├── Semantic Module (optional)
-│   ├── Preprocessor
-│   ├── Embedding Client
-│   ├── Vector Storage
-│   └── Search Engine
-└── Integration Layer
-    ├── Commands
-    ├── Tools
-    └── Configuration
-```
+### **Developer Experience**
+- **Zero Configuration** - Works out of the box
+- **Intelligent Defaults** - Optimized settings for most use cases
+- **Clear Feedback** - Detailed indexing and search statistics
+- **Error Handling** - Graceful fallbacks and helpful error messages
 
 ## 🎯 **Success Criteria Met**
 
