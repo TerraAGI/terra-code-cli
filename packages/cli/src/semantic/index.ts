@@ -19,7 +19,6 @@ export interface SemanticConfig {
   chunking: {
     maxChunkSize: number;
     overlapSize: number;
-    supportedExtensions: string[];
   };
 }
 

@@ -21,9 +21,7 @@ export class SemanticEngine {
 
     if (config.enabled && config.voyageAI.apiKey) {
       // Initialize components
-      this.preprocessor = new CodePreprocessor(
-        config.chunking.supportedExtensions,
-      );
+      this.preprocessor = new CodePreprocessor();
       this.embeddingClient = new VoyageAIClient(config.voyageAI);
       // Resolve relative path to current working directory
       const resolvedConfig = {

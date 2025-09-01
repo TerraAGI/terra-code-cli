@@ -93,7 +93,7 @@ This tool works best when combined with traditional search tools (grep, glob) fo
         const result = `🔍 **Semantic Search Results**\n\n` +
           `**Query:** ${query}\n` +
           `**Max Results:** ${maxResults}\n` +
-          `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All types'}\n\n` +
+          `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n\n` +
           `❌ **No Results Found**\n\n` +
           `No semantically relevant code found for your query. Try:\n` +
           `- Using different keywords\n` +
@@ -109,7 +109,7 @@ This tool works best when combined with traditional search tools (grep, glob) fo
       let result = `🔍 **Semantic Search Results**\n\n` +
         `**Query:** ${query}\n` +
         `**Max Results:** ${maxResults}\n` +
-        `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All types'}\n\n` +
+        `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n\n` +
         `**Found ${results.length} semantically relevant code snippets:**\n\n`;
       
       results.forEach((searchResult, index) => {

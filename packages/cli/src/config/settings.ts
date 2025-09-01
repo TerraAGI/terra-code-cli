@@ -139,17 +139,8 @@ export class LoadedSettings {
           metadataFile: 'metadata.json',
         },
         chunking: {
-          maxChunkSize: 1000,
-          overlapSize: 100,
-          supportedExtensions: [
-            '.js',
-            '.ts',
-            '.py',
-            '.java',
-            '.cpp',
-            '.go',
-            '.rs',
-          ],
+          maxChunkSize: 4000, // Optimized for VoyageAI code-3 model
+          overlapSize: 400,   // 10% overlap for context continuity
         },
         ...(system.semantic && typeof system.semantic === 'object'
           ? system.semantic
