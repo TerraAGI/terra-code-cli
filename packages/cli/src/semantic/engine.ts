@@ -15,7 +15,11 @@ export class SemanticEngine {
   private preprocessor: CodePreprocessor | null = null;
   private embeddingClient: VoyageAIClient | null = null;
   private vectorDB: VectorDB | null = null;
-  private indexedProjects: Map<string, VectorDB> = new Map();
+  // Removed: private indexedProjects: Map<string, VectorDB> = new Map();
+  
+  // NEW: Simple path-based cache (only one project at a time)
+  private lastIndexedPath: string | null = null;
+  private lastVectorDB: VectorDB | null = null;
 
   async initialize(config: SemanticConfig): Promise<void> {
     this.config = config;
@@ -60,19 +64,19 @@ export class SemanticEngine {
       dataDir: path.resolve(projectPath, this.config.vectorDB.dataDir),
     };
     
-    // Check if we already have a vector DB instance for this project
-    if (this.indexedProjects.has(projectPath)) {
-      console.log(`Project already indexed: ${projectPath}`);
-      return;
-    }
+    // Removed: Check if we already have a vector DB instance for this project
+    // if (this.indexedProjects.has(projectPath)) {
+    //   console.log(`Project already indexed: ${projectPath}`);
+    //   return;
+    // }
 
     const projectVectorDB = new VectorDB(resolvedConfig);
     await projectVectorDB.initialize();
     
     if (await projectVectorDB.isIndexed(resolvedConfig.dataDir)) {
-      console.log(`Project already indexed: ${projectPath}`);
-      // Store the existing instance
-      this.indexedProjects.set(projectPath, projectVectorDB);
+      console.log(`Project already indexed: ${projectPath}, skipping indexing`);
+      // Removed: Store the existing instance
+      // this.indexedProjects.set(projectPath, projectVectorDB);
       return;
     }
 
@@ -112,8 +116,8 @@ export class SemanticEngine {
         `Successfully indexed ${totalChunks} chunks from ${files.length} files`,
       );
       
-      // Store the instance for future use
-      this.indexedProjects.set(projectPath, projectVectorDB);
+      // Removed: Store the instance for future use
+      // this.indexedProjects.set(projectPath, projectVectorDB);
     } catch (error) {
       console.error('Failed to index project:', error);
       throw error;
@@ -138,39 +142,36 @@ export class SemanticEngine {
       // Always use current working directory for search
       const currentProjectPath = process.cwd();
       console.log(`Searching in current directory: ${currentProjectPath}`);
-      console.log(`Current indexedProjects cache size: ${this.indexedProjects.size}`);
-      console.log(`Cached projects: ${Array.from(this.indexedProjects.keys()).join(', ')}`);
 
-      // Check if we already have a vector DB instance for this project
-      let searchVectorDB = this.indexedProjects.get(currentProjectPath);
-
-      if (!searchVectorDB) {
-        // Check if the directory is already indexed on disk
+      // SMART CACHE: Check if we have the current project cached
+      let searchVectorDB: VectorDB;
+      
+      if (this.lastIndexedPath === currentProjectPath && this.lastVectorDB) {
+        console.log('Using cached vector database for current directory');
+        searchVectorDB = this.lastVectorDB;
+      } else {
+        // Cache miss: Load from disk and potentially index
+        console.log('Cache miss, loading vector database from disk...');
         const resolvedConfig = {
           ...this.config.vectorDB,
           dataDir: path.resolve(currentProjectPath, this.config.vectorDB.dataDir),
         };
-        const tempVectorDB = new VectorDB(resolvedConfig);
-        await tempVectorDB.initialize();
         
-        if (await tempVectorDB.isIndexed(resolvedConfig.dataDir)) {
+        searchVectorDB = new VectorDB(resolvedConfig);
+        await searchVectorDB.initialize();
+        
+        if (await searchVectorDB.isIndexed(resolvedConfig.dataDir)) {
           console.log('Current directory already indexed on disk, loading existing data...');
-          // Use the existing indexed data
-          searchVectorDB = tempVectorDB;
-          this.indexedProjects.set(currentProjectPath, searchVectorDB);
         } else {
           console.log('Current directory not indexed, indexing now...');
-          // Auto-index the current directory
           await this.indexProject(currentProjectPath);
-          searchVectorDB = this.indexedProjects.get(currentProjectPath);
-          
-          if (!searchVectorDB) {
-            throw new Error('Failed to create vector database for current directory');
-          }
-          console.log(`Successfully indexed and cached project: ${currentProjectPath}`);
+          await searchVectorDB.initialize(); // Reload after indexing
         }
-      } else {
-        console.log('Using existing cached index for current directory');
+        
+        // Update cache with current project
+        this.lastIndexedPath = currentProjectPath;
+        this.lastVectorDB = searchVectorDB;
+        console.log(`Cached vector database for: ${currentProjectPath}`);
       }
 
       console.log(`Creating embedding for query: "${query}"`);

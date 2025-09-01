@@ -21,7 +21,10 @@ export class SemanticSearchTool extends BaseTool<SemanticSearchParams, ToolResul
       'Semantic Code Search',
       `🔍 **INTELLIGENT SEMANTIC CODE SEARCH** - Provides relevant and matching code pieces!
 
-This tool provides semantic understanding for code discovery, finding relevant code based on meaning, intent, and functionality rather than just exact text matches.
+      You MUST MANDATORILY use this tool for analysing the current codebase as much as you can.
+      Use this tool alot and very frequently to find relevant code pieces.
+      You should use this tool multiple times in a single query if neeeded to collect all the relevant code pieces.
+
 This is for doing a vector search on the indexed codebase to find semantically relevant code pieces.
 Keep using this tool frequently on priority. This tool helps find relevant code pieces easily and faster in comparison to normal text search/grep tool, so mostly try to use this tool first before using grep tool.
 `,

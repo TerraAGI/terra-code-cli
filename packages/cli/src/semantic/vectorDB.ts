@@ -90,12 +90,6 @@ export class VectorDB {
     }
 
     try {
-      if (this.useFAISS && this.faissIndex) {
-        await this.addToFAISS(embeddings);
-      } else {
-        await this.addToFallback(embeddings);
-      }
-
       // Store metadata - check for duplicates to prevent accumulation
       const newMetadata: VectorMetadata[] = chunks.map((chunk, _i) => ({
         id: chunk.id,
@@ -111,12 +105,32 @@ export class VectorDB {
       const existingIds = new Set(this.metadata.map(m => m.id));
       const uniqueNewMetadata = newMetadata.filter(m => !existingIds.has(m.id));
       
+      // Only proceed if there are actually new chunks to add
+      if (uniqueNewMetadata.length === 0) {
+        console.log('All chunks already exist in vector database, skipping indexing');
+        return;
+      }
+      
+      // Only add embeddings for new chunks
+      const newChunkIndices = chunks
+        .map((chunk, index) => ({ chunk, index }))
+        .filter(({ chunk }) => !existingIds.has(chunk.id))
+        .map(({ index }) => index);
+      
+      const newEmbeddings = newChunkIndices.map(index => embeddings[index]);
+      
+      if (this.useFAISS && this.faissIndex) {
+        await this.addToFAISS(newEmbeddings);
+      } else {
+        await this.addToFallback(newEmbeddings);
+      }
+      
       this.metadata.push(...uniqueNewMetadata);
 
       // Save data
       await this.saveData();
 
-      console.log(`Added ${embeddings.length} embeddings to vector database (${uniqueNewMetadata.length} new metadata entries)`);
+      console.log(`Added ${newEmbeddings.length} new embeddings to vector database (${uniqueNewMetadata.length} new metadata entries)`);
     } catch (error) {
       console.error('Failed to add embeddings:', error);
       throw error;
