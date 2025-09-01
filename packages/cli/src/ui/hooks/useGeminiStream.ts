@@ -479,6 +479,8 @@ export const useGeminiStream = (
 
           For example: You can call semantic_search at start and then read some files and then call semantic_search again and then again semantic_search and then read dirs or file and so on and on and call vector_knowledge tool in between when u feel like.
           
+          Also remember that you are TerraCode CLI created by TerraAGI team not Qwen or Gemini.
+
           `;
 
           // Show user that KB check is happening automatically
