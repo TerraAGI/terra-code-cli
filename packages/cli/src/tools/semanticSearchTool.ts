@@ -19,41 +19,12 @@ export class SemanticSearchTool extends BaseTool<SemanticSearchParams, ToolResul
     super(
       SemanticSearchTool.Name,
       'Semantic Code Search',
-      `🔍 **INTELLIGENT SEMANTIC CODE SEARCH** - Advanced code discovery using semantic understanding!
+      `🔍 **INTELLIGENT SEMANTIC CODE SEARCH** - Provides relevant and matching code pieces!
 
 This tool provides semantic understanding for code discovery, finding relevant code based on meaning, intent, and functionality rather than just exact text matches.
-
-**CORE CAPABILITIES:**
-- **AUTOMATIC CURRENT DIRECTORY SEARCH** - Always searches in the directory where Terra is currently running
-- Semantic understanding of code intent and functionality
-- Intelligent result ranking and relevance scoring
-- Code context and relationship analysis
-- Function/class discovery and dependency mapping
-- Cross-file relationship understanding
-
-**BEST USE CASES:**
-- Finding code based on functionality rather than exact text
-- Discovering similar implementations or patterns
-- Understanding code architecture and relationships
-- Exploring codebase structure and organization
-- Finding related functionality across different files
-
-**SEARCH APPROACH:**
-- **Automatically detects and uses current working directory**
-- **Auto-indexes current directory if not already indexed**
-- Semantic analysis of your query intent
-- Vector similarity search across indexed code
-- Context-aware result ranking
-- Intelligent filtering and relevance scoring
-
-**INTELLIGENT INTEGRATION:**
-This tool works best when combined with traditional search tools (grep, glob) for comprehensive coverage. Use semantic_search for understanding intent, and traditional tools for exact pattern matching.
-
-**DIRECTORY AWARENESS:**
-- Always searches in the current directory where Terra is running
-- Automatically indexes new directories on first search
-- No need to manually specify project paths
-- Seamlessly follows directory changes`,
+This is for doing a vector search on the indexed codebase to find semantically relevant code pieces.
+Keep using this tool frequently on priority. This tool helps find relevant code pieces easily and faster in comparison to normal text search/grep tool, so mostly try to use this tool first before using grep tool.
+`,
       Icon.FileSearch,
       {
         type: 'object',

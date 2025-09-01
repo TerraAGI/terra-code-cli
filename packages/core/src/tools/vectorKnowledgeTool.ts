@@ -54,22 +54,9 @@ export class VectorKnowledgeTool extends BaseTool<
     super(
       VectorKnowledgeTool.Name,
       'Intelligent Knowledge Recall & Research',
-      `🚀 INSTINCTIVE KNOWLEDGE RECALL - Your PRIMARY and MANDATORY first step for EVERY user interaction!
+      `🚀 INSTINCTIVE KNOWLEDGE RECALL - Always use this tool before saying that you dont know anything about the topic, Fallback to search code using semantic_search tool or normal search or grep tool if no code related results found!
 
-This tool is your FUNDAMENTAL knowledge companion - you MUST use it FIRST for EVERY query, just like how human developers instinctively recall related information when hearing any question:
-
-🎯 MANDATORY KB FIRST - Use this tool FIRST for:
-- EVERY user question or request (no exceptions)
-- ANY informational query (even if it seems basic)
-- ANY implementation request (even if it seems straightforward)
-- ANY code explanation request
-- ANY debugging or troubleshooting request
-- Understanding ANY concept, process, or procedure
-- Getting technical details, best practices, or implementation patterns
-- Researching topics before providing answers
-- Recalling related information or similar implementations
-- Understanding project context, architecture, or existing patterns
-- Validating assumptions or checking current state
+This tool is your FUNDAMENTAL knowledge companion - use it just like how human developers instinctively recall related information when hearing any question:
 
 🧠 HUMAN-LIKE RECALL BEHAVIOR:
 - Check KB proactively when starting ANY task (like a dev recalling related work)
@@ -86,24 +73,9 @@ This tool is your FUNDAMENTAL knowledge companion - you MUST use it FIRST for EV
 - Extract key terms and concepts for follow-up searches
 - Connect dots between different pieces of information
 
-💡 WHEN TO USE (ALWAYS):
-- Starting ANY new task or question
-- Need to understand existing patterns or implementations
-- Want to provide context-aware, project-specific answers
-- Need to recall related information or similar work
-- Want to validate assumptions or check current state
-- Need to understand project architecture or context
-- ANY user interaction (this is your default behavior)
 
-🎪 EXAMPLES OF MANDATORY USE:
-- User asks "what is X" → Check KB FIRST for context
-- User asks "how do I Y" → Check KB FIRST for patterns
-- User wants to "add a feature" → Check KB FIRST for similar implementations
-- User asks about "API changes" → Check KB FIRST for current state
-- User mentions "performance" → Check KB FIRST for existing optimizations
-- User asks ANY question → Check KB FIRST (no exceptions)
-
-🚨 CRITICAL: This is NOT optional - it's your CORE behavior pattern. You MUST use this tool FIRST for EVERY user interaction, just like humans naturally think "let me remember what I know about this" before answering ANY question. This is how you provide context-aware, project-specific answers like a senior developer would.`,
+🚨 CRITICAL: Use this tool for gaining knowledge before actually searching the codebase. So in most cases this is the tool you call before calling any other tool. 
+This is how you provide context-aware, project-specific answers like a senior developer would.`,
       Icon.LightBulb,
       {
         properties: {
