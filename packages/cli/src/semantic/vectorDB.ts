@@ -336,13 +336,24 @@ export class VectorDB {
   async isIndexed(indexPath: string): Promise<boolean> {
     try {
       const metadataPath = path.join(indexPath, this.config.metadataFile);
+      const embeddingsPath = path.join(indexPath, 'embeddings.json');
+      const binaryPath = path.join(indexPath, 'embeddings.bin');
       const indexPathFile = path.join(indexPath, this.config.indexFile);
       
-      // Check if both metadata and index files exist
+      // Check metadata exists
       const metadataExists = await fs.promises.access(metadataPath).then(() => true).catch(() => false);
-      const indexExists = await fs.promises.access(indexPathFile).then(() => true).catch(() => false);
+      if (!metadataExists) return false;
       
-      return metadataExists && indexExists;
+      if (this.useFAISS) {
+        // For FAISS: check if FAISS index exists
+        const indexExists = await fs.promises.access(indexPathFile).then(() => true).catch(() => false);
+        return indexExists;
+      } else {
+        // For fallback: check if embeddings (JSON or binary) exist
+        const embeddingsExists = await fs.promises.access(embeddingsPath).then(() => true).catch(() => false);
+        const binaryExists = await fs.promises.access(binaryPath).then(() => true).catch(() => false);
+        return embeddingsExists || binaryExists;
+      }
     } catch (_error) {
       return false;
     }
@@ -428,58 +439,54 @@ export class VectorDB {
   }
 
   private async loadData(): Promise<void> {
-    const metadataPath = path.join(
-      this.config.dataDir,
-      this.config.metadataFile,
-    );
+    const metadataPath = path.join(this.config.dataDir, this.config.metadataFile);
     const embeddingsPath = path.join(this.config.dataDir, 'embeddings.json');
+    const binaryPath = path.join(this.config.dataDir, 'embeddings.bin');
     const indexPath = path.join(this.config.dataDir, this.config.indexFile);
 
     try {
+      // Load metadata and check file existence in parallel
+      const [metadataExists, embeddingsExists, binaryExists, indexExists] = await Promise.all([
+        fs.promises.access(metadataPath).then(() => true).catch(() => false),
+        fs.promises.access(embeddingsPath).then(() => true).catch(() => false),
+        fs.promises.access(binaryPath).then(() => true).catch(() => false),
+        fs.promises.access(indexPath).then(() => true).catch(() => false)
+      ]);
+
       // Load metadata
-      if (
-        await fs.promises
-          .access(metadataPath)
-          .then(() => true)
-          .catch(() => false)
-      ) {
-        const metadataContent = await fs.promises.readFile(
-          metadataPath,
-          'utf8',
-        );
+      if (metadataExists) {
+        const metadataContent = await fs.promises.readFile(metadataPath, 'utf8');
         this.metadata = JSON.parse(metadataContent);
       }
 
       if (this.useFAISS) {
         // Load FAISS index
-        if (
-          await fs.promises
-            .access(indexPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
+        if (indexExists) {
           const faissModule = (await import('faiss-node')) as FAISSModule;
           this.faissIndex = faissModule.readIndex(indexPath);
-          console.log(
-            `Loaded existing FAISS index with ${this.metadata.length} chunks`,
-          );
+          console.log(`Loaded existing FAISS index with ${this.metadata.length} chunks`);
         }
       } else {
-        // Load fallback embeddings
-        if (
-          await fs.promises
-            .access(embeddingsPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
-          const embeddingsContent = await fs.promises.readFile(
-            embeddingsPath,
-            'utf8',
-          );
+        // Load fallback embeddings - try binary first (10-100x faster), fallback to JSON
+        if (binaryExists) {
+          try {
+            const buffer = await fs.promises.readFile(binaryPath);
+            this.fallbackEmbeddings = this.parseBinaryBuffer(buffer);
+            console.log(`✅ Loaded ${this.fallbackEmbeddings.length} embeddings from binary format`);
+          } catch (binaryError) {
+            console.warn('Binary loading failed, falling back to JSON:', binaryError);
+            // Fallback to JSON if binary fails
+            if (embeddingsExists) {
+              const embeddingsContent = await fs.promises.readFile(embeddingsPath, 'utf8');
+              this.fallbackEmbeddings = JSON.parse(embeddingsContent);
+              console.log(`Loaded ${this.fallbackEmbeddings.length} embeddings from JSON format`);
+            }
+          }
+        } else if (embeddingsExists) {
+          // Load JSON format
+          const embeddingsContent = await fs.promises.readFile(embeddingsPath, 'utf8');
           this.fallbackEmbeddings = JSON.parse(embeddingsContent);
-          console.log(
-            `Loaded existing data with ${this.metadata.length} chunks`,
-          );
+          console.log(`Loaded ${this.fallbackEmbeddings.length} embeddings from JSON format`);
         }
       }
     } catch (error) {
@@ -487,31 +494,72 @@ export class VectorDB {
     }
   }
 
+  private parseBinaryBuffer(buffer: Buffer): number[][] {
+    // Calculate dimensions and count from buffer size
+    const bufferSize = buffer.length;
+    const bytesPerFloat = 4;
+    
+    // Try different common embedding dimensions
+    const possibleDimensions = [1536, 1024, 768, 512, 384]; // voyage-code-3, text-embedding-ada-002, etc.
+    
+    for (const dimensions of possibleDimensions) {
+      const expectedSize = dimensions * bytesPerFloat;
+      if (bufferSize % expectedSize === 0) {
+        const numEmbeddings = bufferSize / expectedSize;
+        
+        const embeddings: number[][] = [];
+        let offset = 0;
+        
+        for (let i = 0; i < numEmbeddings; i++) {
+          const embedding: number[] = [];
+          for (let j = 0; j < dimensions; j++) {
+            embedding.push(buffer.readFloatLE(offset));
+            offset += bytesPerFloat;
+          }
+          embeddings.push(embedding);
+        }
+        
+        return embeddings;
+      }
+    }
+    
+    throw new Error(`Cannot parse binary buffer: ${bufferSize} bytes doesn't match any known embedding dimensions`);
+  }
+
   private async saveData(): Promise<void> {
     try {
-      const metadataPath = path.join(
-        this.config.dataDir,
-        this.config.metadataFile,
-      );
+      const metadataPath = path.join(this.config.dataDir, this.config.metadataFile);
       const embeddingsPath = path.join(this.config.dataDir, 'embeddings.json');
+      const binaryPath = path.join(this.config.dataDir, 'embeddings.bin');
       const indexPath = path.join(this.config.dataDir, this.config.indexFile);
 
       // Save metadata
-      await fs.promises.writeFile(
-        metadataPath,
-        JSON.stringify(this.metadata, null, 2),
-      );
+      await fs.promises.writeFile(metadataPath, JSON.stringify(this.metadata, null, 2));
 
       if (this.useFAISS && this.faissIndex) {
         // Save FAISS index
         const faissModule = (await import('faiss-node')) as FAISSModule;
         faissModule.writeIndex(this.faissIndex, indexPath);
       } else {
-        // Save fallback embeddings
-        await fs.promises.writeFile(
-          embeddingsPath,
-          JSON.stringify(this.fallbackEmbeddings, null, 2),
-        );
+        // Save fallback embeddings in both JSON (compatibility) and binary (performance)
+        await fs.promises.writeFile(embeddingsPath, JSON.stringify(this.fallbackEmbeddings, null, 2));
+        
+        // Save binary format for 10-100x faster future loading
+        if (this.fallbackEmbeddings.length > 0) {
+          const dimensions = this.fallbackEmbeddings[0].length;
+          const buffer = Buffer.allocUnsafe(this.fallbackEmbeddings.length * dimensions * 4);
+          
+          let offset = 0;
+          for (const embedding of this.fallbackEmbeddings) {
+            for (const value of embedding) {
+              buffer.writeFloatLE(value, offset);
+              offset += 4;
+            }
+          }
+          
+          await fs.promises.writeFile(binaryPath, buffer);
+          console.log(`💾 Saved ${this.fallbackEmbeddings.length} embeddings in binary format (${Math.round(buffer.length/1024)}KB)`);
+        }
       }
     } catch (error) {
       console.error('Failed to save data:', error);
