@@ -10,81 +10,81 @@ import { semanticCommands } from '../../commands/semantic.js';
 export const semanticCommand: SlashCommand = {
   kind: CommandKind.BUILT_IN,
   name: 'semantic',
-  description: 'Semantic code analysis and search commands',
+  description: 'Semantic code indexing and status commands',
+  subCommands: [
+    {
+      name: 'index',
+      description: 'Index a directory for semantic search',
+      kind: CommandKind.BUILT_IN,
+      action: async (context, args) => {
+        if (!args.trim()) {
+          return {
+            type: 'message',
+            messageType: 'error',
+            content: 'Usage: /semantic index <project-path>',
+          };
+        }
+        const content = await semanticCommands.index(args.trim());
+        return {
+          type: 'message',
+          messageType: 'info',
+          content,
+        };
+      },
+    },
+    {
+      name: 'status',
+      description: 'Check indexing status',
+      kind: CommandKind.BUILT_IN,
+      action: async () => {
+        const content = await semanticCommands.status();
+        return {
+          type: 'message',
+          messageType: 'info',
+          content,
+        };
+      },
+    },
+  ],
   action: async (context, args) => {
     // Parse subcommand
     const parts = args.trim().split(' ');
     const subcommand = parts[0];
     const subArgs = parts.slice(1).join(' ');
 
-    try {
+    let content;
+
+    if (subcommand) {
       switch (subcommand) {
-        case 'status':
-          return {
-            type: 'message',
-            messageType: 'info',
-            content: await semanticCommands.status(),
-          };
-
-        case 'index':
+        case 'index': {
           if (!subArgs) {
             return {
               type: 'message',
               messageType: 'error',
-              content: 'Usage: /semantic:index <project-path>',
+              content: 'Usage: /semantic index <project-path>',
             };
           }
-          return {
-            type: 'message',
-            messageType: 'info',
-            content: await semanticCommands.index(subArgs),
-          };
-
-        case 'search':
-          if (!subArgs) {
-            return {
-              type: 'message',
-              messageType: 'error',
-              content: 'Usage: /semantic:search <query>',
-            };
-          }
-          return {
-            type: 'message',
-            messageType: 'info',
-            content: await semanticCommands.search(subArgs),
-          };
-
+          content = await semanticCommands.index(subArgs);
+          break;
+        }
+        case 'status': {
+          content = await semanticCommands.status();
+          break;
+        }
         default: {
-          // Add fuzzy matching for common typos
-          const suggestions = ['status', 'index', 'search'];
-          const bestMatch = suggestions.find(s => 
-            s.startsWith(subcommand) || 
-            subcommand.startsWith(s) ||
-            s.includes(subcommand) ||
-            subcommand.includes(s)
-          );
-          
-          if (bestMatch && bestMatch !== subcommand) {
-            return {
-              type: 'message',
-              messageType: 'error',
-              content: `Did you mean "/semantic ${bestMatch}"? Available commands: status, index, search`,
-            };
-          }
-          
-          return {
-            type: 'message',
-            messageType: 'error',
-            content: `Unknown semantic subcommand: ${subcommand}. Available commands: status, index, search`,
-          };
+          const suggestions = ['status', 'index'];
+          const bestMatch = suggestions.find(s => s.startsWith(subcommand)) || suggestions[0];
+          content = `Did you mean "/semantic ${bestMatch}"? Available commands: status, index`;
         }
       }
-    } catch (error) {
-      return {
-        type: 'message',
-        messageType: 'error',
-        content: `Semantic command failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      };
+    } else {
+      content = `Available semantic commands: status, index`;
     }
+
+    return {
+      type: 'message',
+      messageType: 'info',
+      content,
+    };
   },
 };

@@ -99,6 +99,9 @@ import { useSettingsCommand } from './hooks/useSettingsCommand.js';
 import { SettingsDialog } from './components/SettingsDialog.js';
 import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from '../utils/events.js';
+import { useAutoIndexing } from './hooks/useAutoIndexing.js';
+import { AutoIndexingDialog } from './components/AutoIndexingDialog.js';
+import { ProgressMonitor } from './components/ProgressMonitor.js';
 import { isNarrowWidth } from './utils/isNarrowWidth.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
@@ -253,6 +256,46 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } =
     useSettingsCommand();
+
+  // Auto-indexing functionality
+  const semanticConfig = useMemo(() => {
+    // Use the actual semantic config from settings if available
+    const settingsSemantic = settings.merged.semantic;
+    if (settingsSemantic) {
+      return settingsSemantic;
+    }
+    
+    // Use default config from schema (enabled: true)
+    return {
+      enabled: true,
+      voyageAI: {
+        apiKey: 'pa-q5eT52RKvJPJayM7PHVBtoA2I7WAMuhBBPkvre5pGXQ',
+        model: 'voyage-code-3',
+        baseURL: 'https://api.voyageai.com/v1',
+      },
+      vectorDB: {
+        dataDir: '.terra-code/semantic',
+        indexFile: 'index.faiss',
+        metadataFile: 'metadata.json',
+      },
+      chunking: {
+        maxChunkSize: 500,  // 500 lines per chunk for better semantic search
+        overlapSize: 50,    // 10% overlap (50 lines) for context continuity
+      },
+    };
+  }, [settings.merged.semantic]);
+
+  const {
+    showDialog: showAutoIndexingDialog,
+    isIndexing,
+    projectPath,
+    startIndexing,
+    skipIndexing,
+    onIndexingComplete,
+    onIndexingError,
+    onStatusUpdate,
+    indexingStatus,
+  } = useAutoIndexing(semanticConfig);
 
   const { isFolderTrustDialogOpen, handleFolderTrustSelect } =
     useFolderTrust(settings);
@@ -979,6 +1022,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               ideName={config.getIdeClient().getDetectedIdeDisplayName()}
               onComplete={handleIdePromptComplete}
             />
+          ) : showAutoIndexingDialog ? (
+            <AutoIndexingDialog
+              projectPath={projectPath}
+              onConfirm={startIndexing}
+              onSkip={skipIndexing}
+            />
           ) : isFolderTrustDialogOpen ? (
             <FolderTrustDialog onSelect={handleFolderTrustSelect} />
           ) : shellConfirmationRequest ? (
@@ -1172,8 +1221,19 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 </OverflowProvider>
               )}
 
+              {/* Progress monitor for indexing - only when actively indexing */}
+              {isIndexing && indexingStatus === 'indexing' && (
+                <ProgressMonitor
+                  projectPath={projectPath}
+                  onComplete={onIndexingComplete}
+                  onError={onIndexingError}
+                  onStatusUpdate={onStatusUpdate}
+                />
+              )}
+
               {isInputActive && (
                 <InputPrompt
+                  key="main-input-prompt"
                   buffer={buffer}
                   inputWidth={inputWidth}
                   suggestionsWidth={suggestionsWidth}
@@ -1226,6 +1286,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               )}
             </Box>
           )}
+
           <Footer
             model={currentModel}
             targetDir={config.getTargetDir()}
@@ -1241,6 +1302,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             promptTokenCount={sessionStats.lastPromptTokenCount}
             nightly={nightly}
             vimMode={vimModeEnabled ? vimMode : undefined}
+            indexingStatus={indexingStatus}
           />
         </Box>
       </Box>

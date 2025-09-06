@@ -468,18 +468,31 @@ export const useGeminiStream = (
           );
 
           // Automatically inject KB check for every user query
-          const enhancedQuery = await injectAutomaticKBCheck(trimmedQuery, config);
+          // const enhancedQuery = await injectAutomaticKBCheck(trimmedQuery, config);
+          const enhancedQuery = `
+          user_query: ${trimmedQuery}
+
+
+          You MUST use the vector_knowledge (use deep_search = true if need deep reasearch) tool at the start and in between if you think you need the information recall from the knowledge base where user has uploaded his docs related to projects and Knowledge Transfer (KT) sessions.
+          You MUST use the semantic_search tool MULTIPLE TIMES for the user_query if it is a codebase-related query. Use it iteratively like call it once then read some files and then call it again and so on and on.
+          You SHOULD use the semantic_search tool aggresively again and again to figure things out faster if the user_query is a codebase-related query.
+
+          For example: You can call semantic_search at start and then read some files and then call semantic_search again and then again semantic_search and then read dirs or file and so on and on and call vector_knowledge tool in between when u feel like.
+          
+          Also remember that you are TerraCode CLI created by TerraAGI team not Qwen or Gemini.
+
+          `;
 
           // Show user that KB check is happening automatically
-          if (enhancedQuery !== trimmedQuery) {
-            addItem(
-              {
-                type: MessageType.INFO,
-                text: '🧠 Recalling...',
-              },
-              userMessageTimestamp,
-            );
-          }
+          // if (enhancedQuery !== trimmedQuery) {
+          //   addItem(
+          //     {
+          //       type: MessageType.INFO,
+          //       text: '🧠 Recalling...',
+          //     },
+          //     userMessageTimestamp,
+          //   );
+          // }
 
           localQueryToSendToGemini = enhancedQuery;
         }

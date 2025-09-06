@@ -139,17 +139,8 @@ export class LoadedSettings {
           metadataFile: 'metadata.json',
         },
         chunking: {
-          maxChunkSize: 1000,
-          overlapSize: 100,
-          supportedExtensions: [
-            '.js',
-            '.ts',
-            '.py',
-            '.java',
-            '.cpp',
-            '.go',
-            '.rs',
-          ],
+          maxChunkSize: 500,  // 500 lines per chunk for better semantic search
+          overlapSize: 50,    // 10% overlap (50 lines) for context continuity
         },
         ...(system.semantic && typeof system.semantic === 'object'
           ? system.semantic
@@ -298,6 +289,23 @@ export function loadEnvironment(settings?: Settings): void {
     }
     if (settings.terraUsername) {
       process.env.TERRA_USERNAME = settings.terraUsername;
+    }
+  }
+
+  // Load OpenAI credentials from settings if not in environment
+  if (settings && !process.env.OPENAI_API_KEY) {
+    if (settings.openaiApiKey) {
+      process.env.OPENAI_API_KEY = settings.openaiApiKey;
+    }
+  }
+  if (settings && !process.env.OPENAI_BASE_URL) {
+    if (settings.openaiBaseUrl) {
+      process.env.OPENAI_BASE_URL = settings.openaiBaseUrl;
+    }
+  }
+  if (settings && !process.env.OPENAI_MODEL) {
+    if (settings.openaiModel) {
+      process.env.OPENAI_MODEL = settings.openaiModel;
     }
   }
 

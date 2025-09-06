@@ -98,7 +98,7 @@ export function createUserFriendlyError(error: Error): string {
       case SEMANTIC_ERROR_CODES.VOYAGEAI_ERROR:
         return 'VoyageAI API error. Please check your API key and try again.';
       case SEMANTIC_ERROR_CODES.VECTOR_DB_ERROR:
-        return 'Vector database error. Please try reindexing your project.';
+        return 'Vector database error. Please try rebuilding your project index.';
       case SEMANTIC_ERROR_CODES.CONFIG_ERROR:
         return 'Configuration error. Please check your semantic settings.';
       case SEMANTIC_ERROR_CODES.NOT_AVAILABLE:

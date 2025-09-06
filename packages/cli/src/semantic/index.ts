@@ -19,7 +19,6 @@ export interface SemanticConfig {
   chunking: {
     maxChunkSize: number;
     overlapSize: number;
-    supportedExtensions: string[];
   };
 }
 
@@ -61,6 +60,10 @@ export interface SemanticEngine {
     indexSize: number;
     backend: string;
     isInitialized: boolean;
+    uniqueFiles: number;
+    languages: Record<string, number>;
+    duplicates: number;
+    lastIndexed: Date | null;
   }>;
 }
 
@@ -115,12 +118,25 @@ export async function getSemanticStats(): Promise<{
   indexSize: number;
   backend: string;
   isInitialized: boolean;
+  uniqueFiles: number;
+  languages: Record<string, number>;
+  duplicates: number;
+  lastIndexed: Date | null;
 }> {
   try {
     const engine = await getSemanticEngine();
     return engine.getStats();
   } catch (_error) {
-    return { totalChunks: 0, indexSize: 0, backend: 'error', isInitialized: false };
+    return { 
+      totalChunks: 0, 
+      indexSize: 0, 
+      backend: 'error', 
+      isInitialized: false,
+      uniqueFiles: 0,
+      languages: {},
+      duplicates: 0,
+      lastIndexed: null
+    };
   }
 }
 
@@ -128,3 +144,8 @@ export async function indexProject(projectPath: string): Promise<void> {
   const engine = await getSemanticEngine();
   return engine.indexProject(projectPath);
 }
+
+// Export new background indexing components
+export { BackgroundIndexer } from './indexingWorker.js';
+export { ProgressTracker } from './progressTracker.js';
+export { AutoIndexingService } from './autoIndexingService.js';

@@ -1,6 +1,6 @@
 {
   "name": "@terra-code/terra-code",
-  "version": "0.0.44",
+  "version": "0.0.49",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -13,7 +13,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/terra-code/terra-code.git"
+    "url": "git+https://github.com/TerraAGI/terra-code-cli.git"
+  },
+  "homepage": "https://terra-agi.com/",
+  "bugs": {
+    "url": "https://github.com/TerraAGI/terra-code-cli/issues",
+    "email": "info@terra-agi.com"
   },
   "config": {
     "sandboxImageUri": "ghcr.io/terra-code/terra-code:0.0.8"

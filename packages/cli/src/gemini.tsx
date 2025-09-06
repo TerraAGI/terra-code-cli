@@ -221,9 +221,6 @@ export async function main() {
         ...settings.merged.semantic,
         chunking: {
           ...settings.merged.semantic.chunking,
-          supportedExtensions: [
-            ...settings.merged.semantic.chunking.supportedExtensions,
-          ],
         },
       };
       await initializeSemantic(semanticConfig);

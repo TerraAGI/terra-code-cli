@@ -19,32 +19,15 @@ export class SemanticSearchTool extends BaseTool<SemanticSearchParams, ToolResul
     super(
       SemanticSearchTool.Name,
       'Semantic Code Search',
-      `🔍 **INTELLIGENT SEMANTIC CODE SEARCH** - Advanced code discovery using semantic understanding!
+      `🔍 **INTELLIGENT SEMANTIC CODE SEARCH** - Provides relevant and matching code pieces!
 
-This tool provides semantic understanding for code discovery, finding relevant code based on meaning, intent, and functionality rather than just exact text matches.
+      You MUST MANDATORILY use this tool for analysing the current codebase as much as you can.
+      Use this tool alot and very frequently to find relevant code pieces.
+      You should use this tool multiple times in a single query if neeeded to collect all the relevant code pieces.
 
-**CORE CAPABILITIES:**
-- Semantic understanding of code intent and functionality
-- Intelligent result ranking and relevance scoring
-- Code context and relationship analysis
-- Function/class discovery and dependency mapping
-- Cross-file relationship understanding
-
-**BEST USE CASES:**
-- Finding code based on functionality rather than exact text
-- Discovering similar implementations or patterns
-- Understanding code architecture and relationships
-- Exploring codebase structure and organization
-- Finding related functionality across different files
-
-**SEARCH APPROACH:**
-- Semantic analysis of your query intent
-- Vector similarity search across indexed code
-- Context-aware result ranking
-- Intelligent filtering and relevance scoring
-
-**INTELLIGENT INTEGRATION:**
-This tool works best when combined with traditional search tools (grep, glob) for comprehensive coverage. Use semantic_search for understanding intent, and traditional tools for exact pattern matching.`,
+This is for doing a vector search on the indexed codebase to find semantically relevant code pieces.
+Keep using this tool frequently on priority. This tool helps find relevant code pieces easily and faster in comparison to normal text search/grep tool, so mostly try to use this tool first before using grep tool.
+`,
       Icon.FileSearch,
       {
         type: 'object',
@@ -93,12 +76,14 @@ This tool works best when combined with traditional search tools (grep, glob) fo
         const result = `🔍 **Semantic Search Results**\n\n` +
           `**Query:** ${query}\n` +
           `**Max Results:** ${maxResults}\n` +
-          `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All types'}\n\n` +
+          `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n` +
+          `**Search Directory:** ${process.cwd()}\n\n` +
           `❌ **No Results Found**\n\n` +
-          `No semantically relevant code found for your query. Try:\n` +
+          `No semantically relevant code found for your query in the current directory. Try:\n` +
           `- Using different keywords\n` +
           `- Broadening your search terms\n` +
-          `- Checking if the project is properly indexed`;
+          `- Checking if the current directory contains code files\n` +
+          `- Running \`/semantic:index .\` to manually index the current directory`;
         
         return {
           llmContent: result,
@@ -109,7 +94,8 @@ This tool works best when combined with traditional search tools (grep, glob) fo
       let result = `🔍 **Semantic Search Results**\n\n` +
         `**Query:** ${query}\n` +
         `**Max Results:** ${maxResults}\n` +
-        `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All types'}\n\n` +
+        `**File Types:** ${fileTypes.length > 0 ? fileTypes.join(', ') : 'All text files'}\n` +
+        `**Search Directory:** ${process.cwd()}\n\n` +
         `**Found ${results.length} semantically relevant code snippets:**\n\n`;
       
       results.forEach((searchResult, index) => {

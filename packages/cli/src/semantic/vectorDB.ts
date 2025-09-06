@@ -11,6 +11,7 @@ export interface VectorDBConfig {
   dataDir: string;
   indexFile: string;
   metadataFile: string;
+  silent?: boolean; // Add silent mode option
 }
 
 export interface VectorMetadata {
@@ -47,9 +48,11 @@ export class VectorDB {
   private metadata: VectorMetadata[] = [];
   private isInitialized = false;
   private useFAISS = false;
+  private silent: boolean;
 
   constructor(config: VectorDBConfig) {
     this.config = config;
+    this.silent = config.silent || false;
   }
 
   async initialize(): Promise<void> {
@@ -90,13 +93,7 @@ export class VectorDB {
     }
 
     try {
-      if (this.useFAISS && this.faissIndex) {
-        await this.addToFAISS(embeddings);
-      } else {
-        await this.addToFallback(embeddings);
-      }
-
-      // Store metadata
+      // Store metadata - check for duplicates to prevent accumulation
       const newMetadata: VectorMetadata[] = chunks.map((chunk, _i) => ({
         id: chunk.id,
         filePath: chunk.filePath,
@@ -107,12 +104,38 @@ export class VectorDB {
         metadata: chunk.metadata,
       }));
 
-      this.metadata.push(...newMetadata);
+      // Check for duplicates and only add new metadata
+      const existingIds = new Set(this.metadata.map(m => m.id));
+      const uniqueNewMetadata = newMetadata.filter(m => !existingIds.has(m.id));
+      
+      // Only proceed if there are actually new chunks to add
+      if (uniqueNewMetadata.length === 0) {
+        console.log('All chunks already exist in vector database, skipping indexing');
+        return;
+      }
+      
+      // Only add embeddings for new chunks
+      const newChunkIndices = chunks
+        .map((chunk, index) => ({ chunk, index }))
+        .filter(({ chunk }) => !existingIds.has(chunk.id))
+        .map(({ index }) => index);
+      
+      const newEmbeddings = newChunkIndices.map(index => embeddings[index]);
+      
+      if (this.useFAISS && this.faissIndex) {
+        await this.addToFAISS(newEmbeddings);
+      } else {
+        await this.addToFallback(newEmbeddings);
+      }
+      
+      this.metadata.push(...uniqueNewMetadata);
 
       // Save data
       await this.saveData();
 
-      console.log(`Added ${embeddings.length} embeddings to vector database`);
+      if (!this.silent) {
+        console.log(`Added ${newEmbeddings.length} new embeddings to vector database (${uniqueNewMetadata.length} new metadata entries)`);
+      }
     } catch (error) {
       console.error('Failed to add embeddings:', error);
       throw error;
@@ -243,7 +266,7 @@ export class VectorDB {
 
       if (this.useFAISS) {
         console.warn(
-          `Removing chunks for file ${filePath} requires reindexing the entire database`,
+          `Removing chunks for file ${filePath} requires rebuilding the entire database`,
         );
         // For FAISS, we'll need to rebuild the index
         // For now, just remove from metadata
@@ -312,59 +335,165 @@ export class VectorDB {
     return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
   }
 
+  /**
+   * Check if a directory has an existing index
+   */
+  async isIndexed(indexPath: string): Promise<boolean> {
+    try {
+      const metadataPath = path.join(indexPath, this.config.metadataFile);
+      const embeddingsPath = path.join(indexPath, 'embeddings.json');
+      const binaryPath = path.join(indexPath, 'embeddings.bin');
+      const indexPathFile = path.join(indexPath, this.config.indexFile);
+      
+      // Check metadata exists
+      const metadataExists = await fs.promises.access(metadataPath).then(() => true).catch(() => false);
+      if (!metadataExists) return false;
+      
+      if (this.useFAISS) {
+        // For FAISS: check if FAISS index exists
+        const indexExists = await fs.promises.access(indexPathFile).then(() => true).catch(() => false);
+        return indexExists;
+      } else {
+        // For fallback: check if embeddings (JSON or binary) exist
+        const embeddingsExists = await fs.promises.access(embeddingsPath).then(() => true).catch(() => false);
+        const binaryExists = await fs.promises.access(binaryPath).then(() => true).catch(() => false);
+        return embeddingsExists || binaryExists;
+      }
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  /**
+   * Clear all existing data (useful for re-indexing)
+   */
+  async clearData(): Promise<void> {
+    try {
+      // Clear in-memory data
+      this.metadata = [];
+      this.fallbackEmbeddings = [];
+      
+      // Reset FAISS index
+      if (this.useFAISS) {
+        await this.initializeFAISS();
+      }
+      
+      // Remove existing files
+      const metadataPath = path.join(this.config.dataDir, this.config.metadataFile);
+      const embeddingsPath = path.join(this.config.dataDir, 'embeddings.json');
+      const indexPath = path.join(this.config.dataDir, this.config.indexFile);
+      
+      // Remove files if they exist
+      if (await fs.promises.access(metadataPath).then(() => true).catch(() => false)) {
+        await fs.promises.unlink(metadataPath);
+      }
+      if (await fs.promises.access(embeddingsPath).then(() => true).catch(() => false)) {
+        await fs.promises.unlink(embeddingsPath);
+      }
+      if (await fs.promises.access(indexPath).then(() => true).catch(() => false)) {
+        await fs.promises.unlink(indexPath);
+      }
+      
+      console.log('Cleared all existing vector database data');
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed indexing statistics
+   */
+  getIndexStats(): {
+    totalChunks: number;
+    uniqueFiles: number;
+    totalSize: number;
+    languages: Record<string, number>;
+    lastIndexed: Date | null;
+    duplicates: number;
+  } {
+    const uniqueFiles = new Set(this.metadata.map(m => m.filePath)).size;
+    const totalSize = this.metadata.reduce((sum, m) => sum + m.content.length, 0);
+    
+    // Count languages
+    const languages: Record<string, number> = {};
+    this.metadata.forEach(m => {
+      languages[m.language] = (languages[m.language] || 0) + 1;
+    });
+
+    // Check for potential duplicates (same file, same line range)
+    const duplicateKeys = new Set<string>();
+    const seenKeys = new Set<string>();
+    this.metadata.forEach(m => {
+      const key = `${m.filePath}:${m.startLine}-${m.endLine}`;
+      if (seenKeys.has(key)) {
+        duplicateKeys.add(key);
+      } else {
+        seenKeys.add(key);
+      }
+    });
+
+    return {
+      totalChunks: this.metadata.length,
+      uniqueFiles,
+      totalSize,
+      languages,
+      lastIndexed: this.metadata.length > 0 ? new Date() : null, // TODO: Store actual timestamp
+      duplicates: duplicateKeys.size
+    };
+  }
+
   private async loadData(): Promise<void> {
-    const metadataPath = path.join(
-      this.config.dataDir,
-      this.config.metadataFile,
-    );
+    const metadataPath = path.join(this.config.dataDir, this.config.metadataFile);
     const embeddingsPath = path.join(this.config.dataDir, 'embeddings.json');
+    const binaryPath = path.join(this.config.dataDir, 'embeddings.bin');
     const indexPath = path.join(this.config.dataDir, this.config.indexFile);
 
     try {
+      // Load metadata and check file existence in parallel
+      const [metadataExists, embeddingsExists, binaryExists, indexExists] = await Promise.all([
+        fs.promises.access(metadataPath).then(() => true).catch(() => false),
+        fs.promises.access(embeddingsPath).then(() => true).catch(() => false),
+        fs.promises.access(binaryPath).then(() => true).catch(() => false),
+        fs.promises.access(indexPath).then(() => true).catch(() => false)
+      ]);
+
       // Load metadata
-      if (
-        await fs.promises
-          .access(metadataPath)
-          .then(() => true)
-          .catch(() => false)
-      ) {
-        const metadataContent = await fs.promises.readFile(
-          metadataPath,
-          'utf8',
-        );
+      if (metadataExists) {
+        const metadataContent = await fs.promises.readFile(metadataPath, 'utf8');
         this.metadata = JSON.parse(metadataContent);
       }
 
       if (this.useFAISS) {
         // Load FAISS index
-        if (
-          await fs.promises
-            .access(indexPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
+        if (indexExists) {
           const faissModule = (await import('faiss-node')) as FAISSModule;
           this.faissIndex = faissModule.readIndex(indexPath);
-          console.log(
-            `Loaded existing FAISS index with ${this.metadata.length} chunks`,
-          );
+          console.log(`Loaded existing FAISS index with ${this.metadata.length} chunks`);
         }
       } else {
-        // Load fallback embeddings
-        if (
-          await fs.promises
-            .access(embeddingsPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
-          const embeddingsContent = await fs.promises.readFile(
-            embeddingsPath,
-            'utf8',
-          );
+        // Load fallback embeddings - try binary first (10-100x faster), fallback to JSON
+        if (binaryExists) {
+          try {
+            const buffer = await fs.promises.readFile(binaryPath);
+            this.fallbackEmbeddings = this.parseBinaryBuffer(buffer);
+            if (!this.silent) {
+              console.log(`✅ Loaded ${this.fallbackEmbeddings.length} embeddings from binary format`);
+            }
+          } catch (binaryError) {
+            console.warn('Binary loading failed, falling back to JSON:', binaryError);
+            // Fallback to JSON if binary fails
+            if (embeddingsExists) {
+              const embeddingsContent = await fs.promises.readFile(embeddingsPath, 'utf8');
+              this.fallbackEmbeddings = JSON.parse(embeddingsContent);
+              console.log(`Loaded ${this.fallbackEmbeddings.length} embeddings from JSON format`);
+            }
+          }
+        } else if (embeddingsExists) {
+          // Load JSON format
+          const embeddingsContent = await fs.promises.readFile(embeddingsPath, 'utf8');
           this.fallbackEmbeddings = JSON.parse(embeddingsContent);
-          console.log(
-            `Loaded existing data with ${this.metadata.length} chunks`,
-          );
+          console.log(`Loaded ${this.fallbackEmbeddings.length} embeddings from JSON format`);
         }
       }
     } catch (error) {
@@ -372,31 +501,74 @@ export class VectorDB {
     }
   }
 
+  private parseBinaryBuffer(buffer: Buffer): number[][] {
+    // Calculate dimensions and count from buffer size
+    const bufferSize = buffer.length;
+    const bytesPerFloat = 4;
+    
+    // Try different common embedding dimensions
+    const possibleDimensions = [1536, 1024, 768, 512, 384]; // voyage-code-3, text-embedding-ada-002, etc.
+    
+    for (const dimensions of possibleDimensions) {
+      const expectedSize = dimensions * bytesPerFloat;
+      if (bufferSize % expectedSize === 0) {
+        const numEmbeddings = bufferSize / expectedSize;
+        
+        const embeddings: number[][] = [];
+        let offset = 0;
+        
+        for (let i = 0; i < numEmbeddings; i++) {
+          const embedding: number[] = [];
+          for (let j = 0; j < dimensions; j++) {
+            embedding.push(buffer.readFloatLE(offset));
+            offset += bytesPerFloat;
+          }
+          embeddings.push(embedding);
+        }
+        
+        return embeddings;
+      }
+    }
+    
+    throw new Error(`Cannot parse binary buffer: ${bufferSize} bytes doesn't match any known embedding dimensions`);
+  }
+
   private async saveData(): Promise<void> {
     try {
-      const metadataPath = path.join(
-        this.config.dataDir,
-        this.config.metadataFile,
-      );
+      const metadataPath = path.join(this.config.dataDir, this.config.metadataFile);
       const embeddingsPath = path.join(this.config.dataDir, 'embeddings.json');
+      const binaryPath = path.join(this.config.dataDir, 'embeddings.bin');
       const indexPath = path.join(this.config.dataDir, this.config.indexFile);
 
       // Save metadata
-      await fs.promises.writeFile(
-        metadataPath,
-        JSON.stringify(this.metadata, null, 2),
-      );
+      await fs.promises.writeFile(metadataPath, JSON.stringify(this.metadata, null, 2));
 
       if (this.useFAISS && this.faissIndex) {
         // Save FAISS index
         const faissModule = (await import('faiss-node')) as FAISSModule;
         faissModule.writeIndex(this.faissIndex, indexPath);
       } else {
-        // Save fallback embeddings
-        await fs.promises.writeFile(
-          embeddingsPath,
-          JSON.stringify(this.fallbackEmbeddings, null, 2),
-        );
+        // Save fallback embeddings in both JSON (compatibility) and binary (performance)
+        await fs.promises.writeFile(embeddingsPath, JSON.stringify(this.fallbackEmbeddings, null, 2));
+        
+        // Save binary format for 10-100x faster future loading
+        if (this.fallbackEmbeddings.length > 0) {
+          const dimensions = this.fallbackEmbeddings[0].length;
+          const buffer = Buffer.allocUnsafe(this.fallbackEmbeddings.length * dimensions * 4);
+          
+          let offset = 0;
+          for (const embedding of this.fallbackEmbeddings) {
+            for (const value of embedding) {
+              buffer.writeFloatLE(value, offset);
+              offset += 4;
+            }
+          }
+          
+          await fs.promises.writeFile(binaryPath, buffer);
+          if (!this.silent) {
+            console.log(`💾 Saved ${this.fallbackEmbeddings.length} embeddings in binary format (${Math.round(buffer.length/1024)}KB)`);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to save data:', error);

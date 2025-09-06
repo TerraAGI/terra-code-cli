@@ -567,6 +567,33 @@ export const SETTINGS_SCHEMA = {
     description: 'The API key for the Tavily API.',
     showInDialog: false,
   },
+  openaiApiKey: {
+    type: 'string',
+    label: 'OpenAI API Key',
+    category: 'General',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'API key for OpenAI-compatible services.',
+    showInDialog: false,
+  },
+  openaiBaseUrl: {
+    type: 'string',
+    label: 'OpenAI Base URL',
+    category: 'General',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'Base URL for OpenAI-compatible services.',
+    showInDialog: false,
+  },
+  openaiModel: {
+    type: 'string',
+    label: 'OpenAI Model',
+    category: 'General',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'Model name for OpenAI-compatible services.',
+    showInDialog: false,
+  },
   semantic: {
     type: 'object',
     label: 'Semantic Analysis',
@@ -585,17 +612,8 @@ export const SETTINGS_SCHEMA = {
         metadataFile: 'metadata.json',
       },
       chunking: {
-        maxChunkSize: 1000,
-        overlapSize: 100,
-        supportedExtensions: [
-          '.js',
-          '.ts',
-          '.py',
-          '.java',
-          '.cpp',
-          '.go',
-          '.rs',
-        ],
+        maxChunkSize: 500,  // 500 lines per chunk for better semantic search
+        overlapSize: 50,    // 10% overlap (50 lines) for context continuity
       },
     },
     description: 'Semantic code analysis and search settings.',
