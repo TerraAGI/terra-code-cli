@@ -292,6 +292,23 @@ export function loadEnvironment(settings?: Settings): void {
     }
   }
 
+  // Load OpenAI credentials from settings if not in environment
+  if (settings && !process.env.OPENAI_API_KEY) {
+    if (settings.openaiApiKey) {
+      process.env.OPENAI_API_KEY = settings.openaiApiKey;
+    }
+  }
+  if (settings && !process.env.OPENAI_BASE_URL) {
+    if (settings.openaiBaseUrl) {
+      process.env.OPENAI_BASE_URL = settings.openaiBaseUrl;
+    }
+  }
+  if (settings && !process.env.OPENAI_MODEL) {
+    if (settings.openaiModel) {
+      process.env.OPENAI_MODEL = settings.openaiModel;
+    }
+  }
+
   // If no settings provided, try to load workspace settings for exclusions
   let resolvedSettings = settings;
   if (!resolvedSettings) {
