@@ -173,3 +173,17 @@ terra> /semantic index .
 - **`/semantic status`** - Check semantic analysis status
 
 **Note**: Semantic analysis requires VoyageAI API key configuration. See Configuration section above.
+
+## Repository
+
+This project is open source and available on GitHub: [https://github.com/TerraAGI/terra-code-cli](https://github.com/TerraAGI/terra-code-cli)
+
+## Website & Support
+
+- **Website**: [https://terra-agi.com/](https://terra-agi.com/)
+- **Contact**: [info@terra-agi.com](mailto:info@terra-agi.com)
+- **Issues**: [GitHub Issues](https://github.com/TerraAGI/terra-code-cli/issues)
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.

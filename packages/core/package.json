@@ -4,7 +4,12 @@
   "description": "Terra Code Core",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/terra-code/terra-code.git"
+    "url": "git+https://github.com/TerraAGI/terra-code-cli.git"
+  },
+  "homepage": "https://terra-agi.com/",
+  "bugs": {
+    "url": "https://github.com/TerraAGI/terra-code-cli/issues",
+    "email": "info@terra-agi.com"
   },
   "type": "module",
   "main": "dist/index.js",
