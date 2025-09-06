@@ -584,10 +584,10 @@ export const SETTINGS_SCHEMA = {
         indexFile: 'index.faiss',
         metadataFile: 'metadata.json',
       },
-              chunking: {
-          maxChunkSize: 4000, // Optimized for VoyageAI code-3 model (1024 tokens ≈ 4000 chars)
-          overlapSize: 400,   // 10% overlap for context continuity
-        },
+      chunking: {
+        maxChunkSize: 500,  // 500 lines per chunk for better semantic search
+        overlapSize: 50,    // 10% overlap (50 lines) for context continuity
+      },
     },
     description: 'Semantic code analysis and search settings.',
     showInDialog: true,

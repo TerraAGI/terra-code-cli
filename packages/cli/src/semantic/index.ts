@@ -144,3 +144,8 @@ export async function indexProject(projectPath: string): Promise<void> {
   const engine = await getSemanticEngine();
   return engine.indexProject(projectPath);
 }
+
+// Export new background indexing components
+export { BackgroundIndexer } from './indexingWorker.js';
+export { ProgressTracker } from './progressTracker.js';
+export { AutoIndexingService } from './autoIndexingService.js';

@@ -70,8 +70,8 @@ export class VoyageAIClient {
       return [];
     }
 
-    // Process in small batches to avoid rate limits
-    const batchSize = 5;
+    // Process in larger batches for better performance
+    const batchSize = 50; // Increased to 50 for better throughput
     const embeddings: number[][] = [];
 
     for (let i = 0; i < chunks.length; i += batchSize) {

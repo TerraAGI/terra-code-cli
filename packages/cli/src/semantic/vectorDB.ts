@@ -11,6 +11,7 @@ export interface VectorDBConfig {
   dataDir: string;
   indexFile: string;
   metadataFile: string;
+  silent?: boolean; // Add silent mode option
 }
 
 export interface VectorMetadata {
@@ -47,9 +48,11 @@ export class VectorDB {
   private metadata: VectorMetadata[] = [];
   private isInitialized = false;
   private useFAISS = false;
+  private silent: boolean;
 
   constructor(config: VectorDBConfig) {
     this.config = config;
+    this.silent = config.silent || false;
   }
 
   async initialize(): Promise<void> {
@@ -130,7 +133,9 @@ export class VectorDB {
       // Save data
       await this.saveData();
 
-      console.log(`Added ${newEmbeddings.length} new embeddings to vector database (${uniqueNewMetadata.length} new metadata entries)`);
+      if (!this.silent) {
+        console.log(`Added ${newEmbeddings.length} new embeddings to vector database (${uniqueNewMetadata.length} new metadata entries)`);
+      }
     } catch (error) {
       console.error('Failed to add embeddings:', error);
       throw error;
@@ -472,7 +477,9 @@ export class VectorDB {
           try {
             const buffer = await fs.promises.readFile(binaryPath);
             this.fallbackEmbeddings = this.parseBinaryBuffer(buffer);
-            console.log(`✅ Loaded ${this.fallbackEmbeddings.length} embeddings from binary format`);
+            if (!this.silent) {
+              console.log(`✅ Loaded ${this.fallbackEmbeddings.length} embeddings from binary format`);
+            }
           } catch (binaryError) {
             console.warn('Binary loading failed, falling back to JSON:', binaryError);
             // Fallback to JSON if binary fails
@@ -558,7 +565,9 @@ export class VectorDB {
           }
           
           await fs.promises.writeFile(binaryPath, buffer);
-          console.log(`💾 Saved ${this.fallbackEmbeddings.length} embeddings in binary format (${Math.round(buffer.length/1024)}KB)`);
+          if (!this.silent) {
+            console.log(`💾 Saved ${this.fallbackEmbeddings.length} embeddings in binary format (${Math.round(buffer.length/1024)}KB)`);
+          }
         }
       }
     } catch (error) {

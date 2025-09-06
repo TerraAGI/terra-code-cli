@@ -15,14 +15,16 @@ export class SemanticEngine {
   private preprocessor: CodePreprocessor | null = null;
   private embeddingClient: VoyageAIClient | null = null;
   private vectorDB: VectorDB | null = null;
+  private silent: boolean = false;
   // Removed: private indexedProjects: Map<string, VectorDB> = new Map();
   
   // NEW: Simple path-based cache (only one project at a time)
   private lastIndexedPath: string | null = null;
   private lastVectorDB: VectorDB | null = null;
 
-  async initialize(config: SemanticConfig): Promise<void> {
+  async initialize(config: SemanticConfig, silent: boolean = false): Promise<void> {
     this.config = config;
+    this.silent = silent;
 
     if (config.enabled && config.voyageAI.apiKey) {
       // Initialize components
@@ -32,6 +34,7 @@ export class SemanticEngine {
       const resolvedConfig = {
         ...config.vectorDB,
         dataDir: path.resolve(process.cwd(), config.vectorDB.dataDir),
+        silent: this.silent,
       };
       this.vectorDB = new VectorDB(resolvedConfig);
 
@@ -74,22 +77,30 @@ export class SemanticEngine {
     await projectVectorDB.initialize();
     
     if (await projectVectorDB.isIndexed(resolvedConfig.dataDir)) {
-      console.log(`Project already indexed: ${projectPath}, skipping indexing`);
+      if (!this.silent) {
+        console.log(`Project already indexed: ${projectPath}, skipping indexing`);
+      }
       // Removed: Store the existing instance
       // this.indexedProjects.set(projectPath, projectVectorDB);
       return;
     }
 
     try {
-      console.log(`Discovering files in project: ${projectPath}`);
+      if (!this.silent) {
+        console.log(`Discovering files in project: ${projectPath}`);
+      }
       const files = await this.preprocessor.discoverFiles(projectPath);
-      console.log(`Found ${files.length} files to process`);
+      if (!this.silent) {
+        console.log(`Found ${files.length} files to process`);
+      }
 
       let totalChunks = 0;
 
       for (const file of files) {
         try {
-          console.log(`Processing file: ${file}`);
+          if (!this.silent) {
+            console.log(`Processing file: ${file}`);
+          }
           const chunks = await this.preprocessor.processFile(
             file,
             this.config.chunking.maxChunkSize,
@@ -97,11 +108,15 @@ export class SemanticEngine {
           );
 
           if (chunks.length > 0) {
-            console.log(`Generating embeddings for ${chunks.length} chunks`);
+            if (!this.silent) {
+              console.log(`Generating embeddings for ${chunks.length} chunks`);
+            }
             const embeddings =
               await this.embeddingClient.createBatchEmbeddings(chunks);
 
-            console.log(`Storing embeddings in vector database`);
+            if (!this.silent) {
+              console.log(`Storing embeddings in vector database`);
+            }
             await projectVectorDB.addEmbeddings(embeddings, chunks);
 
             totalChunks += chunks.length;
@@ -112,9 +127,11 @@ export class SemanticEngine {
         }
       }
 
-      console.log(
-        `Successfully indexed ${totalChunks} chunks from ${files.length} files`,
-      );
+      if (!this.silent) {
+        console.log(
+          `Successfully indexed ${totalChunks} chunks from ${files.length} files`,
+        );
+      }
       
       // Removed: Store the instance for future use
       // this.indexedProjects.set(projectPath, projectVectorDB);
