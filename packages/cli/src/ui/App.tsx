@@ -291,7 +291,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     projectPath,
     startIndexing,
     skipIndexing,
-    disableAutoIndexing,
     onIndexingComplete,
     onIndexingError,
     onStatusUpdate,
@@ -1028,7 +1027,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               projectPath={projectPath}
               onConfirm={startIndexing}
               onSkip={skipIndexing}
-              onDisable={disableAutoIndexing}
             />
           ) : isFolderTrustDialogOpen ? (
             <FolderTrustDialog onSelect={handleFolderTrustSelect} />

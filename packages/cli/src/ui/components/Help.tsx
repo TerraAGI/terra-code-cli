@@ -57,6 +57,16 @@ export const Help: React.FC<Help> = ({ commands }) => (
       </Text>
       : Responses automatically powered by your brain&apos;s knowledge
     </Text>
+    <Text color={Colors.Foreground}>
+      <Text bold color={Colors.AccentPurple}>
+        Semantic Code Search
+      </Text>
+      : Index your codebase with{' '}
+      <Text bold color={Colors.AccentPurple}>
+        /semantic index
+      </Text>{' '}
+      for intelligent code discovery
+    </Text>
 
     <Box height={1} />
 

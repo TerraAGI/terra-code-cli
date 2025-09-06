@@ -53,6 +53,10 @@ terra> /brain kt
 # Remember personal facts
 terra> /brain remember "I prefer TypeScript over JavaScript"
 🧠 Remembering: "I prefer TypeScript over JavaScript"
+
+# Index your codebase for semantic search (requires VoyageAI API key)
+terra> /semantic index .
+🔍 Starting semantic indexing...
 ```
 
 ### 🔄 Multi-Model Intelligence
@@ -65,7 +69,88 @@ terra> /compare "Explain dependency injection" --models qwen,gpt-4,claude
 # AI automatically uses your brain's knowledge in every response
 ```
 
-## Commands Reference
+## Configuration
+
+### VoyageAI API Key Setup (for Semantic Search)
+
+To enable semantic code indexing and search features, you need to configure your VoyageAI API key. This allows Terra to create embeddings of your codebase for intelligent search capabilities.
+
+**🎁 Free Tier**: VoyageAI offers **200M tokens free** when you add a payment method, providing generous capacity for large codebases.
+
+#### User Settings Configuration
+
+Edit your existing user settings file:
+
+**Windows:**
+```bash
+# Navigate to your user directory
+cd %USERPROFILE%\.terra
+
+# Edit the existing settings.json file
+notepad settings.json
+```
+
+**Windows PowerShell:**
+```powershell
+# Navigate to your user directory
+cd $env:USERPROFILE\.terra
+
+# Edit the existing settings.json file
+notepad settings.json
+```
+
+**macOS/Linux:**
+```bash
+# Navigate to your home directory
+cd ~/.terra
+
+# Edit the existing settings.json file
+nano settings.json
+```
+
+**Add the semantic configuration to your existing settings:**
+```json
+{
+  "selectedAuthType": "qwen-oauth",
+  "terraApiKey": "your-terra-api-key",
+  "terraUsername": "your-terra-username",
+  "semantic": {
+    "enabled": true,
+    "voyageAI": {
+      "apiKey": "your-voyageai-api-key-here",
+      "model": "voyage-code-3",
+      "baseURL": "https://api.voyageai.com/v1"
+    }
+  }
+}
+```
+
+**Note**: If you don't have a settings file yet, create it with just the semantic configuration above.
+
+#### Getting Your VoyageAI API Key
+
+1. Visit [VoyageAI](https://www.voyageai.com/)
+2. Sign up for an account
+3. **Add a payment method** to get **200M tokens free** with higher rate limits
+4. Navigate to your API keys section
+5. Generate a new API key
+6. Copy the key and use it in your configuration
+
+**💡 Pro Tip**: Adding a payment method unlocks VoyageAI's generous free tier with 200M tokens, providing ample capacity for semantic indexing of large codebases.
+
+#### Verify Configuration
+
+After setting up your API key, restart Terra and test semantic indexing:
+
+```bash
+# Check if semantic features are available
+terra> /semantic status
+
+# Index your current project
+terra> /semantic index .
+```
+
+---
 
 ### Core Commands
 
@@ -84,8 +169,7 @@ terra> /compare "Explain dependency injection" --models qwen,gpt-4,claude
 
 ### Semantic Analysis Commands (Optional)
 
-- **`/semantic:index <project-path>`** - Index project for semantic search
-- **`/semantic:search <query>`** - Search code using natural language
-- **`/semantic:status`** - Check semantic analysis status
+- **`/semantic index <project-path>`** - Index project for semantic search
+- **`/semantic status`** - Check semantic analysis status
 
-**Note**: Semantic analysis is disabled by default. Enable it in settings to use these features.
+**Note**: Semantic analysis requires VoyageAI API key configuration. See Configuration section above.

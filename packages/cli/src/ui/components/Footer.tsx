@@ -132,7 +132,7 @@ export const Footer: React.FC<FooterProps> = ({
         {indexingStatus === 'indexing' && (
           <Text color={theme.status.warning}>
             <Text color={theme.ui.symbol}>| </Text>
-            🔍 indexing...
+            🔍 indexing in progress...
           </Text>
         )}
         {indexingStatus === 'completed' && (

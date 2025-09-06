@@ -11,21 +11,18 @@ interface AutoIndexingDialogProps {
   projectPath: string;
   onConfirm: () => void;
   onSkip: () => void;
-  onDisable: () => void;
 }
 
 export const AutoIndexingDialog: React.FC<AutoIndexingDialogProps> = ({
   projectPath,
   onConfirm,
   onSkip,
-  onDisable,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string>('yes');
 
   const options = [
     { value: 'yes', label: 'Yes, index this directory for semantic search' },
     { value: 'skip', label: 'Skip indexing for now' },
-    { value: 'disable', label: 'Disable auto-indexing prompts' },
   ];
 
   const handleSelect = (value: string) => {
@@ -37,9 +34,6 @@ export const AutoIndexingDialog: React.FC<AutoIndexingDialogProps> = ({
         break;
       case 'skip':
         onSkip();
-        break;
-      case 'disable':
-        onDisable();
         break;
     }
   };
@@ -54,7 +48,7 @@ export const AutoIndexingDialog: React.FC<AutoIndexingDialogProps> = ({
       
       <Box marginBottom={1}>
         <Text>
-          Terra can index your code for semantic search. This allows you to find code by meaning, not just text.
+          Index you codebase to make code analysis faster.
         </Text>
       </Box>
       
