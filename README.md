@@ -1,5 +1,7 @@
 # Terra Code CLI
 
+> **🚀 FREE BETA - Limited Time!** Terra Code CLI is completely free for all users during our beta phase, which will end soon. Get started now and experience the future of AI-powered development!
+
 [![npm version](https://img.shields.io/npm/v/terra-code-cli.svg)](https://www.npmjs.com/package/terra-code-cli)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Node.js Version](https://img.shields.io/node/v/terra-code-cli.svg)](https://nodejs.org/)
@@ -49,6 +51,8 @@ Terra isn't just another AI coding assistant. It's a **comprehensive development
 ---
 
 ## Installation
+
+> **🎉 Start Free Today!** During our beta phase, Terra Code CLI is completely free for all users. The beta will end soon, so get started now!
 
 ### Prerequisites
 
