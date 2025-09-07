@@ -666,7 +666,7 @@ export async function connectToMcpServer(
   workspaceContext: WorkspaceContext,
 ): Promise<Client> {
   const mcpClient = new Client({
-    name: 'terra-code-mcp-client',
+    name: 'qwen-code-mcp-client',
     version: '0.0.1',
   });
 

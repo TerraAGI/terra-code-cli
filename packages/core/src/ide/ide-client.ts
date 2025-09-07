@@ -83,7 +83,7 @@ export class IdeClient {
     if (!this.currentIde || !this.currentIdeDisplayName) {
       this.setState(
         IDEConnectionStatus.Disconnected,
-        `IDE integration is not supported in your current environment. To use this feature, run Terra Code in one of these supported IDEs: ${Object.values(
+        `IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: ${Object.values(
           DetectedIde,
         )
           .map((ide) => getIdeDisplayName(ide))
@@ -257,7 +257,7 @@ export class IdeClient {
     if (rel.startsWith('..') || path.isAbsolute(rel)) {
       this.setState(
         IDEConnectionStatus.Disconnected,
-        `Directory mismatch. Terra Code is running in a different location than the open workspace in ${this.currentIdeDisplayName}. Please run the CLI from the same directory as your project's root folder.`,
+        `Directory mismatch. Qwen Code is running in a different location than the open workspace in ${this.currentIdeDisplayName}. Please run the CLI from the same directory as your project's root folder.`,
         true,
       );
       return false;

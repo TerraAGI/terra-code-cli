@@ -96,15 +96,8 @@ class GrepToolInvocation extends BaseToolInvocation<
     // Check existence and type after resolving
     try {
       const stats = fs.statSync(targetPath);
-      if (stats.isDirectory()) {
-        // It's already a directory, return as-is
-        return targetPath;
-      } else if (stats.isFile()) {
-        // It's a file, return the directory containing it
-        return path.dirname(targetPath);
-      } else {
-        // It's neither a file nor directory (e.g., symlink, socket, etc.)
-        throw new Error(`Path is neither a file nor directory: ${targetPath}`);
+      if (!stats.isDirectory()) {
+        throw new Error(`Path is not a directory: ${targetPath}`);
       }
     } catch (error: unknown) {
       if (isNodeError(error) && error.code !== 'ENOENT') {
@@ -114,6 +107,8 @@ class GrepToolInvocation extends BaseToolInvocation<
         `Failed to access path stats for ${targetPath}: ${error}`,
       );
     }
+
+    return targetPath;
   }
 
   async execute(signal: AbortSignal): Promise<ToolResult> {
@@ -121,24 +116,6 @@ class GrepToolInvocation extends BaseToolInvocation<
       const workspaceContext = this.config.getWorkspaceContext();
       const searchDirAbs = this.resolveAndValidatePath(this.params.path);
       const searchDirDisplay = this.params.path || '.';
-
-      // If a specific file path was provided, automatically set include to just that file
-      let effectiveInclude = this.params.include;
-      if (this.params.path && searchDirAbs) {
-        const originalPath = path.resolve(
-          this.config.getTargetDir(),
-          this.params.path,
-        );
-        try {
-          const stats = fs.statSync(originalPath);
-          if (stats.isFile()) {
-            // If it's a file, set include to just that file's basename
-            effectiveInclude = path.basename(originalPath);
-          }
-        } catch (_error) {
-          // If we can't stat the original path, continue with the resolved directory
-        }
-      }
 
       // Determine which directories to search
       let searchDirectories: readonly string[];
@@ -160,7 +137,7 @@ class GrepToolInvocation extends BaseToolInvocation<
         const matches = await this.performGrepSearch({
           pattern: this.params.pattern,
           path: searchDir,
-          include: effectiveInclude,
+          include: this.params.include,
           signal,
         });
 
@@ -202,7 +179,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       }
 
       if (allMatches.length === 0) {
-        const noMatchMsg = `No matches found for pattern "${this.params.pattern}" ${searchLocationDescription}${effectiveInclude ? ` (filter: "${effectiveInclude}")` : ''}.`;
+        const noMatchMsg = `No matches found for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}.`;
         return { llmContent: noMatchMsg, returnDisplay: `No matches found` };
       }
 
@@ -224,7 +201,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       const matchTerm = matchCount === 1 ? 'match' : 'matches';
 
       // Build the header with truncation info if needed
-      let headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${effectiveInclude ? ` (filter: "${effectiveInclude}")` : ''}`;
+      let headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}`;
 
       if (searchTruncated) {
         headerText += ` (showing first ${matchCount} of ${totalMatchesFound}+ total matches)`;
@@ -616,7 +593,7 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
     super(
       GrepTool.Name,
       'SearchText',
-      'Searches for a regular expression pattern within the content of files in a specified directory, specific file, or current working directory. Can filter files by a glob pattern. Returns the lines containing matches, along with their file paths and line numbers.',
+      'Searches for a regular expression pattern within the content of files in a specified directory (or current working directory). Can filter files by a glob pattern. Returns the lines containing matches, along with their file paths and line numbers.',
       Icon.Regex,
       {
         properties: {
@@ -627,7 +604,7 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
           },
           path: {
             description:
-              'Optional: The absolute path to the directory to search within, or a specific file path to search within that file. If omitted, searches the current working directory.',
+              'Optional: The absolute path to the directory to search within. If omitted, searches the current working directory.',
             type: 'string',
           },
           include: {
@@ -675,15 +652,8 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
     // Check existence and type after resolving
     try {
       const stats = fs.statSync(targetPath);
-      if (stats.isDirectory()) {
-        // It's already a directory, return as-is
-        return targetPath;
-      } else if (stats.isFile()) {
-        // It's a file, return the directory containing it
-        return path.dirname(targetPath);
-      } else {
-        // It's neither a file nor directory (e.g., symlink, socket, etc.)
-        throw new Error(`Path is neither a file nor directory: ${targetPath}`);
+      if (!stats.isDirectory()) {
+        throw new Error(`Path is not a directory: ${targetPath}`);
       }
     } catch (error: unknown) {
       if (isNodeError(error) && error.code !== 'ENOENT') {
@@ -693,6 +663,8 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
         `Failed to access path stats for ${targetPath}: ${error}`,
       );
     }
+
+    return targetPath;
   }
 
   /**

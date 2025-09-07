@@ -2,7 +2,7 @@
 import axios, { AxiosError } from 'axios';
 
 // AWS RAG Service base URL
-const BASE_URL = 'http://api.terra-agi.com:8000';
+const BASE_URL = 'http://13.61.2.7:8000';
 
 // V1 API endpoints with authentication required
 
@@ -41,7 +41,7 @@ export async function uploadDocument(
   fileBuffer: Buffer,
   fileName: string,
   collectionName: string,
-  apiKey?: string,
+  apiKey?: string
 ): Promise<UploadResponse> {
   const formData = new FormData();
   // Create a Blob from the Buffer. In Node.js, we need to specify type and size implicitly via the Blob constructor.
@@ -65,9 +65,7 @@ export async function uploadDocument(
     if (axiosError.response) {
       // Server responded with a status code outside 2xx range
       // Axios responses have data, statusText
-      const errorMessage = axiosError.response.data
-        ? JSON.stringify(axiosError.response.data)
-        : axiosError.response.statusText;
+      const errorMessage = axiosError.response.data ? JSON.stringify(axiosError.response.data) : axiosError.response.statusText;
       return {
         success: false,
         error: `API Error: ${axiosError.response.status} - ${errorMessage}`,
@@ -101,7 +99,7 @@ export async function searchDocuments(
   query: string,
   collectionName: string,
   limit: number = 5,
-  apiKey?: string,
+  apiKey?: string
 ): Promise<SearchResponse> {
   const payload = {
     query,
@@ -126,14 +124,12 @@ export async function searchDocuments(
     // Handle network errors, non-2xx responses, etc.
     if (axiosError.response) {
       // Server responded with a status code outside 2xx range
-      // Axios responses have data, statusText
-      const errorMessage = axiosError.response.data
-        ? JSON.stringify(axiosError.response.data)
-        : axiosError.response.statusText;
-      return {
-        success: false,
-        error: `API Error: ${axiosError.response.status} - ${errorMessage}`,
-      };
+       // Axios responses have data, statusText
+       const errorMessage = axiosError.response.data ? JSON.stringify(axiosError.response.data) : axiosError.response.statusText;
+       return {
+         success: false,
+         error: `API Error: ${axiosError.response.status} - ${errorMessage}`,
+       };
     } else if (axiosError.request) {
       // Request was made but no response received
       return {
@@ -142,12 +138,12 @@ export async function searchDocuments(
       };
     } else {
       // Something else happened, potentially during request setup
-      // The error object itself might have a message
-      const generalError = error as Error; // Attempt a safer cast for the base error message
-      return {
-        success: false,
-        error: `Request Setup Error: ${generalError.message || 'Unknown error occurred'}`,
-      };
+       // The error object itself might have a message
+       const generalError = error as Error; // Attempt a safer cast for the base error message
+       return {
+         success: false,
+         error: `Request Setup Error: ${generalError.message || 'Unknown error occurred'}`,
+       };
     }
   }
 }

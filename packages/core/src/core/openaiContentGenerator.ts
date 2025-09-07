@@ -124,7 +124,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
       ...(isOpenRouterProvider
         ? {
             'HTTP-Referer': 'https://github.com/terra-code/terra-code.git',
-            'X-Title': 'Terra Code',
+            'X-Title': 'Qwen Code',
           }
         : isDashScopeProvider
           ? {
