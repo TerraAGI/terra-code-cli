@@ -30,7 +30,7 @@
   "dependencies": {
     "@google/genai": "1.9.0",
     "@iarna/toml": "^2.2.5",
-    "@terra-code/terra-code-core": "^0.0.20",
+    "@terra-code/terra-code-core": "./package/dist/package.json",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "@types/update-notifier": "^6.0.8",
     "command-exists": "^1.2.9",
