@@ -314,8 +314,8 @@ export class CodePreprocessor {
 
   async processFile(
     filePath: string,
-    maxChunkSize: number = 1000,
-    overlapSize: number = 100,
+    maxChunkSize: number = 500,
+    overlapSize: number = 50,
   ): Promise<CodeChunk[]> {
     const content = await fs.promises.readFile(filePath, 'utf8');
     const language = this.detectLanguage(filePath);
@@ -1273,7 +1273,7 @@ export class CodePreprocessor {
 
     const patterns = importPatterns[language] || importPatterns.text;
     for (const pattern of patterns) {
-      const matches = content.matchAll(pattern);
+      const matches = Array.from(content.matchAll(pattern));
       for (const match of matches) {
         if (match[1]) {
           dependencies.push(match[1]);

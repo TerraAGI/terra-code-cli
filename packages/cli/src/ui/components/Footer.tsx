@@ -32,6 +32,7 @@ interface FooterProps {
   promptTokenCount: number;
   nightly: boolean;
   vimMode?: string;
+  indexingStatus?: 'indexing' | 'completed' | 'failed' | null;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -47,6 +48,7 @@ export const Footer: React.FC<FooterProps> = ({
   promptTokenCount,
   nightly,
   vimMode,
+  indexingStatus,
 }) => {
   const { columns: terminalWidth } = useTerminalSize();
 
@@ -127,6 +129,24 @@ export const Footer: React.FC<FooterProps> = ({
             model={model}
           />
         </Text>
+        {indexingStatus === 'indexing' && (
+          <Text color={theme.status.warning}>
+            <Text color={theme.ui.symbol}>| </Text>
+            🔍 indexing in progress...
+          </Text>
+        )}
+        {indexingStatus === 'completed' && (
+          <Text color={theme.status.success}>
+            <Text color={theme.ui.symbol}>| </Text>
+            ✅ indexed
+          </Text>
+        )}
+        {indexingStatus === 'failed' && (
+          <Text color={theme.status.error}>
+            <Text color={theme.ui.symbol}>| </Text>
+            ❌ indexing failed
+          </Text>
+        )}
         {corgiMode && (
           <Text>
             <Text color={theme.ui.symbol}>| </Text>

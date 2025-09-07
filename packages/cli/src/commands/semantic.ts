@@ -8,6 +8,8 @@ import {
   searchSemantic,
   isSemanticAvailable,
   getSemanticStats,
+  BackgroundIndexer,
+  SemanticConfig,
 } from '../semantic/index.js';
 
 export const semanticCommands = {
@@ -22,6 +24,42 @@ export const semanticCommands = {
       return `Successfully indexed project: ${pathToIndex}`;
     } catch (error) {
       return `Failed to index project: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+  },
+
+  async indexBackground(projectPath?: string): Promise<string> {
+    try {
+      if (!isSemanticAvailable()) {
+        return 'Semantic analysis is not available. Please enable it in settings first.';
+      }
+
+      const pathToIndex = projectPath || process.cwd();
+      
+      // Create a simple config for background indexing
+      const config: SemanticConfig = {
+        enabled: true,
+        voyageAI: {
+          apiKey: process.env.VOYAGE_AI_API_KEY,
+          model: 'voyage-large-2',
+          baseURL: 'https://api.voyageai.com/v1',
+        },
+        vectorDB: {
+          dataDir: '.terra/semantic',
+          indexFile: 'index.json',
+          metadataFile: 'metadata.json',
+        },
+        chunking: {
+          maxChunkSize: 1000,
+          overlapSize: 100,
+        },
+      };
+
+      const indexer = new BackgroundIndexer(config, pathToIndex);
+      await indexer.startIndexing();
+      
+      return `Background indexing started for project: ${pathToIndex}`;
+    } catch (error) {
+      return `Failed to start background indexing: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   },
 

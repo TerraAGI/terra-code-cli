@@ -70,4 +70,4 @@ RUN npm install -g /tmp/*.tgz \
   && rm -rf /tmp/*.tgz
 
 # Default entrypoint when none specified
-CMD ["qwen"]
+CMD ["terra"]

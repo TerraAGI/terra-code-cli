@@ -1,3 +1,7 @@
+# Terra Code CLI Development Guide
+
+**The AI-powered development companion with persistent memory and knowledge.**
+
 ## Building and running
 
 Before submitting any changes, it is crucial to validate them by running the full preflight check. This command will build the repository, run all tests, check for type errors, and lint the code.
@@ -54,9 +58,9 @@ This project uses **Vitest** as its primary testing framework. When writing test
 - When adding tests, first examine existing tests to understand and conform to established conventions.
 - Pay close attention to the mocks at the top of existing test files; they reveal critical dependencies and how they are managed in a test environment.
 
-## Git Repo
+## Git Repository
 
-The main branch for this project is called "main"
+The main branch for this project is called "main". The repository is hosted at [https://github.com/TerraAGI/terra-code-cli](https://github.com/TerraAGI/terra-code-cli).
 
 ## JavaScript/TypeScript
 
@@ -184,6 +188,36 @@ Only write high-value comments if at all. Avoid talking to the user through comm
 
 Use hyphens instead of underscores in flag names (e.g. `my-flag` instead of `my_flag`).
 
-## Qwen Added Memories
+## Terra Code CLI Project Context
 
-- The user is working on Qwen Code, an AI-powered command-line workflow tool adapted from Gemini CLI, optimized for Qwen3-Coder models. The project uses Node.js >=20, has a monorepo structure with packages for cli, core, test-utils, and vscode-ide-companion. Key features include code understanding, workflow automation, and Terra AGI services. The main branch is 'main'.
+Terra Code CLI is an AI-powered development companion that provides:
+
+- **Persistent Memory**: Stores knowledge across sessions using TERRA.md context files
+- **Multi-Model Support**: Works with various AI models including OpenAI-compatible APIs
+- **Semantic Search**: Advanced code understanding and search capabilities
+- **Brain Commands**: Upload documents, remember facts, and conduct knowledge transfer sessions
+- **Cross-Model Comparisons**: Compare responses from different AI models simultaneously
+
+### Key Features
+
+- **Knowledge Universe**: Upload documents, capture team knowledge, and remember across projects
+- **Enhanced AI Responses**: Context-aware responses using uploaded knowledge
+- **Persistent Memory**: Personal preferences, team standards, and cross-session continuity
+- **Multi-Model Intelligence**: Leverage strengths of different AI models
+
+### Architecture
+
+The project uses a monorepo structure with packages for:
+- `cli`: User interface and command handling
+- `core`: Backend logic, model communication, and tool management
+- `test-utils`: Shared testing utilities
+- `vscode-ide-companion`: VS Code extension integration
+
+### Technology Stack
+
+- **Node.js**: >=20.0.0
+- **TypeScript**: Primary language
+- **React**: CLI UI using Ink framework
+- **Vitest**: Testing framework
+- **VoyageAI**: Semantic search and embeddings
+- **OpenAI-Compatible APIs**: Model communication

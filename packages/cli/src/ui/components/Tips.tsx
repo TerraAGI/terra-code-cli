@@ -52,6 +52,13 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
         </Text>{' '}
         - AI automatically uses your brain&apos;s knowledge
       </Text>
+      <Text color={Colors.Foreground}>
+        5.{' '}
+        <Text bold color={Colors.AccentPurple}>
+          /semantic index
+        </Text>{' '}
+        - Index your codebase for intelligent code search. Example: &quot;/semantic index /path/to/your/repo&quot;
+      </Text>
 
       <Box height={1} />
 
